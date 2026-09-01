@@ -33,6 +33,22 @@ sub remove_sentences_matching {
 }
 
 # ============================================================
+# HELPER: preserve sentence-initial capitalisation (issue #11)
+#
+# Many rules below match case-insensitively (/i) but substitute a fixed,
+# lowercase replacement string. When such a rule matches text at the start
+# of a sentence (e.g. "Our take-out is..."), a plain substitution silently
+# lowercases it ("the take-out is...") and produces a grammar error mid
+# text. This wraps those replacements: if the matched text started with a
+# capital letter, the replacement is capitalised too.
+# ============================================================
+sub case_preserve {
+    my ($matched, $replacement) = @_;
+    return $replacement unless defined $matched && $matched =~ /^[A-Z]/;
+    return ucfirst($replacement);
+}
+
+# ============================================================
 # MAIN REWRITE FUNCTION
 # ============================================================
 sub rewrite_text {
@@ -145,7 +161,7 @@ sub rewrite_text {
     # ------------------------------------------------------------------
 
     # "we scraped a bit getting over some of these ledges"
-    $text =~ s/we scraped a bit getting over some of these ledges/some ledges may require careful navigation at lower levels/gi;
+    $text =~ s/we scraped a bit getting over some of these ledges/case_preserve($&, "some ledges may require careful navigation at lower levels")/gie;
 
     # "We were short on time so only paddled the last few hundred metres"
     $text =~ s/[Ww]e were short on time so only paddled ([^,]+),/Only the $1 was paddled,/g;
@@ -164,9 +180,9 @@ sub rewrite_text {
     $text =~ s/\b[Ww]e.ve\b/The group has/g;
     $text =~ s/\b[Ww]e've\b/The group has/g;
 
-    # "we were often left thinking"
-    $text =~ s/we were often left thinking/one is often left thinking/gi;
-    $text =~ s/We were often left thinking/One is often left thinking/g;
+    # "we were often left thinking" (case_preserve makes the dedicated
+    # capitalised variant that used to follow this rule redundant)
+    $text =~ s/we were often left thinking/case_preserve($&, "one is often left thinking")/gie;
 
     # "one(er..me!) disappearing from sight" → remove personal aside
     $text =~ s/\(er\.\.me!\)//g;
@@ -177,27 +193,27 @@ sub rewrite_text {
 
     # "we had 5 swims between 8 of us including a 1km chase of boat..."
     # Keep factual part, remove "us"
-    $text =~ s/between \d+ of us/in the group/gi;
+    $text =~ s/between \d+ of us/case_preserve($&, "in the group")/gie;
 
     # "we have never been told not park there"
-    $text =~ s/we have never been told not park there/no problems have been encountered parking here/gi;
+    $text =~ s/we have never been told not park there/case_preserve($&, "no problems have been encountered parking here")/gie;
 
     # "no one has ever complained to us when we use it but make your choice for yourself"
-    $text =~ s/no one has ever complained to us when we use it but make your choice for yourself/no complaints have been reported but exercise discretion/gi;
+    $text =~ s/no one has ever complained to us when we use it but make your choice for yourself/case_preserve($&, "no complaints have been reported but exercise discretion")/gie;
     # "it's not really in the ethos of bothies to have folk drive up to them"
     # (neutral text, keep as is)
 
     # "You are parking entirely on a private estate... we have car access"
-    $text =~ s/it.s only through their openness that we have car access to this run/it is only through their openness that there is car access to this run/gi;
-    $text =~ s/no one has ever complained to us/no complaints have been raised/gi;
+    $text =~ s/it.s only through their openness that we have car access to this run/case_preserve($&, "it is only through their openness that there is car access to this run")/gie;
+    $text =~ s/no one has ever complained to us/case_preserve($&, "no complaints have been raised")/gie;
 
     # "I thought I'd write in and tell you about" → remove meta opener, keep content
     $text =~ s/I thought I.d write in and tell you about this fun five minutes worth of paddling,?\s*//gi;
     $text =~ s/The paddler thought It would write in and tell you about this fun five minutes worth of paddling,?\s*//gi;
 
     # "I'll let you see for yourselves" → "inspection recommended"
-    $text =~ s/I.ll let you see for yourselves/inspection is recommended/gi;
-    $text =~ s/I'll let you see for yourselves/inspection is recommended/gi;
+    $text =~ s/I.ll let you see for yourselves/case_preserve($&, "inspection is recommended")/gie;
+    $text =~ s/I'll let you see for yourselves/case_preserve($&, "inspection is recommended")/gie;
 
     # "I'll say it again" → remove
     $text =~ s/I.ll say it again[.,]?\s*//gi;
@@ -215,7 +231,7 @@ sub rewrite_text {
     $text =~ s/\bOne of my personal favourites\b/One of the finest rivers/gi;
 
     # "to my knowledge no one has bothered" → "no one is known to have"
-    $text =~ s/to my knowledge no one has bothered/no one is known to have/gi;
+    $text =~ s/to my knowledge no one has bothered/case_preserve($&, "no one is known to have")/gie;
 
     # "adds:" attribution lines → remove
     $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+ adds:\s*'?//g;
@@ -292,7 +308,7 @@ sub rewrite_text {
     $text =~ s/\bI can see\b/One can see/gi;
 
     # "I could be wrong" → "further information may clarify this"
-    $text =~ s/\bI could be wrong\b/further information may clarify this/gi;
+    $text =~ s/\bI could be wrong\b/case_preserve($&, "further information may clarify this")/gie;
 
     # "I think" → "It appears"
     $text =~ s/\bI think\b/It appears/gi;
@@ -320,7 +336,7 @@ sub rewrite_text {
     $text =~ s/\bI ended up ([a-z])/The approach resulted in $1/gi;
 
     # "I went deep" → "going deep is possible here"
-    $text =~ s/\bI went deep on this one\b/going deep is possible here/gi;
+    $text =~ s/\bI went deep on this one\b/case_preserve($&, "going deep is possible here")/gie;
 
     # "I got away with" → "consequences included"
     $text =~ s/\bI got away with ([^.]+)\./The consequences were $1./gi;
@@ -343,11 +359,11 @@ sub rewrite_text {
     $text =~ s/\bI decided\b/The decision was/gi;
 
     # "I presume" → "presumably"
-    $text =~ s/\bI presume\b/presumably/gi;
+    $text =~ s/\bI presume\b/case_preserve($&, "presumably")/gie;
 
     # "I should say" / "I must admit"
     $text =~ s/\bI must admit[^,]+,\s*//gi;
-    $text =~ s/\bI should say\b/it should be noted/gi;
+    $text =~ s/\bI should say\b/case_preserve($&, "it should be noted")/gie;
 
     # "I would definitely recommend" → "It is strongly recommended"
     $text =~ s/\bI would definitely recommend\b/It is strongly recommended/gi;
@@ -411,7 +427,7 @@ sub rewrite_text {
     $text =~ s/\bI haven.t run\b/The section has not been run/gi;
 
     # "I haven't paddled the last mile" → "The last mile has not been paddled"
-    $text =~ s/I haven.t paddled (the [^.]+)\)/the $1 has not been paddled)/gi;
+    $text =~ s/I haven.t paddled (the [^.]+)\)/case_preserve($&, "the $1 has not been paddled)")/gie;
     $text =~ s/I haven.t paddled (the [^.]+)\./The $1 has not been paddled./gi;
 
     # "I'd" contractions
@@ -576,31 +592,31 @@ sub rewrite_text {
     $text =~ s/\b[Ww]e\b/The group/g;
 
     # "our" → "the"
-    $text =~ s/\bour put-?in\b/the put-in/gi;
-    $text =~ s/\bour take-?out\b/the take-out/gi;
-    $text =~ s/\bour group\b/the group/gi;
-    $text =~ s/\bour boats\b/the boats/gi;
-    $text =~ s/\bour trip\b/the trip/gi;
-    $text =~ s/\bour experience\b/past experience/gi;
-    $text =~ s/\bour point of view\b/one perspective/gi;
-    $text =~ s/\bour more able paddlers\b/the more able paddlers/gi;
-    $text =~ s/\bour paddlers\b/the paddlers/gi;
-    $text =~ s/\bour wet gear\b/wet gear/gi;
-    $text =~ s/\bour\b/the/gi;
+    $text =~ s/\bour put-?in\b/case_preserve($&, "the put-in")/gie;
+    $text =~ s/\bour take-?out\b/case_preserve($&, "the take-out")/gie;
+    $text =~ s/\bour group\b/case_preserve($&, "the group")/gie;
+    $text =~ s/\bour boats\b/case_preserve($&, "the boats")/gie;
+    $text =~ s/\bour trip\b/case_preserve($&, "the trip")/gie;
+    $text =~ s/\bour experience\b/case_preserve($&, "past experience")/gie;
+    $text =~ s/\bour point of view\b/case_preserve($&, "one perspective")/gie;
+    $text =~ s/\bour more able paddlers\b/case_preserve($&, "the more able paddlers")/gie;
+    $text =~ s/\bour paddlers\b/case_preserve($&, "the paddlers")/gie;
+    $text =~ s/\bour wet gear\b/case_preserve($&, "wet gear")/gie;
+    $text =~ s/\bour\b/case_preserve($&, "the")/gie;
 
     # "us" in first-person context → rephrase
-    $text =~ s/\bfor us\b/for paddlers/gi;
-    $text =~ s/\bwith us\b/in the group/gi;
-    $text =~ s/\bjoin us\b/join the group/gi;
-    $text =~ s/\bto us\b/to paddlers/gi;
-    $text =~ s/\bat us\b/at the group/gi;
+    $text =~ s/\bfor us\b/case_preserve($&, "for paddlers")/gie;
+    $text =~ s/\bwith us\b/case_preserve($&, "in the group")/gie;
+    $text =~ s/\bjoin us\b/case_preserve($&, "join the group")/gie;
+    $text =~ s/\bto us\b/case_preserve($&, "to paddlers")/gie;
+    $text =~ s/\bat us\b/case_preserve($&, "at the group")/gie;
     $text =~ s/\b complained to us\b/ complaints have been raised/gi;
 
     # "myself" → "oneself"
-    $text =~ s/\bmyself\b/oneself/gi;
+    $text =~ s/\bmyself\b/case_preserve($&, "oneself")/gie;
 
     # "ourselves" → "the group"
-    $text =~ s/\bourselves\b/the group/gi;
+    $text =~ s/\bourselves\b/case_preserve($&, "the group")/gie;
 
     # ------------------------------------------------------------------
     # STEP 5: Remaining personal names / references
