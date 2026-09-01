@@ -1,0 +1,10 @@
+{
+  "name": "riverguide-reference-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal reference/mock backend for River Guide local dev. No dependencies.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
