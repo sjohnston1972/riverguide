@@ -4,9 +4,12 @@ use warnings;
 use JSON::PP;
 use utf8;
 use open ':std', ':encoding(UTF-8)';
+use FindBin qw($RealBin);
 
-my $input_file  = 'C:/docker/net-core/web-projects/rivers2/scotland_rivers_detail.json';
-my $output_file = 'C:/docker/net-core/web-projects/rivers2/scotland_rivers_detail_reworded.json';
+# Defaults are the JSON files committed in the repo root (next to this
+# script). Override with: perl reword_rivers2.pl <input.json> <output.json>
+my $input_file  = $ARGV[0] // "$RealBin/scotland_rivers_detail.json";
+my $output_file = $ARGV[1] // "$RealBin/scotland_rivers_detail_reworded.json";
 
 my $raw = do {
     local $/;
