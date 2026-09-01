@@ -680,7 +680,15 @@ sub rewrite_text {
     $text =~ s/ ,/,/g;
     $text =~ s/,\s*,/,/g;
     $text =~ s/\.\s*\././g;
-    $text =~ s/\.{2,}/./g unless $text =~ /\.\.\./;  # protect ellipsis
+    # Issue #10: collapse stray runs of dots per-occurrence rather than
+    # gating on whether the whole field happens to contain a "..." anywhere
+    # (the old "unless $text =~ /\.\.\./" guard was field-wide, so a single
+    # genuine ellipsis anywhere in a field used to protect every stray ".."
+    # in that field, while a field with no ellipsis at all had every "..."
+    # a rule may have produced flattened to ".").
+    $text =~ s/\.{4,}/.../g;               # 4+ dots -> a single ellipsis
+    $text =~ s/(?<!\.)\.\.(?!\.)/./g;      # exactly two dots -> one full stop
+                                            # (leaves "..." untouched)
     # Remove empty parentheses
     $text =~ s/\(\s*\)//g;
     # Remove lines that are purely whitespace after cleanup
