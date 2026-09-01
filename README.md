@@ -34,4 +34,19 @@ The frontend sends messages to a backend API (`/api/mcp/chat`) which orchestrate
 
 ## Running
 
-Serve the frontend with any static file server. The backend API endpoint (`/api/mcp/chat`) must be configured separately to handle Claude AI requests with MCP tools for SEPA, weather, and river guide lookups.
+A minimal reference/mock backend lives in `server/` and is enough to run the whole app locally, with no production credentials required.
+
+```sh
+cd server
+node server.js       # or: npm start
+```
+
+Then open **http://localhost:3000** — the server serves the static frontend *and* implements `POST /api/mcp/chat`.
+
+- **Mock mode (default):** if `ANTHROPIC_API_KEY` is not set, every chat request gets a canned response in the correct shape, so the UI can be exercised end to end offline. No SEPA/Open-Meteo/Claude credentials needed.
+- **Live mode (optional):** set `ANTHROPIC_API_KEY` in your environment (never commit it) to proxy chat requests to the real Claude Messages API instead, using the system prompt from `prompt.txt`, which the server owns and loads at startup. Note: live mode calls the plain Messages API — it does not implement the `search_rivers` / `get_river_stations` / `get_station_levels` / `get_weather_forecast` / `get_river_guide` MCP tools described in `prompt.txt`; that integration is out of scope for this reference backend (see `server/README.md`).
+- Optional: `PORT` (default `3000`) and `ANTHROPIC_MODEL` (default `claude-sonnet-4-5-20250929`) environment variables.
+
+`server/` has zero npm dependencies (Node's built-in `http`/`https`/`fs` only), so no `npm install` step is required.
+
+See `server/README.md` for backend implementation notes.
