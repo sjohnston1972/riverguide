@@ -119,37 +119,9 @@ function addMessage(content, role) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Markdown-lite formatting
-function formatMessage(content) {
-    let f = content;
-
-    // Headers: ## and ###
-    f = f.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    f = f.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-
-    // Bold
-    f = f.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-    // Italic
-    f = f.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
-
-    // Links [text](url)
-    f = f.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-    // Bullet lists
-    f = f.replace(/^- (.+)$/gm, '<li>$1</li>');
-    f = f.replace(/((?:<li>.*<\/li>\s*)+)/g, '<ul>$1</ul>');
-
-    // Line breaks (but not inside tags)
-    f = f.replace(/\n/g, '<br>');
-
-    // Clean up double breaks after block elements
-    f = f.replace(/(<\/h[23]>)<br>/g, '$1');
-    f = f.replace(/(<\/ul>)<br>/g, '$1');
-    f = f.replace(/(<ul>)<br>/g, '$1');
-
-    return f;
-}
+// Markdown-lite formatting: formatMessage() lives in format.js (loaded
+// before this file, see index.html) so it can also be unit-tested from
+// Node without a DOM — see test/format.test.js.
 
 // Loading state
 function setLoading(isLoading) {
