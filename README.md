@@ -110,3 +110,29 @@ The client reads `error` and shows it (or a generic status-based fallback) to th
 - The five MCP tools referenced in `prompt.txt` (`search_rivers`, `get_river_stations`, `get_station_levels`, `get_weather_forecast`, `get_river_guide`) are the tools a full implementation of this endpoint is expected to call server-side before replying; they are not part of the HTTP contract itself and are invisible to the client.
 - The reference backend in `server/` implements this contract in **mock mode** by default (canned `text` response, no tools called) and can optionally proxy to the real Claude Messages API — see "Running" above.
 - `prompt.txt` must **not** be served as a public static asset. It ships in this repo for reference/version-control purposes; whoever deploys the frontend must keep it out of any publicly reachable static path (don't copy it into the directory a static file server exposes, or add a host-level deny rule for it), so the guardrail text isn't downloadable by visitors at a URL like `/prompt.txt`.
+
+## Data Pipeline: Reword Script
+
+`reword_rivers2.pl` reads `scotland_rivers_detail.json` and rewrites the guide prose fields (`where_is_it`, `water_level`, `general_description`, `other_notes`, `major_hazards`, `access_hassles`) to strip out first-person voice ("we paddled", "I think") and personal contributor names, producing a neutral, factual `scotland_rivers_detail_reworded.json`.
+
+**Prerequisites:** Perl 5 with the core `JSON::PP` module (ships with modern Perl - no CPAN install needed).
+
+**Run it:**
+
+```sh
+# Defaults: reads/writes the JSON files committed in the repo root
+perl reword_rivers2.pl
+
+# Or pass explicit paths
+perl reword_rivers2.pl <input.json> <output.json>
+```
+
+**Verify the output before trusting it:** the rewrite is a long chain of regex substitutions over safety-relevant data (grades, hazards, access notes), so a change to the rules can silently delete more than intended. `verify_reword.pl` compares the rewritten output against the source field-by-field and flags any field that lost a suspicious amount of content:
+
+```sh
+perl verify_reword.pl                      # compares the repo's own before/after JSON
+perl verify_reword.pl <original.json> <reworded.json>
+perl verify_reword.pl --strict             # exit non-zero if anything is flagged (CI use)
+```
+
+It prints a warning per flagged field (river, field, characters lost) and a summary line. It doesn't fail the run by default - the rewrite legitimately removes some text - it's meant for a human to eyeball the flagged list after any change to the rewrite rules.
