@@ -49,4 +49,59 @@ Then open **http://localhost:3000** — the server serves the static frontend *a
 
 `server/` has zero npm dependencies (Node's built-in `http`/`https`/`fs` only), so no `npm install` step is required.
 
-See `server/README.md` for backend implementation notes.
+See `server/README.md` for backend implementation notes, and the API contract below for the exact request/response shapes.
+
+## API Contract: `POST /api/mcp/chat`
+
+This is the contract the frontend (`script.js`) speaks. The system prompt is **server-owned** — the client does not send one; the backend applies it (e.g. loaded server-side from `prompt.txt`).
+
+### Request
+
+```
+POST /api/mcp/chat
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "messages": [
+    { "role": "user", "content": "What are the current levels on the River Etive?" }
+  ]
+}
+```
+
+- `messages` (required, array) — the running conversation, oldest first.
+  - `role`: `"user"` or `"assistant"`.
+  - `content` for a `"user"` message is a plain **string**.
+  - `content` for an `"assistant"` message is the **raw `content` array** from a previous response (see below) — the client echoes it back verbatim as conversation history, it does not flatten it to a string.
+
+### Success response
+
+`200 OK`:
+
+```json
+{
+  "content": [
+    { "type": "text", "text": "Assistant reply text, in markdown-lite." }
+  ]
+}
+```
+
+- `content` is an array of typed blocks, mirroring the shape of the Claude Messages API response. The client only reads blocks where `type === "text"`, and joins their `text` fields with a blank line to build the rendered reply. Any other block types are present in the array but ignored by the client today.
+
+### Error response
+
+Any non-2xx status, with:
+
+```json
+{ "error": "Human-readable error message" }
+```
+
+The client reads `error` and shows it (or a generic status-based fallback) to the user as the assistant's message.
+
+### Notes
+
+- The five MCP tools referenced in `prompt.txt` (`search_rivers`, `get_river_stations`, `get_station_levels`, `get_weather_forecast`, `get_river_guide`) are the tools a full implementation of this endpoint is expected to call server-side before replying; they are not part of the HTTP contract itself and are invisible to the client.
+- The reference backend in `server/` implements this contract in **mock mode** by default (canned `text` response, no tools called) and can optionally proxy to the real Claude Messages API — see "Running" above.
