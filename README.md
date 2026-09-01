@@ -20,6 +20,10 @@ The frontend sends messages to a backend API (`/api/mcp/chat`) which orchestrate
 3. Fetch weather forecasts for the river area
 4. Combine everything into an informed, factual response
 
+The frontend sends only the conversation (`{ "messages": [...] }`) — it does
+not fetch or send a system prompt. See "API Contract" below for the full
+request/response shape and the server-owned system prompt.
+
 ## Data
 
 - **`scotland_rivers_detail.json`** — Comprehensive paddling guide data for Scottish rivers sourced from the UK Rivers Guidebook, including grades, hazards, access points, and descriptions
@@ -105,3 +109,4 @@ The client reads `error` and shows it (or a generic status-based fallback) to th
 
 - The five MCP tools referenced in `prompt.txt` (`search_rivers`, `get_river_stations`, `get_station_levels`, `get_weather_forecast`, `get_river_guide`) are the tools a full implementation of this endpoint is expected to call server-side before replying; they are not part of the HTTP contract itself and are invisible to the client.
 - The reference backend in `server/` implements this contract in **mock mode** by default (canned `text` response, no tools called) and can optionally proxy to the real Claude Messages API — see "Running" above.
+- `prompt.txt` must **not** be served as a public static asset. It ships in this repo for reference/version-control purposes; whoever deploys the frontend must keep it out of any publicly reachable static path (don't copy it into the directory a static file server exposes, or add a host-level deny rule for it), so the guardrail text isn't downloadable by visitors at a URL like `/prompt.txt`.
