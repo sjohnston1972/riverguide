@@ -31,20 +31,10 @@
     });
 })();
 
-// System prompt (loaded from prompt.txt)
-let systemPrompt = '';
-
-async function loadSystemPrompt() {
-    try {
-        const response = await fetch('prompt.txt');
-        systemPrompt = await response.text();
-    } catch (error) {
-        console.error('Error loading system prompt:', error);
-        systemPrompt = 'You are a helpful Scottish rivers and kayaking guide.';
-    }
-}
-
-loadSystemPrompt();
+// The AI system/guardrail prompt is owned and applied server-side — see
+// README.md ("System Prompt / Guardrails"). This client does not fetch it
+// and does not forward it in the request body; it only sends the
+// conversation (see sendMessage() below).
 
 // Conversation state
 let conversationHistory = [];
@@ -156,8 +146,7 @@ async function sendMessage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                messages: conversationHistory,
-                systemPrompt: systemPrompt
+                messages: conversationHistory
             })
         });
 
