@@ -79,14 +79,20 @@ sub rewrite_text {
     $text =~ s/Paddler:\s*[^,.\n]+[,.]?\s*Photo:[^\n.]*[.\n]?//gi;
     $text =~ s/Photo:\s*[^.\n]+[.\n]?//gi;
 
-    # Remove named contributor attribution lines like "Big Al Collis (April 2005).'..."
-    # These appear as "Firstname Lastname (date).'quoted text'"
-    $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+(?: [A-Z][a-z]+)?\s*\([^)]+\)\s*\.?'[^']*'//g;
-    # Remove "Firstname Lastname." standalone attribution at end of paragraph
-    $text =~ s/\b[A-Z][a-z]+ [A-Z][a-z]+\.\s*'[^']*'//g;
-    # Remove standalone attribution "Firstname Lastname." at end of sentence where it's just a name
-    # e.g. "Iain McKendry."
-    $text =~ s/\s+[A-Z][a-z]+ [A-Z][a-z]+\.\s*$//m;
+    # NOTE (issue #9): the three generic "[A-Z][a-z]+ [A-Z][a-z]+ ... 'quoted'"
+    # patterns that used to live here were removed. They matched *any* two
+    # consecutive capitalised words - in this dataset that is overwhelmingly
+    # a place/river name ("Fort William.", "Loch Dughail.", "Power Station.",
+    # "South Esk.", ...), not a contributor credit, and they were deleting
+    # real geography and even safety-relevant text (e.g. a quoted hazard
+    # warning beginning "The North Sannox has a large tree..."). Verified
+    # against the real data: across the whole dataset they matched their
+    # intended target (a genuine contributor name/quote attribution) in only
+    # a handful of cases while corrupting dozens of legitimate fields, so
+    # they are not worth keeping in this broad form. Real contributor names
+    # are handled by the explicit literal list in STEP 2 instead (this is
+    # where "Iain McKendry." - the one genuine target of the old line 86
+    # rule - is now removed).
 
     # Remove "Before I start I should say I am not a paddler"
     $text =~ s/[^.!?]*Before I start I should say[^.!?]*[.!?]?\s*//gi;
@@ -122,6 +128,7 @@ sub rewrite_text {
     # Remove specific patterns like "Paul Brear", "Jen Hartnett", "J.A.Johnson", "J.Swale"
     $text =~ s/\bPaul Brear\b//g;
     $text =~ s/\bJen Hartnett\b//g;
+    $text =~ s/\bIain McKendry\b//g;
     $text =~ s/\bJ\.A\.Johnson\b//g;
     $text =~ s/\bJ\.Swale\b//g;
     $text =~ s/\bDominic Serrammi\b//g;
@@ -213,7 +220,12 @@ sub rewrite_text {
     # "adds:" attribution lines → remove
     $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+ adds:\s*'?//g;
     $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+ has run this at monster flows and notes that/At very high flows/g;
-    $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+ notes[^.]*\.\s*//g;
+    # Issue #9: this used to be "[A-Z][a-z]+ [A-Z][a-z]+ notes[^.]*\.", which
+    # strips ANY "Word Word notes ... ." sentence - a place name like "Loch
+    # Morar" reads exactly the same shape as a contributor name. Require a
+    # dated parenthetical (e.g. "(May 1999)") after "notes", which a place
+    # name would never have, so only genuine dated attributions match.
+    $text =~ s/[A-Z][a-z]+ [A-Z][a-z]+ notes \([^)]*\d{4}[^)]*\)[^.]*\.\s*//g;
 
     # "This is not really bothered what its called" → remove meta
     $text =~ s/[^.!?]*This is not really bothered what its called[^.!?]*[.!?]?\s*//gi;
@@ -643,9 +655,18 @@ sub rewrite_text {
     # Fix "comparable to a scaled - up garden centre water feature" - keep as descriptive
     # (neutral descriptive, leave as-is)
 
-    # Remove stray quoted attribution blocks like "'I ventured..." when they contain first-person
-    # These appear as embedded quotes with names
-    $text =~ s/'[A-Z][a-z]+ [A-Z][a-z]+ [^']*'//g;
+    # Issue #9: a "'[A-Z][a-z]+ [A-Z][a-z]+ [^']*'" rule used to live here,
+    # intended to strip stray quoted attribution blocks like "'I ventured...'"
+    # when preceded by a contributor name. In practice it matched from the
+    # *first* two-capitalised-word run inside any quoted passage through to
+    # the next apostrophe/closing quote - since apostrophes are common in
+    # ordinary prose (contractions, quoted asides), this frequently ate
+    # through hundreds of characters of genuine factual/hazard text (e.g. a
+    # quoted hazard note beginning "The North Sannox has a large tree below
+    # the grade 4 fall, inspect from the bottom bridge before running." was
+    # deleted wholesale because it starts with two capitalised words). No
+    # verified-genuine match for this rule was found in the real dataset, so
+    # it has been removed rather than narrowed.
 
     # Fix the Tilt "I'll definitely not forget" already handled above
     # Fix remaining "I'll" → "It is worth"
