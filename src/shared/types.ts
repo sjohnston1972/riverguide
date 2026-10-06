@@ -5,8 +5,12 @@ export type TypicalStatus = 'below' | 'typical' | 'above' | 'unknown';
 export type Trend = 'rising' | 'falling' | 'steady' | 'unknown';
 export type Confidence = 'high' | 'medium' | 'low';
 export type Relation = 'on-section' | 'upstream' | 'downstream' | 'proxy';
-/** Where a section's paddling thresholds came from. */
-export type BandBasis = 'guide' | 'typical-relative' | 'manual';
+/**
+ * Where a section's paddling thresholds came from:
+ * guide = metres stated in the guidebook; duration = guidebook wording mapped onto how often the gauge
+ * reaches each level; typical-relative = wording mapped onto SEPA's typical range (gauges without a curve).
+ */
+export type BandBasis = 'guide' | 'duration' | 'typical-relative' | 'manual';
 /** How the headline status was decided. */
 export type StatusBasis = 'manual' | 'estimate' | 'typical' | 'none';
 
@@ -24,6 +28,8 @@ export interface Gauge {
   typical_low: number | null;
   typical_high: number | null;
   typical_status: TypicalStatus;
+  /** Share of days (from three years of daily maxima) on which the current level is reached; null without a curve. */
+  days_reached_pct: number | null;
   stale: boolean;
 }
 

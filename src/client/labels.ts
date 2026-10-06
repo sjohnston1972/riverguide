@@ -56,6 +56,7 @@ export function basisWording(basis: BandBasis, confidence: Confidence): string {
   if (basis === 'manual') return 'Set manually';
   const conf = `${confidence} confidence`;
   if (basis === 'guide') return `Estimated from the guidebook — ${conf}`;
+  if (basis === 'duration') return `Guidebook description matched to how often this gauge reaches each level — ${conf}`;
   return `Based on SEPA typical range — ${conf}`;
 }
 

@@ -11,7 +11,7 @@
 // resumable; delete a cache file to redo that section. Final output is
 // data/enrichment.json — facts and links only, no guide prose — for review.
 //
-// Usage: npm run data:enrich [-- --limit 5] [-- --only slug1,slug2] [-- --relocate]
+// Usage: npm run data:enrich [-- --limit 5] [-- --only slug1,slug2] [-- --relocate] [-- --relink]
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import Anthropic from '@anthropic-ai/sdk';
@@ -20,6 +20,7 @@ import { z } from 'zod';
 import { gridRefToLatLon, type LatLon } from '../src/shared/osgrid.ts';
 import { distanceKm, inScotland } from '../src/shared/geo.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
+import { describeCurve, type DurationCurve } from '../src/shared/duration.ts';
 import type { RawSection } from './build-sections.ts';
 
 const MODEL = 'claude-sonnet-5-5';
@@ -31,12 +32,15 @@ const limit = args.includes('--limit') ? Number(args[args.indexOf('--limit') + 1
 const only = args.includes('--only') ? new Set(args[args.indexOf('--only') + 1].split(',')) : null;
 // Recompute approximate locations (after geocoding fixes); links are redone only where a point moved.
 const relocate = args.includes('--relocate');
+// Redo gauge links and thresholds for every selected section (e.g. after a prompt change).
+const relink = args.includes('--relink');
 
 const sections = (JSON.parse(readFileSync('data/private/sections.raw.json', 'utf8')) as RawSection[])
   .filter((s) => !only || only.has(s.slug))
   .slice(0, limit);
 const gauges = JSON.parse(readFileSync('data/gauges.json', 'utf8')) as SepaStation[];
 const gaugeByNo = new Map(gauges.map((g) => [g.station_no, g]));
+const durations = (JSON.parse(readFileSync('data/gauge-durations.json', 'utf8')) as { curves: Record<string, { curve: DurationCurve } | null> }).curves;
 mkdirSync(CACHE_DIR, { recursive: true });
 
 const client = new Anthropic();
@@ -73,9 +77,15 @@ type Facts = z.infer<typeof Facts>;
 const Link = z.object({
   station_no: z.string().describe('station_no copied exactly from the candidate list'),
   relation: z.enum(['on-section', 'upstream', 'downstream', 'proxy']),
-  band_mode: z.enum(['absolute', 'typical_relative', 'none']),
-  min: z.number().nullable().describe('Lowest runnable level (absolute metres, or fraction of typical range); null if no lower limit'),
-  max: z.number().nullable().describe('Level above which the run becomes too high / changes character; null if not stated'),
+  band_mode: z.enum(['absolute', 'days_reached', 'typical_relative', 'none']),
+  min: z
+    .number()
+    .nullable()
+    .describe('Lowest runnable level: metres (absolute), % of days the level is reached (days_reached), or typical-range fraction; null if no lower limit'),
+  max: z
+    .number()
+    .nullable()
+    .describe('Level above which the run is too high / changes character, in the same unit as min; null if not stated'),
   confidence: z.enum(['high', 'medium', 'low']),
   reason: z.string().describe('At most 25 words, in your own words; no quotations from the guide'),
 });
@@ -256,9 +266,18 @@ Rules:
 - relation: on-section (gauge is on the run), upstream/downstream (same river, off the run), proxy (different river that responds to the same rain).
 - At most 3 links, best first. Prefer gauges on the same river; a proxy only when nothing on the river is usable.
 - band_mode "absolute": the guide gives levels in metres for this specific gauge — copy them into min/max.
-- band_mode "typical_relative": the guide only describes water qualitatively. Express min/max as a fraction of the gauge's typical range,
-  where 0 = SEPA median annual minimum and 1 = median annual maximum. Rough mapping: "runs at most levels" -> min 0.05;
-  "needs some rain" -> min 0.3; "needs to be in spate / high water" -> min 0.6–0.8; "dangerous/flood in high water" -> max ~1.1–1.3.
+- band_mode "days_reached" (use whenever the guide describes water only in words and the gauge has a level-duration curve):
+  express min/max as the PERCENTAGE OF DAYS on which the gauge's daily maximum reaches that level. Each candidate lists
+  the level reached on 90%, 50%, 30%, 20%, 10%, 5% and 2% of days, from three years of SEPA data.
+  min is a larger percentage than max (lower levels are reached more often). Rough guide, adjust to the river's character:
+    "runs at most levels / loch-fed, holds water" -> min 80–95
+    "needs some rain / after moderate rain" -> min 35–55
+    "needs recent heavy rain / medium-high" -> min 20–30
+    "needs to be in spate / very high / rain still falling" -> min 8–15 (small steep creeks 5–10)
+    "too high / flood / dangerous in high water" -> max 2–5 (big-volume rivers may go to 1)
+  You may also use the listed metre values to sanity-check, e.g. a falls that "needs a good covering" on a small creek.
+- band_mode "typical_relative": only for a candidate with no duration curve. Express min/max as a fraction of its typical range
+  (0 = SEPA median annual minimum, 1 = median annual maximum; the maximum is a flood peak, so spate runs start around 0.3–0.45).
 - band_mode "none": the link is useful for watching trends but the guide gives no basis for thresholds.
 - confidence: high = guide names this gauge with numbers; medium = same river and clear qualitative guidance; low = proxy or vague guidance.
 - Ignore references to non-SEPA gauges (painted gauges, websites) except as hints.
@@ -269,7 +288,8 @@ function linksPrompt(s: RawSection, f: Facts, cands: ReturnType<typeof candidate
     .map(
       (g) =>
         `- station_no ${g.station_no}: "${g.name}" on ${g.river ?? 'unknown river'} (catchment ${g.catchment ?? '?'})` +
-        `${g.km != null ? `, ${g.km} km from the section` : ''}, typical range ${g.typical_low ?? '?'}–${g.typical_high ?? '?'} m`,
+        `${g.km != null ? `, ${g.km} km from the section` : ''}, typical range ${g.typical_low ?? '?'}–${g.typical_high ?? '?'} m` +
+        (durations[g.station_no] ? `. Level reached on % of days: ${describeCurve(durations[g.station_no]!.curve)}` : '. No duration curve.'),
     )
     .join('\n');
   return `Section: ${s.page_name} (${f.river}${f.section_name ? `, ${f.section_name}` : ''}), grade ${f.grade_text}, character: ${f.character}.
@@ -308,6 +328,7 @@ await pool(sections, 8, async (s) => {
       c.location = await locate(s, c.facts);
       saveCache(s.slug, c);
     }
+    if (relink) delete c.links;
     if (!c.links) {
       const cands = candidates(c.location.point, c.facts);
       const res = cands.length ? await callClaude(Links, LINKS_SYSTEM, linksPrompt(s, c.facts, cands), 'medium') : { links: [] };

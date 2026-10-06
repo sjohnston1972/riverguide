@@ -46,7 +46,10 @@ Each section links to as many as 3 gauges. A link has a relation (on-section / u
 
 Basis:
 - `guide`: the guidebook gives metres for that gauge.
-- `typical-relative`: the guidebook describes levels only in words, so the threshold is placed within SEPA's median annual min–max range for the gauge. This is the most common basis, so treat it as a rough guide.
+- `duration`: the most common basis. The guidebook describes levels only in words ("needs a spate"), so that wording is matched to the gauge's **level-duration curve**: how often its daily maximum reaches each level over three years of SEPA data. "Needs a spate" might become "reached on about 10% of days", which is then converted to metres along that gauge's own curve. Still an estimate, but it is calibrated to how each river actually behaves.
+- `typical-relative`: the fallback for the few gauges without enough history. The threshold is placed within SEPA's median annual min–max range.
+
+Every gauge also reports `days_reached_pct`, the share of days on which its current level is reached. The river page shows this as "How often".
 - `manual`: set by a person in `data/overrides.json`.
 
 ## Chat guardrails (public site)
@@ -86,8 +89,10 @@ The source is the scraped UKRGB Scotland dataset, which the previous version had
 
 ```sh
 npm run data:gauges      # SEPA → data/gauges.json
+npm run data:durations   # SEPA daily maxima, 3 years → data/gauge-durations.json (re-run yearly)
 npm run data:sections    # source → data/private/sections.raw.json (slugs, grid refs → lat/lon)
 npm run data:enrich      # Claude Sonnet 5.5 + Nominatim → data/enrichment.json  (~$3.50 for all 232; cached per section, resumable)
+                         #   --relink redoes only the gauge links and thresholds (~$2.50)
 npm run data:seed        # → data/private/seed.sql
 npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 ```

@@ -93,7 +93,7 @@ export async function fetchLevelStations(fetcher: typeof fetch = fetch): Promise
 /** Values for many series in one request. `period` is an ISO-8601 duration such as PT3H or P7D. */
 export async function fetchSeriesValues(tsIds: string[], period: string, fetcher: typeof fetch = fetch): Promise<SepaSeries[]> {
   if (tsIds.length === 0) return [];
-  if (!/^P(T?\d+[HDM])+$/.test(period)) throw new Error(`Bad period ${period}`);
+  if (!/^P(T?\d+[HDMWY])+$/.test(period)) throw new Error(`Bad period ${period}`);
   const raw = await getJson(
     `request=getTimeseriesValues&ts_id=${tsIds.map(encodeURIComponent).join(',')}&period=${period}&returnfields=Timestamp,Value&format=json`,
     fetcher,
