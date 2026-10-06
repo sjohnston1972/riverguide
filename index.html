@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>River Guide: Scottish river levels for paddlers</title>
+    <meta name="description" content="Which Scottish whitewater rivers are running now: live SEPA gauge levels, paddling bands, rain forecasts and maps for 232 sections." />
+    <meta name="theme-color" content="#eef3f1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/png" href="/logo-thumb.png" />
+    <link rel="apple-touch-icon" href="/logo-thumb.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" />
+    <script>
+      // Apply a saved theme before first paint.
+      try {
+        var t = localStorage.getItem('rg-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <noscript><p style="padding:1rem">River Guide needs JavaScript to show live river levels.</p></noscript>
+    </div>
+    <script type="module" src="/src/client/main.ts"></script>
+  </body>
+</html>

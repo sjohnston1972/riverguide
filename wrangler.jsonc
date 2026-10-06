@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "riverguide",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "riverguide",
+      "database_id": "9505070b-191b-4b4a-82a9-4c61656b1fbc",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "triggers": {
+    // Latest SEPA readings every 15 minutes; gauge metadata (typical ranges) daily.
+    "crons": ["*/15 * * * *", "0 3 * * *"]
+  },
+  "ratelimits": [
+    {
+      "name": "CHAT_LIMITER",
+      "namespace_id": "4201",
+      "simple": { "limit": 6, "period": 60 }
+    }
+  ],
+  "vars": {
+    "DAILY_SPEND_CAP_USD": "3",
+    "DAILY_MESSAGES_PER_IP": "40",
+    "SHOW_FULL_GUIDE_TEXT": "false",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFPryVRo5mKb-dJF",
+    "AI_GATEWAY_URL": ""
+  },
+  // Secrets (wrangler secret put): ANTHROPIC_API_KEY, SESSION_SECRET, TURNSTILE_SECRET
+  "observability": { "enabled": true }
+}

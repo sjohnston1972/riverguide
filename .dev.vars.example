@@ -1,0 +1,3 @@
+ANTHROPIC_API_KEY=sk-ant-...
+SESSION_SECRET=any-long-random-string
+# TURNSTILE_SECRET=  (omit locally to skip verification)

@@ -1,0 +1,73 @@
+import { describe, expect, it } from 'vitest';
+import { isStale, linkRank, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus } from '../src/shared/status.ts';
+import { latestAndHourAgo, parseTable } from '../src/shared/sepa.ts';
+
+describe('sectionStatus', () => {
+  it('classifies against min and max', () => {
+    expect(sectionStatus(0.4, false, 0.5, 1.2)).toBe('low');
+    expect(sectionStatus(0.8, false, 0.5, 1.2)).toBe('runnable');
+    expect(sectionStatus(1.5, false, 0.5, 1.2)).toBe('high');
+  });
+  it('handles one-sided bands', () => {
+    expect(sectionStatus(0.9, false, 0.5, null)).toBe('runnable');
+    expect(sectionStatus(2, false, null, 1.2)).toBe('high');
+  });
+  it('is unknown when stale, missing or unbanded', () => {
+    expect(sectionStatus(0.8, true, 0.5, 1.2)).toBe('unknown');
+    expect(sectionStatus(null, false, 0.5, 1.2)).toBe('unknown');
+    expect(sectionStatus(0.8, false, null, null)).toBe('unknown');
+  });
+});
+
+describe('typicalStatus / trendFrom / isStale', () => {
+  it('compares to the typical range', () => {
+    expect(typicalStatus(0.2, 0.3, 1.8)).toBe('below');
+    expect(typicalStatus(1.0, 0.3, 1.8)).toBe('typical');
+    expect(typicalStatus(2.0, 0.3, 1.8)).toBe('above');
+    expect(typicalStatus(1.0, null, 1.8)).toBe('unknown');
+  });
+  it('derives trend with a deadband', () => {
+    expect(trendFrom(1.05, 1.0)).toBe('rising');
+    expect(trendFrom(0.95, 1.0)).toBe('falling');
+    expect(trendFrom(1.005, 1.0)).toBe('steady');
+    expect(trendFrom(1.0, null)).toBe('unknown');
+  });
+  it('treats readings older than 3 hours as stale', () => {
+    const now = Date.parse('2026-10-06T12:00:00Z');
+    expect(isStale('2026-10-06T10:00:00Z', now)).toBe(false);
+    expect(isStale('2026-10-06T08:00:00Z', now)).toBe(true);
+    expect(isStale(null, now)).toBe(true);
+  });
+});
+
+describe('linkRank / relativeToAbsolute', () => {
+  it('prefers manual, then confidence, then relation', () => {
+    const manualLow = linkRank({ basis: 'manual', confidence: 'low', relation: 'proxy' });
+    const estHigh = linkRank({ basis: 'guide', confidence: 'high', relation: 'on-section' });
+    const estHighProxy = linkRank({ basis: 'guide', confidence: 'high', relation: 'proxy' });
+    expect(manualLow).toBeLessThan(estHigh);
+    expect(estHigh).toBeLessThan(estHighProxy);
+  });
+  it('maps typical-range fractions to metres', () => {
+    expect(relativeToAbsolute(0.5, 0.2, 1.2)).toBe(0.7);
+    expect(relativeToAbsolute(null, 0.2, 1.2)).toBeNull();
+    expect(relativeToAbsolute(0.5, null, 1.2)).toBeNull();
+  });
+});
+
+describe('SEPA parsing', () => {
+  it('turns KiWIS header+rows into objects', () => {
+    expect(parseTable([['a', 'b'], ['1', '2']])).toEqual([{ a: '1', b: '2' }]);
+    expect(parseTable({ type: 'error' })).toEqual([]);
+  });
+  it('finds the latest value and the value an hour earlier', () => {
+    const pts: Array<[string, number]> = [
+      ['2026-10-06T10:00:00Z', 1.0],
+      ['2026-10-06T10:30:00Z', 1.1],
+      ['2026-10-06T11:00:00Z', 1.2],
+      ['2026-10-06T11:15:00Z', 1.25],
+    ];
+    expect(latestAndHourAgo(pts)).toEqual({ latest: ['2026-10-06T11:15:00Z', 1.25], hourAgo: 1.0 });
+    expect(latestAndHourAgo([])).toEqual({ latest: null, hourAgo: null });
+  });
+});

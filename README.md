@@ -1,138 +1,125 @@
-# River Guide - Scottish Rivers AI Assistant
+# River Guide
 
-A web-based AI chat assistant for Scottish whitewater paddlers. Ask about any Scottish river and get live conditions, grades, hazards, and access information — all in one place.
+Live river levels and an AI assistant for whitewater paddlers in Scotland, running entirely on Cloudflare.
 
-## Features
+- **Rivers first.** Every guidebook section (232) is listed and mapped with its linked SEPA gauge, current level, trend and an estimated status: *runnable*, *low*, *high* or *unknown*. The site works fully without the AI.
+- **Assistant on top.** A chat (Claude Haiku 4.5) answers questions such as "what's running in the West Highlands?". It uses the same data as the pages, so the two never disagree.
+- **Honest about uncertainty.** Paddling thresholds are mostly estimates derived from guidebook prose, and every status says whether it is an estimate, set manually, or only SEPA's typical range.
 
-- **Live River Levels** — Real-time SEPA gauge readings and 24-hour trends
-- **Weather Forecasts** — Current conditions, rainfall, and wind via Open-Meteo
-- **River Grades & Hazards** — Whitewater grades, rapids, portages, and safety info
-- **Access Points** — Put-in/take-out locations and logistics
-- **Dark/Light Theme** — Toggle between themes
-- **Conversational AI** — Multi-turn chat powered by Claude AI with tool use (MCP)
+## Architecture
 
-## How It Works
+```
+Browser (Vite, vanilla TS, Leaflet, uPlot)
+   │  /api/*                           static assets (SPA)
+   ▼
+Cloudflare Worker (Hono) ── D1: gauges, sections, section_gauges, chat_usage, spend
+   │        │                     ▲
+   │        │                     └─ Cron */15: one bulk SEPA KiWIS call refreshes all ~400 gauges
+   │        │                        Cron 03:00: gauge metadata + typical ranges
+   │        ├─ Open-Meteo (edge-cached 30 min)
+   │        └─ SEPA level history (edge-cached 15 min)
+   └─ /api/chat ── Anthropic Messages API (streaming, tool use) → SSE to the browser
+```
 
-The frontend sends messages to a backend API (`/api/mcp/chat`) which orchestrates Claude AI with MCP tools to:
+| Path | What |
+|---|---|
+| `src/worker/` | Worker: routes (`index.ts`), D1 access (`data.ts`), SEPA polling (`poll.ts`), weather, chat guardrails (`guard.ts`), chat loop/tools/prompt (`chat/`) |
+| `src/shared/` | Code shared by the Worker, browser and scripts: API types, SEPA client, status rules, OS grid → WGS84 |
+| `src/client/`, `index.html` | Browser app |
+| `scripts/` | One-off data pipeline (below) |
+| `migrations/` | D1 schema |
+| `data/gauges.json` | SEPA gauge snapshot (OGL; committed) |
+| `data/enrichment.json` | Per-section facts and gauge links/thresholds (committed, reviewable) |
+| `data/overrides.json` | **Manual corrections; always win** |
+| `data/private/` | Guidebook source text, enrichment cache, seed SQL (**gitignored**) |
+| `legacy/` | The previous Docker-hosted version (Express backend + static frontend), kept for reference |
 
-1. Look up detailed river guide data (grades, hazards, descriptions) from the UK Rivers Guidebook dataset
-2. Query SEPA for real-time water levels and station data
-3. Fetch weather forecasts for the river area
-4. Combine everything into an informed, factual response
+### API
 
-The frontend sends only the conversation (`{ "messages": [...] }`) — it does
-not fetch or send a system prompt. See "API Contract" below for the full
-request/response shape and the server-owned system prompt.
+`GET /api/config` · `GET /api/sections` · `GET /api/sections/:slug` · `GET /api/gauges/:no/history?period=P1D|P2D|P7D|P30D` · `GET /api/weather?lat&lon` · `POST /api/chat/session` · `POST /api/chat` (SSE). Types are in `src/shared/types.ts`.
 
-## Data
+### How a status is decided
 
-- **`scotland_rivers_detail.json`** — Comprehensive paddling guide data for Scottish rivers sourced from the UK Rivers Guidebook, including grades, hazards, access points, and descriptions
-- **SEPA API** — Live river level and flow data (queried at runtime)
-- **Open-Meteo** — Weather forecasts (queried at runtime)
+Each section links to as many as 3 gauges. A link has a relation (on-section / upstream / downstream / proxy), optional thresholds (`min_level` = lowest runnable, `max_level` = too high), a basis and a confidence. The headline link is the first manual link; failing that, the most confident and closest link that has thresholds. Readings older than 3 hours count as *unknown*. Logic: `src/shared/status.ts`.
 
-## Tech Stack
+Basis:
+- `guide`: the guidebook gives metres for that gauge.
+- `typical-relative`: the guidebook describes levels only in words, so the threshold is placed within SEPA's median annual min–max range for the gauge. This is the most common basis, so treat it as a rough guide.
+- `manual`: set by a person in `data/overrides.json`.
 
-- **Frontend:** Vanilla HTML, CSS, JavaScript (no frameworks)
-- **AI:** Claude API with MCP tool use
-- **Data Sources:** SEPA, Open-Meteo, UK Rivers Guidebook
+## Chat guardrails (public site)
 
-## Running
+1. Cloudflare Turnstile once, which issues a 2-hour signed session cookie.
+2. A per-IP burst limit (6 per minute, Workers Rate Limiting).
+3. A per-IP daily quota (`DAILY_MESSAGES_PER_IP`, default 40).
+4. A site-wide daily spend cap (`DAILY_SPEND_CAP_USD`, default $3), metered from real token usage. When the cap is reached, chat pauses until midnight UTC and the river pages keep working.
 
-A minimal reference/mock backend lives in `server/` and is enough to run the whole app locally, with no production credentials required.
+A typical question costs about 1¢.
+
+## Data and licensing
+
+- **SEPA** level data: Open Government Licence v3.0.
+- **Open-Meteo**: CC BY 4.0, free for non-commercial use (commercial use needs their paid plan).
+- **OpenStreetMap** tiles and Nominatim geocoding: © OpenStreetMap contributors, ODbL.
+- **River section information** is derived from the [UK Rivers Guidebook](https://www.ukriversguidebook.co.uk). The full write-ups are community content, so the public site shows only short facts (grade, length, location, gauge) and links each section to its UKRGB page for hazards, access and route detail. The full text is used only server-side to ground the assistant. The assistant is told to summarise, never to quote. If UKRGB agree to wider use, set `SHOW_FULL_GUIDE_TEXT=true` and river pages will show it.
+- The guidebook text is **not** in this repository (it lives in `data/private/`, which is gitignored). Earlier commits did include it.
+
+## Development
 
 ```sh
-cd server
-node server.js       # or: npm start
+npm install
+cp .dev.vars.example .dev.vars        # ANTHROPIC_API_KEY, SESSION_SECRET
+npx wrangler d1 migrations apply riverguide --local
+npx wrangler d1 execute riverguide --local --file data/private/seed.sql
+npm run dev                            # http://localhost:5173
+curl "http://localhost:5173/cdn-cgi/handler/scheduled?cron=*/15+*+*+*+*"   # pull current levels
+npm test && npm run typecheck
 ```
 
-Then open **http://localhost:3000** — the server serves the static frontend *and* implements `POST /api/mcp/chat`.
+Without `TURNSTILE_SECRET` the chat session step skips verification, which is meant only for local dev.
 
-- **Mock mode (default):** if `ANTHROPIC_API_KEY` is not set, every chat request gets a canned response in the correct shape, so the UI can be exercised end to end offline. No SEPA/Open-Meteo/Claude credentials needed.
-- **Live mode (optional):** set `ANTHROPIC_API_KEY` in your environment (never commit it) to proxy chat requests to the real Claude Messages API instead, using the system prompt from `prompt.txt`, which the server owns and loads at startup. Note: live mode calls the plain Messages API — it does not implement the `search_rivers` / `get_river_stations` / `get_station_levels` / `get_weather_forecast` / `get_river_guide` MCP tools described in `prompt.txt`; that integration is out of scope for this reference backend (see `server/README.md`).
-- Optional: `PORT` (default `3000`) and `ANTHROPIC_MODEL` (default `claude-sonnet-4-5-20250929`) environment variables.
+## Data pipeline
 
-`server/` has zero npm dependencies (Node's built-in `http`/`https`/`fs` only), so no `npm install` step is required.
+The source is the scraped UKRGB Scotland dataset, which the previous version had already depersonalised: `data/private/scotland_rivers_clean.json`.
 
-See `server/README.md` for backend implementation notes, and the API contract below for the exact request/response shapes.
-
-## API Contract: `POST /api/mcp/chat`
-
-This is the contract the frontend (`script.js`) speaks. The system prompt is **server-owned** — the client does not send one; the backend applies it (e.g. loaded server-side from `prompt.txt`).
-
-### Request
-
-```
-POST /api/mcp/chat
-Content-Type: application/json
+```sh
+npm run data:gauges      # SEPA → data/gauges.json
+npm run data:sections    # source → data/private/sections.raw.json (slugs, grid refs → lat/lon)
+npm run data:enrich      # Claude Sonnet 5.5 + Nominatim → data/enrichment.json  (~$3.50 for all 232; cached per section, resumable)
+npm run data:seed        # → data/private/seed.sql
+npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 ```
 
-Body:
+The enrichment runs two passes per section:
+1. Extract facts and put-in/take-out locations. A grid reference is used only if it literally appears in the text. Otherwise place names are geocoded and the result is marked approximate.
+2. Choose gauges from a shortlist of nearby candidates and propose thresholds, each with a confidence and a one-line reason.
+
+To redo one section, delete its cache file in `data/private/enrich-cache/`.
+
+### Correcting a section (the most valuable maintenance)
+
+Add to `data/overrides.json`, rebuild the seed, and apply it (numbers below are illustrative):
 
 ```json
 {
-  "messages": [
-    { "role": "user", "content": "What are the current levels on the River Etive?" }
-  ]
+  "sections": { "river-leny-a84-layby-to-lade-inn": { "grade_text": "3 (4)" } },
+  "links": {
+    "river-leny-a84-layby-to-lade-inn": [
+      { "station_no": "14888", "relation": "on-section", "min_level": 0.95, "max_level": 1.8, "reason": "Local knowledge: scrapey below 0.95 m on Anie." }
+    ]
+  }
 }
 ```
 
-- `messages` (required, array) — the running conversation, oldest first.
-  - `role`: `"user"` or `"assistant"`.
-  - `content` for a `"user"` message is a plain **string**.
-  - `content` for an `"assistant"` message is the **raw `content` array** from a previous response (see below) — the client echoes it back verbatim as conversation history, it does not flatten it to a string.
+Manual links replace that section's estimated links and are shown as "set manually".
 
-### Success response
-
-`200 OK`:
-
-```json
-{
-  "content": [
-    { "type": "text", "text": "Assistant reply text, in markdown-lite." }
-  ]
-}
-```
-
-- `content` is an array of typed blocks, mirroring the shape of the Claude Messages API response. The client only reads blocks where `type === "text"`, and joins their `text` fields with a blank line to build the rendered reply. Any other block types are present in the array but ignored by the client today.
-
-### Error response
-
-Any non-2xx status, with:
-
-```json
-{ "error": "Human-readable error message" }
-```
-
-The client reads `error` and shows it (or a generic status-based fallback) to the user as the assistant's message.
-
-### Notes
-
-- The five MCP tools referenced in `prompt.txt` (`search_rivers`, `get_river_stations`, `get_station_levels`, `get_weather_forecast`, `get_river_guide`) are the tools a full implementation of this endpoint is expected to call server-side before replying; they are not part of the HTTP contract itself and are invisible to the client.
-- The reference backend in `server/` implements this contract in **mock mode** by default (canned `text` response, no tools called) and can optionally proxy to the real Claude Messages API — see "Running" above.
-- `prompt.txt` must **not** be served as a public static asset. It ships in this repo for reference/version-control purposes; whoever deploys the frontend must keep it out of any publicly reachable static path (don't copy it into the directory a static file server exposes, or add a host-level deny rule for it), so the guardrail text isn't downloadable by visitors at a URL like `/prompt.txt`.
-
-## Data Pipeline: Reword Script
-
-`reword_rivers2.pl` reads `scotland_rivers_detail.json` and rewrites the guide prose fields (`where_is_it`, `water_level`, `general_description`, `other_notes`, `major_hazards`, `access_hassles`) to strip out first-person voice ("we paddled", "I think") and personal contributor names, producing a neutral, factual `scotland_rivers_detail_reworded.json`.
-
-**Prerequisites:** Perl 5 with the core `JSON::PP` module (ships with modern Perl - no CPAN install needed).
-
-**Run it:**
+## Deploy
 
 ```sh
-# Defaults: reads/writes the JSON files committed in the repo root
-perl reword_rivers2.pl
-
-# Or pass explicit paths
-perl reword_rivers2.pl <input.json> <output.json>
+npm run deploy
+npx wrangler secret put ANTHROPIC_API_KEY
+npx wrangler secret put SESSION_SECRET      # any long random string
+npx wrangler secret put TURNSTILE_SECRET    # from the Turnstile widget
 ```
 
-**Verify the output before trusting it:** the rewrite is a long chain of regex substitutions over safety-relevant data (grades, hazards, access notes), so a change to the rules can silently delete more than intended. `verify_reword.pl` compares the rewritten output against the source field-by-field and flags any field that lost a suspicious amount of content:
-
-```sh
-perl verify_reword.pl                      # compares the repo's own before/after JSON
-perl verify_reword.pl <original.json> <reworded.json>
-perl verify_reword.pl --strict             # exit non-zero if anything is flagged (CI use)
-```
-
-It prints a warning per flagged field (river, field, characters lost) and a summary line. It doesn't fail the run by default - the rewrite legitimately removes some text - it's meant for a human to eyeball the flagged list after any change to the rewrite rules.
+Optional: set `AI_GATEWAY_URL` (for example `https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`) to route Claude calls through Cloudflare AI Gateway for logs and analytics.
