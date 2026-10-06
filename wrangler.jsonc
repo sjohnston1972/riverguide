@@ -30,6 +30,8 @@
     }
   ],
   "vars": {
+    // Master switch for the AI chat. "false" hides the chat UI and rejects /api/chat*.
+    "CHAT_ENABLED": "false",
     "DAILY_SPEND_CAP_USD": "3",
     "DAILY_MESSAGES_PER_IP": "40",
     "SHOW_FULL_GUIDE_TEXT": "false",

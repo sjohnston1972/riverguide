@@ -21,7 +21,7 @@ import { getWeather } from './weather.ts';
 type HonoEnv = { Bindings: AppEnv };
 const app = new Hono<HonoEnv>();
 
-const chatEnabled = (env: AppEnv) => Boolean(env.ANTHROPIC_API_KEY && env.SESSION_SECRET);
+const chatEnabled = (env: AppEnv) => flag(env.CHAT_ENABLED) && Boolean(env.ANTHROPIC_API_KEY && env.SESSION_SECRET);
 
 app.onError((err, c) => {
   console.error(err);
