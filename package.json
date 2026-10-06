@@ -1,0 +1,34 @@
+{
+  "name": "riverguide",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && wrangler deploy",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p src/worker",
+    "test": "vitest run",
+    "cf-typegen": "wrangler types src/worker/worker-configuration.d.ts",
+    "data:sections": "node scripts/build-sections.ts",
+    "data:gauges": "node scripts/fetch-gauges.ts",
+    "data:enrich": "node --env-file=.env scripts/enrich.ts",
+    "data:seed": "node scripts/build-seed.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "hono": "^4.13.13",
+    "leaflet": "^1.9.4",
+    "uplot": "^1.6.32",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.63.0",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.148.0"
+  }
+}
