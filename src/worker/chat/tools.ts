@@ -147,6 +147,7 @@ async function run(name: ToolName, input: unknown, t: ToolContext): Promise<unkn
           stale: l.gauge.stale,
           trend: l.gauge.trend,
           typical_range_m: [l.gauge.typical_low, l.gauge.typical_high],
+          current_level_reached_on_pct_of_days: l.gauge.days_reached_pct,
           runnable_from_m: l.min_level,
           too_high_above_m: l.max_level,
           threshold_basis: l.basis,

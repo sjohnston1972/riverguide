@@ -1,6 +1,7 @@
 // D1 access: rows -> API objects, with statuses computed from the latest readings.
 
 import { distanceKm } from '../shared/geo.ts';
+import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
 import { isStale, linkRank, sectionStatus, trendFrom, typicalStatus } from '../shared/status.ts';
 import type {
   BandBasis,
@@ -28,6 +29,7 @@ interface GaugeRow {
   level: number | null;
   level_at: string | null;
   level_hour_ago: number | null;
+  duration_curve: string | null;
 }
 
 interface SectionRow {
@@ -68,6 +70,7 @@ const SUMMARY_COLUMNS =
 
 export function toGauge(r: GaugeRow, now = Date.now()): Gauge {
   const stale = isStale(r.level_at, now);
+  const curve = parseJson<DurationCurve>(r.duration_curve);
   return {
     station_no: r.station_no,
     name: r.name,
@@ -81,6 +84,7 @@ export function toGauge(r: GaugeRow, now = Date.now()): Gauge {
     typical_low: r.typical_low,
     typical_high: r.typical_high,
     typical_status: stale ? 'unknown' : typicalStatus(r.level, r.typical_low, r.typical_high),
+    days_reached_pct: stale || r.level == null || !curve?.length ? null : pctForLevel(curve, r.level),
     stale,
   };
 }

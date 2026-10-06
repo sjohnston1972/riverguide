@@ -12,6 +12,7 @@
     "cf-typegen": "wrangler types src/worker/worker-configuration.d.ts",
     "data:sections": "node scripts/build-sections.ts",
     "data:gauges": "node scripts/fetch-gauges.ts",
+    "data:durations": "node scripts/fetch-durations.ts",
     "data:enrich": "node --env-file=.env scripts/enrich.ts",
     "data:seed": "node scripts/build-seed.ts"
   },

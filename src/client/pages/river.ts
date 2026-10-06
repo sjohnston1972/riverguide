@@ -214,6 +214,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         : TYPICAL_LABEL[g.typical_status];
     const rows: [string, string][] = [['Gauge', single ? `${g.name}. ${RELATION_LABEL[l.relation]}` : RELATION_LABEL[l.relation]], ['Paddling band', band]];
     if (l.min_level != null || l.max_level != null) rows.push(['Basis', basisWording(l.basis, l.confidence)]);
+    if (g.days_reached_pct != null) rows.push(['How often', `This level is reached on ${daysText(g.days_reached_pct)} of days`]);
     rows.push(['Typical range', typical]);
 
     const out: Node[] = [
@@ -230,6 +231,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
     if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
+  }
+
+  function daysText(pct: number): string {
+    if (pct >= 99) return 'over 99%';
+    if (pct <= 0.5) return 'under 1%';
+    return `${pct < 10 ? pct.toFixed(1).replace(/.0$/, '') : Math.round(pct)}%`;
   }
 
   function facts(d: SectionDetail): HTMLElement {

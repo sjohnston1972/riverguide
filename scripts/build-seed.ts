@@ -1,5 +1,6 @@
 // Builds data/private/seed.sql from:
 //   data/gauges.json        SEPA gauge snapshot (public)
+//   data/gauge-durations.json  level-duration curves from SEPA daily maxima (public)
 //   data/enrichment.json    reviewed facts + gauge links (public)
 //   data/overrides.json     manual corrections — always win (public)
 //   data/private/sections.raw.json   guide text (private, server-side only)
@@ -8,6 +9,7 @@
 //              npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { type DurationCurve, levelForPct } from '../src/shared/duration.ts';
 import { relativeToAbsolute } from '../src/shared/status.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
 import type { GuideText } from '../src/shared/types.ts';
@@ -16,7 +18,7 @@ import type { RawSection } from './build-sections.ts';
 interface EnrichedLink {
   station_no: string;
   relation: string;
-  band_mode: 'absolute' | 'typical_relative' | 'none';
+  band_mode: 'absolute' | 'days_reached' | 'typical_relative' | 'none';
   min: number | null;
   max: number | null;
   confidence: string;
@@ -63,6 +65,8 @@ const enriched = read<Enriched[]>('data/enrichment.json');
 const overrides = read<Overrides>('data/overrides.json');
 const raw = new Map(read<RawSection[]>('data/private/sections.raw.json').map((s) => [s.slug, s]));
 const gaugeByNo = new Map(gauges.map((g) => [g.station_no, g]));
+const curves = read<{ curves: Record<string, { curve: DurationCurve } | null> }>('data/gauge-durations.json').curves;
+const curveOf = (stationNo: string) => curves[stationNo]?.curve ?? null;
 
 function sql(v: unknown): string {
   if (v == null) return 'NULL';
@@ -77,9 +81,9 @@ const out: string[] = ['DELETE FROM section_gauges;', 'DELETE FROM sections;'];
 
 for (const g of gauges) {
   out.push(
-    `INSERT INTO gauges (station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high) VALUES ${row([
-      g.station_no, g.name, g.river, g.catchment, g.lat, g.lon, g.ts_id, g.typical_low, g.typical_high,
-    ])} ON CONFLICT(station_no) DO UPDATE SET name = excluded.name, river = excluded.river, catchment = excluded.catchment, lat = excluded.lat, lon = excluded.lon, ts_id = excluded.ts_id, typical_low = excluded.typical_low, typical_high = excluded.typical_high;`,
+    `INSERT INTO gauges (station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, duration_curve) VALUES ${row([
+      g.station_no, g.name, g.river, g.catchment, g.lat, g.lon, g.ts_id, g.typical_low, g.typical_high, curveOf(g.station_no),
+    ])} ON CONFLICT(station_no) DO UPDATE SET name = excluded.name, river = excluded.river, catchment = excluded.catchment, lat = excluded.lat, lon = excluded.lon, ts_id = excluded.ts_id, typical_low = excluded.typical_low, typical_high = excluded.typical_high, duration_curve = excluded.duration_curve;`,
   );
 }
 
@@ -103,13 +107,20 @@ for (const e of enriched) {
     ? manual.map((m) => ({ ...m, basis: 'manual', confidence: m.confidence ?? 'high' }))
     : e.links.map((l) => {
         const g = gaugeByNo.get(l.station_no);
-        const rel = l.band_mode === 'typical_relative';
+        const curve = curveOf(l.station_no);
+        const convert = (v: number | null): number | null => {
+          if (v == null || l.band_mode === 'none') return null;
+          if (l.band_mode === 'absolute') return v;
+          if (l.band_mode === 'days_reached') return curve ? levelForPct(curve, v) : null;
+          return relativeToAbsolute(v, g?.typical_low ?? null, g?.typical_high ?? null);
+        };
+        const basis = l.band_mode === 'absolute' ? 'guide' : l.band_mode === 'days_reached' ? 'duration' : 'typical-relative';
         return {
           station_no: l.station_no,
           relation: l.relation,
-          min_level: l.band_mode === 'none' ? null : rel ? relativeToAbsolute(l.min, g?.typical_low ?? null, g?.typical_high ?? null) : l.min,
-          max_level: l.band_mode === 'none' ? null : rel ? relativeToAbsolute(l.max, g?.typical_low ?? null, g?.typical_high ?? null) : l.max,
-          basis: rel ? 'typical-relative' : 'guide',
+          min_level: convert(l.min),
+          max_level: convert(l.max),
+          basis,
           confidence: l.confidence,
           reason: l.reason,
         };
