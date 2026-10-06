@@ -35,9 +35,10 @@ export function sectionStatus(level: number | null, stale: boolean, min: number 
 const CONFIDENCE_RANK: Record<Confidence, number> = { high: 0, medium: 1, low: 2 };
 const RELATION_RANK: Record<Relation, number> = { 'on-section': 0, upstream: 1, downstream: 1, proxy: 2 };
 
-/** Sort key for choosing a section's headline gauge: manual first, then confidence, then proximity of relation. */
+/** Sort key for choosing a section's headline gauge: manual, then community, then confidence and proximity of relation. */
 export function linkRank(l: { basis: string; confidence: Confidence; relation: Relation }): number {
-  return (l.basis === 'manual' ? 0 : 100) + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
+  const basis = l.basis === 'manual' ? 0 : l.basis === 'community' ? 50 : 100;
+  return basis + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
 }
 
 /**

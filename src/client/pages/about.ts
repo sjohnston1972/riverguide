@@ -44,8 +44,16 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         ),
         h('dt', null, 'Based on SEPA typical range'),
         h('dd', null, "For the few gauges without enough history: thresholds are placed within the gauge's typical range (between its median annual low and high)."),
+        h('dt', null, 'Set from community reports'),
+        h(
+          'dd',
+          null,
+          'Paddlers report how a section was (too low, scrapy, good, pushy or too high), and the gauge level at that time is recorded. Once a section has at least 5 reports from 3 people on 2 different days, its band is set where the reports change from too low to runnable and from runnable to too high. Marked ',
+          h('abbr', { class: 'est est-community', title: 'Thresholds set from community paddling reports' }, 'community'),
+          '. Community bands replace estimates.',
+        ),
         h('dt', null, 'Set manually'),
-        h('dd', null, 'Set by hand for this section. Manual bands take priority over estimates.'),
+        h('dd', null, 'Set by hand for this section. Manual bands take priority over everything else.'),
       ),
       h('p', null, 'Rising, falling and steady compare the latest reading with the one an hour earlier.'),
 
@@ -57,6 +65,18 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, h('strong', null, 'Weather: '), ext('https://open-meteo.com/', 'Open-Meteo'), ', licensed under ', ext('https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0'), '.'),
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
         h('li', null, h('strong', null, 'River sections: '), 'section names, grades and level advice are derived from ', ext('https://www.ukriversguidebook.co.uk/', 'UK Rivers Guidebook'), '. The full write-ups, with hazards, access and route details, live there. Please read them, and contribute updates when things change.'),
+      ),
+
+      h('h2', null, 'Community reports'),
+      h(
+        'p',
+        null,
+        'Reports are anonymous and public. A quick automated check runs the first time you report or vote from a device. "Same for me" adds weight to a report. Reports that more people disagree with than agree with, from 3 or more people, stop counting. Each device can make one report per section per day.',
+      ),
+      h(
+        'p',
+        null,
+        "Keep notes to river conditions. Notes that several people report as inappropriate are hidden, and reports can be removed by the site's maintainer. Don't post personal information.",
       ),
 
       h('h2', null, 'The chat assistant'),

@@ -105,7 +105,7 @@ api
     document.dispatchEvent(new CustomEvent('rg:config'));
   })
   .catch(() => {
-    config = { chat_enabled: false, turnstile_site_key: null, show_full_guide_text: false };
+    config = { chat_enabled: false, community_enabled: false, turnstile_site_key: null, show_full_guide_text: false };
   });
 
 function render(route: Route, nav: { pop: boolean }): void {

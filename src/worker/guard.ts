@@ -39,6 +39,30 @@ export async function verifySession(secret: string, token: string | undefined, n
   return timingSafeEqual(token.slice(i + 1), await hmac(secret, payload));
 }
 
+// Anonymous device identity for community reports: a signed random id in a
+// long-lived HttpOnly cookie, issued after one Turnstile check.
+export const DEVICE_COOKIE = 'rg_dev';
+const DEVICE_TTL_S = 365 * 24 * 60 * 60;
+
+export async function signDevice(secret: string, nowS = Math.floor(Date.now() / 1000)): Promise<string> {
+  const payload = `${nowS + DEVICE_TTL_S}.${crypto.randomUUID()}`;
+  return `${payload}.${await hmac(secret, `dev:${payload}`)}`;
+}
+
+/** The device id if the token is valid and unexpired, else null. */
+export async function verifyDevice(secret: string, token: string | undefined, nowS = Math.floor(Date.now() / 1000)): Promise<string | null> {
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [exp, id, sig] = parts;
+  if (!Number.isFinite(Number(exp)) || Number(exp) < nowS) return null;
+  return timingSafeEqual(sig, await hmac(secret, `dev:${exp}.${id}`)) ? id : null;
+}
+
+export function deviceCookie(token: string): string {
+  return `${DEVICE_COOKIE}=${token}; Path=/api; Max-Age=${DEVICE_TTL_S}; HttpOnly; Secure; SameSite=Lax`;
+}
+
 export function sessionCookie(token: string): string {
   return `${SESSION_COOKIE}=${token}; Path=/api/chat; Max-Age=${SESSION_TTL_S}; HttpOnly; Secure; SameSite=Strict`;
 }

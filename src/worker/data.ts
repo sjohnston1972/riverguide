@@ -103,6 +103,37 @@ function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
   };
 }
 
+interface CommunityBandRow {
+  slug: string;
+  station_no: string;
+  min_level: number | null;
+  max_level: number | null;
+  reports: number;
+  people: number;
+  confidence: Confidence;
+}
+
+/** Community-derived thresholds take over from estimates (never from a manual band). */
+function withCommunity(l: LinkRow, band: CommunityBandRow | undefined): LinkRow {
+  if (!band || l.basis === 'manual') return l;
+  return {
+    ...l,
+    min_level: band.min_level,
+    max_level: band.max_level,
+    basis: 'community',
+    confidence: band.confidence,
+    reason: `Set from ${band.reports} paddler reports by ${band.people} people.`,
+  };
+}
+
+async function communityBands(db: D1Database, slug?: string): Promise<Map<string, CommunityBandRow>> {
+  const { results } = await (slug
+    ? db.prepare('SELECT * FROM community_bands WHERE slug = ?').bind(slug)
+    : db.prepare('SELECT * FROM community_bands')
+  ).all<CommunityBandRow>();
+  return new Map(results.map((b) => [`${b.slug}|${b.station_no}`, b]));
+}
+
 function headline(links: SectionGaugeLink[]): {
   status: SectionSummary['status'];
   status_basis: StatusBasis;
@@ -111,7 +142,8 @@ function headline(links: SectionGaugeLink[]): {
   const sorted = [...links].sort((a, b) => linkRank(a) - linkRank(b));
   const banded = sorted.find((l) => l.min_level != null || l.max_level != null);
   if (banded) {
-    return { status: banded.status, status_basis: banded.basis === 'manual' ? 'manual' : 'estimate', link: banded };
+    const basis: StatusBasis = banded.basis === 'manual' ? 'manual' : banded.basis === 'community' ? 'community' : 'estimate';
+    return { status: banded.status, status_basis: basis, link: banded };
   }
   const first = sorted[0] ?? null;
   return { status: 'unknown', status_basis: first ? 'typical' : 'none', link: first };
@@ -132,7 +164,7 @@ function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>,
     location_precision: s.location_precision,
     status: h.status,
     status_basis: h.status_basis,
-    status_confidence: h.status_basis === 'estimate' || h.status_basis === 'manual' ? (h.link?.confidence ?? null) : null,
+    status_confidence: h.status_basis === 'typical' || h.status_basis === 'none' ? null : (h.link?.confidence ?? null),
     station_no: h.link?.station_no ?? null,
     gauge_name: h.link?.gauge.name ?? null,
     level: h.link?.gauge.level ?? null,
@@ -149,17 +181,18 @@ async function allGauges(db: D1Database): Promise<Map<string, Gauge>> {
 }
 
 export async function listSections(db: D1Database): Promise<SectionSummary[]> {
-  const [sections, links, gauges] = await Promise.all([
+  const [sections, links, gauges, bands] = await Promise.all([
     db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM sections ORDER BY name`).all<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges ORDER BY rowid').all<LinkRow>(),
     allGauges(db),
+    communityBands(db),
   ]);
   const bySlug = new Map<string, SectionGaugeLink[]>();
   for (const l of links.results) {
     const g = gauges.get(l.station_no);
     if (!g) continue;
     const arr = bySlug.get(l.slug) ?? [];
-    arr.push(toLink(l, g));
+    arr.push(toLink(withCommunity(l, bands.get(`${l.slug}|${l.station_no}`)), g));
     bySlug.set(l.slug, arr);
   }
   return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? []));
@@ -181,16 +214,17 @@ export interface DetailWithGuide {
 
 /** Section detail. `guide` is returned separately so callers decide whether it may leave the server. */
 export async function getSection(db: D1Database, slug: string): Promise<DetailWithGuide | null> {
-  const [row, links, gauges] = await Promise.all([
+  const [row, links, gauges, bands] = await Promise.all([
     db.prepare('SELECT * FROM sections WHERE slug = ?').bind(slug).first<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges WHERE slug = ? ORDER BY rowid').bind(slug).all<LinkRow>(),
     allGauges(db),
+    communityBands(db, slug),
   ]);
   if (!row) return null;
   const linked = links.results
     .flatMap((l) => {
       const g = gauges.get(l.station_no);
-      return g ? [toLink(l, g)] : [];
+      return g ? [toLink(withCommunity(l, bands.get(`${l.slug}|${l.station_no}`)), g)] : [];
     })
     .sort((a, b) => linkRank(a) - linkRank(b));
   const linkedNos = new Set(linked.map((l) => l.station_no));

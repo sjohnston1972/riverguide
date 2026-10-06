@@ -549,6 +549,11 @@ button {
   margin-left: 4px;
 }
 
+.est-community {
+  color: var(--st-runnable-ink, var(--st-runnable));
+  text-decoration: none;
+}
+
 .lvl {
   display: inline-flex;
   align-items: baseline;
@@ -1515,6 +1520,38 @@ button {
   background: var(--ink-3);
 }
 
+/* Community report dots under the band bar, coloured by verdict. */
+.bb-dots {
+  position: relative;
+  height: 14px;
+  margin-top: 4px;
+}
+
+.bb-dot {
+  position: absolute;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--rule-strong);
+}
+
+.v-too_low { background: var(--st-low); }
+.v-scrapy { background: color-mix(in srgb, var(--st-low) 45%, var(--st-runnable)); }
+.v-good { background: var(--st-runnable); }
+.v-pushy { background: color-mix(in srgb, var(--st-high) 45%, var(--st-runnable)); }
+.v-too_high { background: var(--st-high); }
+
+.bb-dot-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--st-low) 0 33%, var(--st-runnable) 33% 66%, var(--st-high) 66%);
+}
+
 /* Graph */
 .graph-area {
   min-height: 220px;
@@ -2250,5 +2287,217 @@ button {
 
   .site-main {
     padding-bottom: 48px;
+  }
+}
+
+/* ---------- Community level reports ---------- */
+.community {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.community-head {
+  display: grid;
+  gap: 2px;
+}
+
+.community-head h2 {
+  font-size: 1.05rem;
+}
+
+.community > .btn {
+  justify-self: start;
+}
+
+.notice-ok {
+  border-color: color-mix(in srgb, var(--st-runnable) 45%, transparent);
+  background: var(--st-runnable-tint);
+}
+
+.report-form {
+  display: grid;
+  gap: 12px;
+}
+
+.report-form fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.report-form legend,
+.note-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.note-label {
+  display: grid;
+  gap: 4px;
+}
+
+.verdicts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.verdict {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 52px;
+  padding: 8px 4px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.verdict[aria-pressed='true'] {
+  background: var(--surface);
+  border-color: var(--loch);
+  box-shadow: inset 0 0 0 2px var(--loch);
+}
+
+.vdot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.when {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.form-msg:empty {
+  display: none;
+}
+
+.form-msg {
+  font-size: 0.9rem;
+  color: var(--st-high-ink);
+}
+
+.fine-print {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.community-check:empty {
+  display: none;
+}
+
+.reports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.report {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.report-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 0.9rem;
+}
+
+.verdict-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.verdict-tag .vdot {
+  width: 10px;
+  height: 10px;
+}
+
+.report-level {
+  font-variant-numeric: tabular-nums;
+}
+
+.report-when {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.report-note {
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: inherit;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+}
+
+.vote[aria-pressed='true'] {
+  border-color: var(--loch);
+  box-shadow: inset 0 0 0 1px var(--loch);
+}
+
+.vote:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.vote-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 599px) {
+  .verdicts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .vote-label {
+    display: none;
   }
 }

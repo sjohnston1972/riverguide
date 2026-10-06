@@ -10,9 +10,9 @@ export type Relation = 'on-section' | 'upstream' | 'downstream' | 'proxy';
  * guide = metres stated in the guidebook; duration = guidebook wording mapped onto how often the gauge
  * reaches each level; typical-relative = wording mapped onto SEPA's typical range (gauges without a curve).
  */
-export type BandBasis = 'guide' | 'duration' | 'typical-relative' | 'manual';
+export type BandBasis = 'guide' | 'duration' | 'typical-relative' | 'community' | 'manual';
 /** How the headline status was decided. */
-export type StatusBasis = 'manual' | 'estimate' | 'typical' | 'none';
+export type StatusBasis = 'manual' | 'community' | 'estimate' | 'typical' | 'none';
 
 export interface Gauge {
   station_no: string;
@@ -128,7 +128,55 @@ export interface Weather {
 export interface PublicConfig {
   turnstile_site_key: string | null;
   chat_enabled: boolean;
+  community_enabled: boolean;
   show_full_guide_text: boolean;
+}
+
+// ---- Community level reports ----
+
+export type Verdict = 'too_low' | 'scrapy' | 'good' | 'pushy' | 'too_high';
+
+export interface CommunityReport {
+  id: string;
+  station_no: string | null;
+  gauge_name: string | null;
+  paddled_at: string;
+  level: number | null;
+  verdict: Verdict;
+  /** Null when there is no note or it was hidden after flags. */
+  note: string | null;
+  created_at: string;
+  agrees: number;
+  disagrees: number;
+  /** This device's vote: 1, -1 or 0. */
+  my_vote: number;
+  mine: boolean;
+}
+
+export interface CommunityBandInfo {
+  station_no: string;
+  min_level: number | null;
+  max_level: number | null;
+  reports: number;
+  people: number;
+  confidence: Confidence;
+}
+
+export interface CommunityReports {
+  reports: CommunityReport[];
+  band: CommunityBandInfo | null;
+  /** Evidence so far towards a community band, and what is required. */
+  progress: { reports: number; people: number; days: number; need: { reports: number; people: number; days: number } };
+  /** Whether this device has passed the bot check (it can then report and vote). */
+  verified: boolean;
+  enabled: boolean;
+}
+
+export interface NewReport {
+  verdict: Verdict;
+  /** ISO time the section was paddled; within the last 7 days. */
+  paddled_at: string;
+  note?: string;
 }
 
 // ---- Chat (POST /api/chat, Server-Sent Events) ----

@@ -1,6 +1,6 @@
 // Typed fetch helpers for the Worker API, with small in-memory caches.
 
-import type { LevelHistory, PublicConfig, SectionDetail, SectionSummary, Weather } from '../shared/types.ts';
+import type { CommunityReport, CommunityReports, LevelHistory, NewReport, PublicConfig, SectionDetail, SectionSummary, Weather } from '../shared/types.ts';
 
 export class ApiError extends Error {
   constructor(
@@ -25,8 +25,19 @@ export async function errorFrom(res: Response): Promise<ApiError> {
   return new ApiError(res.status, message, code);
 }
 
-async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(url, { signal, headers: { accept: 'application/json' } });
+async function getJson<T>(url: string, signal?: AbortSignal, cache: RequestCache = 'default'): Promise<T> {
+  const res = await fetch(url, { signal, cache, headers: { accept: 'application/json' } });
+  if (!res.ok) throw await errorFrom(res);
+  return (await res.json()) as T;
+}
+
+async function send<T>(method: 'POST' | 'DELETE', url: string, body?: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    credentials: 'same-origin',
+    headers: body === undefined ? { accept: 'application/json' } : { accept: 'application/json', 'content-type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
   if (!res.ok) throw await errorFrom(res);
   return (await res.json()) as T;
 }
@@ -58,7 +69,7 @@ export const api = {
   section(slug: string, force = false): Promise<SectionDetail> {
     const hit = detailCache.get(slug);
     if (!force && hit && Date.now() - hit.at < 60_000) return hit.p;
-    const p = getJson<SectionDetail>(`/api/sections/${encodeURIComponent(slug)}`);
+    const p = getJson<SectionDetail>(`/api/sections/${encodeURIComponent(slug)}`, undefined, force ? 'no-cache' : 'default');
     detailCache.set(slug, { at: Date.now(), p });
     p.catch(() => detailCache.delete(slug));
     return p;
@@ -66,6 +77,30 @@ export const api = {
 
   history(stationNo: string, period: string, signal?: AbortSignal): Promise<LevelHistory> {
     return getJson(`/api/gauges/${encodeURIComponent(stationNo)}/history?period=${encodeURIComponent(period)}`, signal);
+  },
+
+  reports(slug: string, signal?: AbortSignal): Promise<CommunityReports> {
+    return getJson(`/api/sections/${encodeURIComponent(slug)}/reports`, signal, 'no-store');
+  },
+
+  verifyDevice(token: string | null): Promise<{ ok: true }> {
+    return send('POST', '/api/community/verify', token ? { token } : {});
+  },
+
+  submitReport(slug: string, report: NewReport): Promise<{ report: CommunityReport }> {
+    return send('POST', `/api/sections/${encodeURIComponent(slug)}/reports`, report);
+  },
+
+  vote(id: string, vote: 1 | -1 | 0): Promise<{ report: CommunityReport }> {
+    return send('POST', `/api/reports/${encodeURIComponent(id)}/vote`, { vote });
+  },
+
+  flag(id: string): Promise<{ ok: true }> {
+    return send('POST', `/api/reports/${encodeURIComponent(id)}/flag`, {});
+  },
+
+  deleteReport(id: string): Promise<{ ok: true }> {
+    return send('DELETE', `/api/reports/${encodeURIComponent(id)}`);
   },
 
   weather(lat: number, lon: number, signal?: AbortSignal): Promise<Weather> {
