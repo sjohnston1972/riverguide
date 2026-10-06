@@ -71,53 +71,165 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     head.querySelector('.facts')?.remove();
     head.append(h('p', { class: 'river-sub' }, sub), facts(d));
 
-    const headlineLink = d.links.find((l) => l.station_no === d.station_no) ?? null;
-    const main = h(
-      'div',
-      { class: 'col-main' },
-      statusHero(d, headlineLink),
-      guideNotice(d),
-      gaugesSection(d.links),
-      d.station_no ? graphSection(d, headlineLink) : null,
-      d.guide ? guideSection(d.guide) : null,
-    );
+    const main = h('div', { class: 'col-main' }, nowCard(d), guideBanner(d), d.guide ? guideSection(d.guide) : null);
     const side = h('div', { class: 'col-side' }, weatherSection(d), placesSection(d), nearbySection(d));
     clear(body);
     body.append(h('div', { class: 'river-grid' }, main, side));
   }
 
-  // ---- Status hero ----
-  function statusHero(d: SectionDetail, link: SectionGaugeLink | null): HTMLElement {
-    const askBtn = h('button', { type: 'button', class: 'btn btn-primary ask-btn', hidden: !ctx.config()?.chat_enabled }, icon(ICONS.chat), 'Ask about this river');
+  // ---- Now card: section status, linked gauges (as tabs) and level history ----
+  function nowCard(d: SectionDetail): HTMLElement {
+    const askBtn = h(
+      'button',
+      { type: 'button', class: 'btn btn-primary btn-sm ask-btn', hidden: !ctx.config()?.chat_enabled, 'aria-label': 'Ask about this river' },
+      icon(ICONS.chat),
+      h('span', { class: 'ask-long' }, 'Ask about this river'),
+      h('span', { class: 'ask-short', 'aria-hidden': 'true' }, 'Ask'),
+    );
     askBtn.addEventListener('click', () => ctx.openChat({ slug: d.slug, name: d.name }));
     const onConfig = () => (askBtn.hidden = !ctx.config()?.chat_enabled);
     document.addEventListener('rg:config', onConfig);
     cleanups.push(() => document.removeEventListener('rg:config', onConfig));
 
+    // Headline gauge first, then the rest in ranked order.
+    const headline = d.links.find((l) => l.station_no === d.station_no) ?? null;
+    const links = headline ? [headline, ...d.links.filter((l) => l !== headline)] : d.links;
+
     let basis: string;
     if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
-    else if (d.status_basis === 'estimate') basis = link ? `${basisWording(link.basis, link.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
-    else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range below.';
+    else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
+    else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
     else basis = 'No SEPA gauge is linked to this section.';
 
-    const g = link?.gauge ?? null;
-    const reading = g
-      ? h(
-          'p',
-          { class: 'hero-reading' },
-          g.level != null ? levelWithTrend(g.level, g.trend) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
-          h('span', { class: 'hero-gauge' }, g.trend !== 'unknown' && g.level != null ? `${TREND_LABEL[g.trend]} at ${g.name}` : `at ${g.name}`),
-          h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
-        )
-      : null;
-
-    return h(
-      'section',
+    const top = h(
+      'div',
       { class: `status-hero st-${d.status}`, 'aria-label': 'Current status' },
       h('div', { class: 'hero-top' }, statusPill(d.status, 'lg'), h('p', { class: 'hero-basis' }, basis)),
-      reading,
       h('div', { class: 'hero-actions' }, askBtn),
     );
+    const card = h('section', { class: 'now-card' }, top);
+    if (!links.length) {
+      card.append(h('div', { class: 'now-body' }, h('p', { class: 'muted' }, 'No SEPA gauge is linked to this section. Check the guidebook for level advice.')));
+      return card;
+    }
+
+    const multi = links.length > 1;
+    const panel = h('div', { class: 'gauge-panel', id: `gauge-panel-${d.slug}`, role: multi ? 'tabpanel' : null });
+    const graphArea = h('div', { class: 'graph-area' });
+    let selected = 0;
+    let period = 'P2D';
+    let graph: LevelGraph | null = null;
+    let seq = 0;
+    cleanups.push(() => graph?.destroy());
+
+    const tabs = links.map((l, i) => {
+      const t = h(
+        'button',
+        { type: 'button', role: 'tab', class: 'gauge-tab', id: `gauge-tab-${l.station_no}`, 'aria-controls': panel.id, 'aria-selected': String(i === 0), tabindex: i === 0 ? '0' : '-1' },
+        h('span', { class: 'gauge-tab-name' }, l.gauge.name),
+        h('span', { class: 'gauge-tab-meta' }, statusPill(l.status), l.gauge.level != null ? h('span', null, formatLevel(l.gauge.level)) : null),
+      );
+      t.addEventListener('click', () => select(i));
+      t.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const next = (selected + step + links.length) % links.length;
+        select(next);
+        tabs[next].focus();
+      });
+      return t;
+    });
+
+    const periodBtns = PERIODS.map(([p, label]) => {
+      const b = h('button', { type: 'button', class: 'seg', 'aria-pressed': String(p === period) }, label);
+      b.addEventListener('click', () => {
+        period = p;
+        periodBtns.forEach((x, i) => x.setAttribute('aria-pressed', String(PERIODS[i][0] === p)));
+        void draw();
+      });
+      return b;
+    });
+
+    function select(i: number): void {
+      selected = i;
+      tabs.forEach((t, j) => {
+        t.setAttribute('aria-selected', String(j === i));
+        t.tabIndex = j === i ? 0 : -1;
+      });
+      if (multi) panel.setAttribute('aria-labelledby', tabs[i].id);
+      panel.replaceChildren(...gaugeDetail(links[i], !multi));
+      void draw();
+    }
+
+    async function draw(): Promise<void> {
+      const my = ++seq;
+      const link = links[selected];
+      graph?.destroy();
+      graph = null;
+      graphArea.replaceChildren(h('div', { class: 'skel skel-graph', 'aria-hidden': 'true' }));
+      try {
+        const [hist, mod] = await Promise.all([api.history(link.station_no, period, abort.signal), import('../graph.ts')]);
+        if (destroyed || my !== seq) return;
+        graphArea.replaceChildren();
+        if (!hist.points.length) {
+          graphArea.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
+          return;
+        }
+        graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level });
+      } catch (e) {
+        if (destroyed || my !== seq || (e instanceof DOMException && e.name === 'AbortError')) return;
+        graphArea.replaceChildren(errorBox("Couldn't load the level history.", () => void draw()));
+      }
+    }
+
+    card.append(
+      h(
+        'div',
+        { class: 'now-body' },
+        multi ? h('div', { class: 'gauge-tabs', role: 'tablist', 'aria-label': 'Linked SEPA gauges' }, tabs) : null,
+        panel,
+        h(
+          'div',
+          { class: 'now-graph' },
+          h('div', { class: 'now-graph-head' }, h('h2', null, 'Level history'), h('div', { class: 'segmented', role: 'group', 'aria-label': 'Period' }, periodBtns)),
+          graphArea,
+        ),
+      ),
+    );
+    select(0);
+    return card;
+  }
+
+  /** One linked gauge: reading, band bar and compact facts. */
+  function gaugeDetail(l: SectionGaugeLink, single: boolean): Node[] {
+    const g = l.gauge;
+    let band = 'None set for this gauge';
+    if (l.min_level != null && l.max_level != null) band = `Runnable ${formatLevel(l.min_level)} to ${formatLevel(l.max_level)}`;
+    else if (l.min_level != null) band = `Runnable from ${formatLevel(l.min_level)}`;
+    else if (l.max_level != null) band = `Too high above ${formatLevel(l.max_level)}`;
+    const typical =
+      g.typical_low != null && g.typical_high != null
+        ? `${TYPICAL_LABEL[g.typical_status]} (${formatLevel(g.typical_low)} to ${formatLevel(g.typical_high)})`
+        : TYPICAL_LABEL[g.typical_status];
+    const rows: [string, string][] = [['Gauge', single ? `${g.name}. ${RELATION_LABEL[l.relation]}` : RELATION_LABEL[l.relation]], ['Paddling band', band]];
+    if (l.min_level != null || l.max_level != null) rows.push(['Basis', basisWording(l.basis, l.confidence)]);
+    rows.push(['Typical range', typical]);
+
+    const out: Node[] = [
+      h(
+        'p',
+        { class: 'hero-reading' },
+        g.level != null ? levelWithTrend(g.level, g.trend) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
+        h('span', { class: 'hero-gauge' }, g.trend !== 'unknown' && g.level != null ? `${TREND_LABEL[g.trend]} at ${g.name}` : `at ${g.name}`),
+        h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
+      ),
+    ];
+    const bar = bandBar(l);
+    if (bar) out.push(bar);
+    out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
+    if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
+    return out;
   }
 
   function facts(d: SectionDetail): HTMLElement {
@@ -134,102 +246,20 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     );
   }
 
-  function guideNotice(d: SectionDetail): HTMLElement {
+  function guideBanner(d: SectionDetail): HTMLElement {
     const url = safeUrl(d.ukrgb_url);
     const updated = formatDate(d.source_updated);
     return h(
       'aside',
       { class: 'guide-notice' },
-      h('p', { class: 'guide-notice-main' }, 'Hazards, access and route details: read the full, current write-up on UK Rivers Guidebook before paddling.'),
-      url ? h('a', { class: 'btn btn-outline', href: url, target: '_blank', rel: 'noopener' }, 'Open on UK Rivers Guidebook', icon(ICONS.external)) : null,
-      updated ? h('p', { class: 'guide-notice-date' }, `Guide entry last updated ${updated}.`) : null,
-    );
-  }
-
-  // ---- Gauges ----
-  function gaugesSection(links: SectionGaugeLink[]): HTMLElement {
-    return h(
-      'section',
-      { class: 'block' },
-      h('h2', null, links.length === 1 ? 'Gauge' : 'Gauges'),
-      links.length ? links.map(gaugeCard) : h('p', { class: 'muted' }, 'No SEPA gauge is linked to this section. Check the guidebook for level advice.'),
-    );
-  }
-
-  function gaugeCard(l: SectionGaugeLink): HTMLElement {
-    const g = l.gauge;
-    const band: string[] = [];
-    if (l.min_level != null) band.push(`Runnable from ${formatLevel(l.min_level)}.`);
-    if (l.max_level != null) band.push(`Too high above ${formatLevel(l.max_level)}.`);
-    const typical =
-      g.typical_low != null && g.typical_high != null
-        ? `${TYPICAL_LABEL[g.typical_status]} (${formatLevel(g.typical_low)} to ${formatLevel(g.typical_high)}).`
-        : `${TYPICAL_LABEL[g.typical_status]}.`;
-    return h(
-      'article',
-      { class: 'gauge-card' },
-      h('header', { class: 'gauge-head' }, h('div', null, h('h3', null, g.name), h('p', { class: 'gauge-rel' }, RELATION_LABEL[l.relation])), statusPill(l.status)),
       h(
         'p',
-        { class: 'gauge-reading' },
-        g.level != null ? levelWithTrend(g.level, g.trend) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
-        g.level != null && g.trend !== 'unknown' ? h('span', { class: 'muted' }, TREND_LABEL[g.trend]) : null,
-        h('span', { class: g.stale ? 'reading-time stale' : 'reading-time' }, g.stale ? `Stale: ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
+        { class: 'guide-notice-main' },
+        h('strong', null, 'Before paddling: '),
+        'read the full, current write-up on UK Rivers Guidebook for hazards, access and route details.',
+        updated ? h('span', { class: 'guide-notice-date' }, ` Guide entry last updated ${updated}.`) : null,
       ),
-      bandBar(l),
-      h('p', { class: 'band-text' }, band.length ? band.join(' ') : 'No paddling band set for this gauge.'),
-      band.length ? h('p', { class: 'basis' }, basisWording(l.basis, l.confidence)) : null,
-      l.reason ? h('p', { class: 'reason' }, l.reason) : null,
-      h('p', { class: 'typical muted' }, typical),
-    );
-  }
-
-  // ---- Graph ----
-  function graphSection(d: SectionDetail, link: SectionGaugeLink | null): HTMLElement {
-    const station = d.station_no!;
-    const area = h('div', { class: 'graph-area' });
-    let period = 'P2D';
-    let graph: LevelGraph | null = null;
-    let seq = 0;
-    cleanups.push(() => graph?.destroy());
-
-    const buttons = PERIODS.map(([p, label]) => {
-      const b = h('button', { type: 'button', class: 'seg', 'aria-pressed': String(p === period) }, label);
-      b.addEventListener('click', () => {
-        period = p;
-        buttons.forEach((x, i) => x.setAttribute('aria-pressed', String(PERIODS[i][0] === p)));
-        void draw();
-      });
-      return b;
-    });
-
-    async function draw(): Promise<void> {
-      const my = ++seq;
-      graph?.destroy();
-      graph = null;
-      area.replaceChildren(h('div', { class: 'skel skel-graph', 'aria-hidden': 'true' }));
-      try {
-        const [hist, mod] = await Promise.all([api.history(station, period, abort.signal), import('../graph.ts')]);
-        if (destroyed || my !== seq) return;
-        area.replaceChildren();
-        if (!hist.points.length) {
-          area.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
-          return;
-        }
-        graph = mod.levelGraph(area, hist.points, { min: link?.min_level, max: link?.max_level });
-      } catch (e) {
-        if (destroyed || my !== seq || (e instanceof DOMException && e.name === 'AbortError')) return;
-        area.replaceChildren(errorBox("Couldn't load the level history.", () => void draw()));
-      }
-    }
-    void draw();
-
-    return h(
-      'section',
-      { class: 'block' },
-      h('div', { class: 'block-head' }, h('h2', null, 'Level history'), h('div', { class: 'segmented', role: 'group', 'aria-label': 'Period' }, buttons)),
-      h('p', { class: 'muted block-sub' }, `SEPA gauge at ${d.gauge_name ?? station}.`),
-      area,
+      url ? h('a', { class: 'btn btn-outline btn-sm', href: url, target: '_blank', rel: 'noopener' }, 'Open on UKRGB', icon(ICONS.external)) : null,
     );
   }
 

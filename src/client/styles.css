@@ -1163,24 +1163,204 @@ button {
 }
 
 .guide-notice {
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 14px;
   border-radius: var(--radius);
   background: var(--surface);
-  border: 2px solid var(--loch);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--loch);
 }
 
 .guide-notice-main {
-  font-weight: 600;
-  font-size: 1.05rem;
-  line-height: 1.4;
+  flex: 1 1 280px;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
 .guide-notice-date {
-  font-size: 0.875rem;
   color: var(--ink-2);
+}
+
+/* Now card: status header + gauge tabs + selected gauge + level history. */
+.now-card {
+  display: grid;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.now-card > .status-hero {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+}
+
+.now-body {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  min-width: 0;
+}
+
+.gauge-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px 2px;
+}
+
+.gauge-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.gauge-tab {
+  flex: 0 0 auto;
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  padding: 7px 12px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+}
+
+.gauge-tab:hover {
+  border-color: var(--rule-strong);
+}
+
+.gauge-tab[aria-selected='true'] {
+  background: var(--surface);
+  border-color: var(--loch);
+  box-shadow: inset 0 0 0 1px var(--loch);
+}
+
+.gauge-tab-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.gauge-tab-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.gauge-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gauge-panel .hero-reading .lvl {
+  font-size: 2.2rem;
+}
+
+.gauge-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 14px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.gauge-facts dt {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.gauge-facts dd {
+  margin: 0;
+}
+
+.now-graph {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.now-graph-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.now-graph-head h2 {
+  font-size: 1.05rem;
+}
+
+.now-card .graph-area {
+  min-height: 200px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ask-short {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .ask-long {
+    display: none;
+  }
+
+  .ask-short {
+    display: inline;
+  }
+
+  /* Facts in one row when they fit, otherwise wrap; no column rules. */
+  .facts {
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    column-gap: 12px;
+  }
+
+  .fact:nth-child(odd) {
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 899px) {
+  .river-head {
+    padding: 8px 0 14px;
+  }
+
+  .fact {
+    padding: 7px 0;
+  }
+
+  .fact dd {
+    font-size: 1.05rem;
+  }
+
+  .river-grid,
+  .col-main,
+  .col-side {
+    gap: 16px;
+  }
+
+  .mini-map {
+    height: 180px;
+  }
 }
 
 .block {
@@ -1197,42 +1377,11 @@ button {
   gap: 8px;
 }
 
-.block-sub {
-  margin-top: -6px;
-  font-size: 0.9rem;
-}
 
-.gauge-card {
-  display: grid;
-  gap: 10px;
-  padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-}
 
-.gauge-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
 
-.gauge-rel {
-  font-size: 0.85rem;
-  color: var(--ink-2);
-}
 
-.gauge-reading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
-}
 
-.gauge-reading .lvl {
-  font-size: 1.7rem;
-}
 
 .reading-time {
   font-size: 0.875rem;
@@ -1243,23 +1392,12 @@ button {
   color: var(--st-high-ink);
 }
 
-.band-text {
-  font-weight: 600;
-}
 
-.basis {
-  font-size: 0.9rem;
-  color: var(--ink-2);
-  font-style: italic;
-}
 
 .reason {
   font-size: 0.95rem;
 }
 
-.typical {
-  font-size: 0.875rem;
-}
 
 /* The gauge board: band bar. */
 .bandbar {
