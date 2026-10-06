@@ -2,6 +2,8 @@
 
 Live river levels and an AI assistant for whitewater paddlers in Scotland, running entirely on Cloudflare.
 
+**Live:** https://riverguide.clydeford.net (also https://riverguide.stevie-johnston.workers.dev)
+
 - **Rivers first.** Every guidebook section (232) is listed and mapped with its linked SEPA gauge, current level, trend and an estimated status: *runnable*, *low*, *high* or *unknown*. The site works fully without the AI.
 - **Assistant on top.** A chat (Claude Haiku 4.5) answers questions such as "what's running in the West Highlands?". It uses the same data as the pages, so the two never disagree.
 - **Honest about uncertainty.** Paddling thresholds are mostly estimates derived from guidebook prose, and every status says whether it is an estimate, set manually, or only SEPA's typical range.
