@@ -27,11 +27,18 @@
       "name": "CHAT_LIMITER",
       "namespace_id": "4201",
       "simple": { "limit": 6, "period": 60 }
+    },
+    {
+      "name": "COMMUNITY_LIMITER",
+      "namespace_id": "4202",
+      "simple": { "limit": 10, "period": 60 }
     }
   ],
   "vars": {
     // Master switch for the AI chat. "false" hides the chat UI and rejects /api/chat*.
     "CHAT_ENABLED": "false",
+    // Community level reports and votes. "false" hides the UI and rejects writes.
+    "COMMUNITY_ENABLED": "true",
     "DAILY_SPEND_CAP_USD": "3",
     "DAILY_MESSAGES_PER_IP": "40",
     "SHOW_FULL_GUIDE_TEXT": "false",

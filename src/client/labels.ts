@@ -51,9 +51,11 @@ export function characterLabel(c: string | null): string | null {
 }
 
 export const ESTIMATE_TOOLTIP = 'Thresholds estimated from guidebook descriptions';
+export const COMMUNITY_TOOLTIP = 'Thresholds set from community paddling reports';
 
 export function basisWording(basis: BandBasis, confidence: Confidence): string {
   if (basis === 'manual') return 'Set manually';
+  if (basis === 'community') return `Set from community paddling reports — ${confidence} confidence`;
   const conf = `${confidence} confidence`;
   if (basis === 'guide') return `Estimated from the guidebook — ${conf}`;
   if (basis === 'duration') return `Guidebook description matched to how often this gauge reaches each level — ${conf}`;

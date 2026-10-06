@@ -52,6 +52,33 @@ Basis:
 Every gauge also reports `days_reached_pct`, the share of days on which its current level is reached. The river page shows this as "How often".
 - `manual`: set by a person in `data/overrides.json`.
 
+## Community level reports
+
+On each river page, under "Paddled it?", anyone can say how a section was: **too low · scrapy · good · pushy · too high**, plus a day, a time of day and an optional note. The Worker records the headline gauge's level at that time from SEPA history. Other people can respond with 👍 "Same for me" (adds weight) or 👎 "Not for me".
+
+- **Community band.** Once a section has at least 5 reports from 3 people (distinct hashed IPs) on 2 different days, `src/shared/community.ts` sets the lower threshold where reports change from too low to runnable, and the upper threshold where they change from runnable to too high. A side with no evidence keeps the estimate. One-sided evidence can only move a threshold in the direction it supports. The band is stored in `community_bands` and overrides estimates, but never manual bands (precedence: manual > community > estimate). It shows as "community" in the list.
+- **Disputed reports** stop counting when 3 or more people disagree and disagreements outnumber agreements.
+- **Abuse controls.**
+  - One Turnstile check per device, which issues a signed 1-year `rg_dev` cookie.
+  - 10 writes per minute per IP.
+  - 10 reports per IP per day.
+  - One report per device per section per day.
+  - Reports up to 7 days old only.
+  - Votes are one per device, and you can't vote on your own report.
+- **Reporting content.** A "Report note" link sits on each note. A note flagged 3 times is hidden. People can delete their own reports.
+- **Kill switch.** Set `COMMUNITY_ENABLED` to `"false"` and redeploy.
+
+Moderation (D1):
+
+```sh
+# recent reports
+npx wrangler d1 execute riverguide --remote --command "SELECT id, slug, verdict, level, paddled_at, note, hidden FROM reports ORDER BY created_at DESC LIMIT 20"
+# hide a report (then visit the section once, or vote, to recompute its band, or clear its band row)
+npx wrangler d1 execute riverguide --remote --command "UPDATE reports SET hidden = 1 WHERE id = '<id>'; DELETE FROM community_bands WHERE slug = '<slug>'"
+# hide every report from one device
+npx wrangler d1 execute riverguide --remote --command "UPDATE reports SET hidden = 1 WHERE device = (SELECT device FROM reports WHERE id = '<id>')"
+```
+
 ## Chat guardrails (public site)
 
 1. Cloudflare Turnstile once, which issues a 2-hour signed session cookie.

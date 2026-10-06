@@ -1,9 +1,10 @@
 // River section page.
 
 import { distanceKm } from '../../shared/geo.ts';
-import type { Gauge, GuideText, PlacePoint, SectionDetail, SectionGaugeLink, Weather } from '../../shared/types.ts';
+import type { CommunityReports, Gauge, GuideText, PlacePoint, SectionDetail, SectionGaugeLink, Weather } from '../../shared/types.ts';
 import { ApiError, api } from '../api.ts';
-import { bandBar } from '../bandbar.ts';
+import { bandBar, type ReportDot } from '../bandbar.ts';
+import { communityPanel } from '../community.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
 import { clear, h, icon, safeUrl } from '../dom.ts';
 import { lastListHref } from '../filters.ts';
@@ -71,14 +72,30 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     head.querySelector('.facts')?.remove();
     head.append(h('p', { class: 'river-sub' }, sub), facts(d));
 
-    const main = h('div', { class: 'col-main' }, nowCard(d), guideBanner(d), d.guide ? guideSection(d.guide) : null);
+    const reports = api.reports(slug);
+    reports.catch(() => undefined);
+    let now = nowCard(d, reports);
+    // A new report or vote can move the community band: refresh the status card in place.
+    const onChange = () => {
+      void api
+        .section(slug, true)
+        .then((fresh) => {
+          if (destroyed) return;
+          const next = nowCard(fresh, api.reports(slug));
+          now.replaceWith(next);
+          now = next;
+        })
+        .catch(() => undefined);
+    };
+    const community = communityPanel({ slug, gaugeName: d.gauge_name, siteKey: ctx.config()?.turnstile_site_key ?? null, data: reports, onChange });
+    const main = h('div', { class: 'col-main' }, now, community, guideBanner(d), d.guide ? guideSection(d.guide) : null);
     const side = h('div', { class: 'col-side' }, weatherSection(d), placesSection(d), nearbySection(d));
     clear(body);
     body.append(h('div', { class: 'river-grid' }, main, side));
   }
 
   // ---- Now card: section status, linked gauges (as tabs) and level history ----
-  function nowCard(d: SectionDetail): HTMLElement {
+  function nowCard(d: SectionDetail, reports: Promise<CommunityReports>): HTMLElement {
     const askBtn = h(
       'button',
       { type: 'button', class: 'btn btn-primary btn-sm ask-btn', hidden: !ctx.config()?.chat_enabled, 'aria-label': 'Ask about this river' },
@@ -97,6 +114,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     let basis: string;
     if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
+    else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
     else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
     else basis = 'No SEPA gauge is linked to this section.';
@@ -158,9 +176,28 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         t.tabIndex = j === i ? 0 : -1;
       });
       if (multi) panel.setAttribute('aria-labelledby', tabs[i].id);
-      panel.replaceChildren(...gaugeDetail(links[i], !multi));
+      renderPanel();
       void draw();
     }
+
+    // Community report dots per gauge, filled in when reports arrive.
+    let dots = new Map<string, ReportDot[]>();
+    function renderPanel(): void {
+      const l = links[selected];
+      panel.replaceChildren(...gaugeDetail(l, !multi, dots.get(l.station_no) ?? []));
+    }
+    reports
+      .then((r) => {
+        dots = new Map();
+        for (const rep of r.reports) {
+          if (rep.level == null || !rep.station_no) continue;
+          const arr = dots.get(rep.station_no) ?? [];
+          arr.push({ level: rep.level, verdict: rep.verdict });
+          dots.set(rep.station_no, arr);
+        }
+        if (!destroyed && dots.size) renderPanel();
+      })
+      .catch(() => undefined);
 
     async function draw(): Promise<void> {
       const my = ++seq;
@@ -202,7 +239,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   /** One linked gauge: reading, band bar and compact facts. */
-  function gaugeDetail(l: SectionGaugeLink, single: boolean): Node[] {
+  function gaugeDetail(l: SectionGaugeLink, single: boolean, dots: ReportDot[] = []): Node[] {
     const g = l.gauge;
     let band = 'None set for this gauge';
     if (l.min_level != null && l.max_level != null) band = `Runnable ${formatLevel(l.min_level)} to ${formatLevel(l.max_level)}`;
@@ -226,7 +263,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
       ),
     ];
-    const bar = bandBar(l);
+    const bar = bandBar(l, dots);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
     if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));

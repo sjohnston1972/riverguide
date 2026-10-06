@@ -16,6 +16,7 @@ import {
   verifyTurnstile,
 } from './guard.ts';
 import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata } from './poll.ts';
+import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { getWeather } from './weather.ts';
 
 type HonoEnv = { Bindings: AppEnv };
@@ -32,6 +33,7 @@ app.get('/api/config', (c) => {
   const body: PublicConfig = {
     turnstile_site_key: c.env.TURNSTILE_SITE_KEY || null,
     chat_enabled: chatEnabled(c.env),
+    community_enabled: communityEnabled(c.env),
     show_full_guide_text: flag(c.env.SHOW_FULL_GUIDE_TEXT),
   };
   return c.json(body);
@@ -107,6 +109,8 @@ app.post('/api/chat', async (c) => {
 
   return chatStream(env, c.executionCtx as ExecutionContext, parsed.data);
 });
+
+registerCommunityRoutes(app);
 
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 
