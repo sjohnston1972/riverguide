@@ -1,4 +1,4 @@
-// "Paddled it?" panel: community level reports for a section, with a quick
+// "Paddled it recently?" panel: community level reports for a section, with a quick
 // report form and "same for me / not for me" votes.
 
 import { BAND_RULES, VERDICT_LABEL, VERDICTS } from '../shared/community.ts';
@@ -254,7 +254,7 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
   function render(): void {
     if (!state) return;
     const s = state;
-    const head = h('div', { class: 'community-head' }, h('h2', null, 'Paddled it?'), h('p', { class: 'muted' }, progressText(s)));
+    const head = h('div', { class: 'community-head' }, h('h2', null, 'Paddled it recently?'), h('p', { class: 'muted' }, progressText(s)));
     const list = s.reports.length
       ? h(
           'ul',
@@ -274,12 +274,12 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
     root.replaceChildren(head, flashMsg ? h('p', { class: 'notice notice-ok', role: 'status' }, flashMsg) : '', cta, list ?? '', more ?? '', expanded ? '' : tsBox);
   }
 
-  root.append(h('div', { class: 'community-head' }, h('h2', null, 'Paddled it?'), h('p', { class: 'muted loading' }, 'Loading community reports…')));
+  root.append(h('div', { class: 'community-head' }, h('h2', null, 'Paddled it recently?'), h('p', { class: 'muted loading' }, 'Loading community reports…')));
   o.data
     .then((d) => {
       state = d;
       render();
     })
-    .catch(() => root.replaceChildren(h('div', { class: 'community-head' }, h('h2', null, 'Paddled it?'), h('p', { class: 'muted' }, "Couldn't load community reports."))));
+    .catch(() => root.replaceChildren(h('div', { class: 'community-head' }, h('h2', null, 'Paddled it recently?'), h('p', { class: 'muted' }, "Couldn't load community reports."))));
   return root;
 }

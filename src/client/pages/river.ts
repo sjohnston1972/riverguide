@@ -122,10 +122,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const links = headline ? [headline, ...d.links.filter((l) => l !== headline)] : d.links;
 
     const step = headline?.step ?? null;
-    let basis: string | Node;
-    if (d.status_basis === 'paddler')
-      basis = h('span', null, step ? `${STEP_LABEL[step]} on the paddler scale from ` : 'Paddler-set levels from ', wtwLink(), '.');
-    else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
+    // Paddler-scale sections need no explanation here: the step tag says it (credit is on the About page).
+    let basis: string | Node | null = null;
+    if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
     else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
@@ -138,7 +137,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         'div',
         { class: 'hero-top' },
         h('div', { class: 'hero-pills' }, statusPill(d.status, 'lg'), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null, tomorrowTag(d)),
-        h('p', { class: 'hero-basis' }, basis),
+        basis ? h('p', { class: 'hero-basis' }, basis) : null,
         d.release_today ? h('p', { class: 'release-today' }, 'Scheduled release today.') : null,
       ),
       h('div', { class: 'hero-actions' }, askBtn),
@@ -255,7 +254,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         ? `${TYPICAL_LABEL[g.typical_status]} (${formatLevel(g.typical_low)} to ${formatLevel(g.typical_high)})`
         : TYPICAL_LABEL[g.typical_status];
     const rows: [string, string][] = [['Gauge', `${g.name}, ${RELATION_LABEL[l.relation]}`], ['Paddling band', band]];
-    if (l.min_level != null || l.max_level != null) rows.push(['Basis', basisWording(l.basis, l.confidence)]);
+    if ((l.min_level != null || l.max_level != null) && l.basis !== 'paddler') rows.push(['Basis', basisWording(l.basis, l.confidence)]);
     if (g.days_reached_pct != null) rows.push(['How often', `This level is reached on ${daysText(g.days_reached_pct)} of days`]);
     rows.push(['Typical range', typical]);
 
@@ -273,8 +272,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const bar = bandBar(l);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
-    if (l.basis === 'paddler') out.push(h('p', { class: 'reason' }, l.levels ? 'Levels set by paddlers on ' : 'Gauge used by ', wtwLink(), l.levels ? '.' : '; paddler levels not set yet.'));
-    else if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
+    if (l.basis !== 'paddler' && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
   }
 
