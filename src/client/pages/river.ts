@@ -72,9 +72,10 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     ctx.setTitle(d.name);
     title.textContent = d.name;
     const sub = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
+    head.querySelector('.river-grade')?.remove();
     head.querySelector('.river-sub')?.remove();
     head.querySelector('.facts')?.remove();
-    head.append(h('p', { class: 'river-sub' }, sub), facts(d));
+    head.append(gradeLine(d), h('p', { class: 'river-sub' }, sub), facts(d));
 
     const reports = api.reports(slug);
     reports.catch(() => undefined);
@@ -315,17 +316,31 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return `${pct < 10 ? pct.toFixed(1).replace(/\.0$/, '') : Math.round(pct)}%`;
   }
 
+  /** The grade, prominently, with a note when it has a bracketed harder feature. */
+  function gradeLine(d: SectionDetail): HTMLElement {
+    const grade = d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade\s*/i, '') : '';
+    const bracket = grade.match(/\(([^)]+)\)/);
+    return h(
+      'div',
+      { class: 'river-grade', hidden: !grade },
+      h('span', { class: 'grade-badge', 'aria-label': `Grade ${grade}` }, h('span', { class: 'grade-badge-label' }, 'Grade'), h('span', { class: 'grade-badge-value' }, grade)),
+      bracket && /^\s*\d/.test(bracket[1])
+        ? h('span', { class: 'grade-note' }, `(${bracket[1].trim()}): a harder rapid or optional feature, often portaged`)
+        : null,
+    );
+  }
+
   function facts(d: SectionDetail): HTMLElement {
     const items: [string, string | null][] = [
-      ['Grade', d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade /, '') : null],
       ['Length', d.length_text],
       ['Time', d.time_text],
       ['Character', characterLabel(d.character)],
     ];
+    const present = items.filter(([, v]) => v);
     return h(
       'dl',
-      { class: 'facts' },
-      items.filter(([, v]) => v).map(([k, v]) => h('div', { class: 'fact' }, h('dt', null, k), h('dd', null, v!))),
+      { class: 'facts', hidden: present.length === 0 },
+      present.map(([k, v]) => h('div', { class: 'fact' }, h('dt', null, k), h('dd', null, v!))),
     );
   }
 

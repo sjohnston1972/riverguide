@@ -1072,6 +1072,42 @@ button {
   justify-self: start;
 }
 
+.river-grade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 4px;
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 14px 7px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  line-height: 1.1;
+}
+
+.grade-badge-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.grade-badge-value {
+  font: 700 1.35rem/1.1 var(--font-display);
+}
+
+.grade-note {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+}
+
 .river-sub {
   color: var(--ink-2);
   font-size: 1.05rem;
@@ -2323,7 +2359,9 @@ button {
 /* ---------- Wider screens ---------- */
 @media (min-width: 640px) {
   .facts {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
   }
 
   .fact:nth-child(odd) {
