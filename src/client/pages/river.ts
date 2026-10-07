@@ -78,7 +78,14 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     head.querySelector('.river-grade')?.remove();
     head.querySelector('.river-sub')?.remove();
     head.querySelector('.facts')?.remove();
-    head.append(gradeLine(d), h('p', { class: 'river-sub' }, sub), facts(d));
+    head.querySelector('.river-source')?.remove();
+    head.append(
+      gradeLine(d),
+      h('p', { class: 'river-sub' }, sub),
+      facts(d),
+      // Sections added from Where's the Water: their grade, length and access come from it.
+      d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), ' (', ccLink(), ').') : '',
+    );
 
     const reports = api.reports(slug);
     reports.catch(() => undefined);
@@ -275,7 +282,17 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
     if (l.basis === 'paddler')
-      out.push(h('p', { class: 'reason' }, 'Paddler levels from ', wtwLink(), ' (', h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'), ').'));
+      out.push(
+        h(
+          'p',
+          { class: 'reason' },
+          l.levels ? 'Paddler levels from ' : 'Gauge chosen by ',
+          wtwLink(),
+          ' (',
+          ccLink(),
+          l.levels ? ').' : '); no paddler levels set for it yet.',
+        ),
+      );
     else if (!estimate && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
   }
@@ -336,6 +353,10 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       panel.focus({ preventScroll: true });
     });
     return a;
+  }
+
+  function ccLink(): HTMLElement {
+    return h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0');
   }
 
   function wtwLink(): HTMLElement {
@@ -440,7 +461,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         'check a current guidebook and local knowledge for hazards, access and route details. River Guide does not show them, and trees, landslips and works change without notice.',
         updated ? h('span', { class: 'guide-notice-date' }, ` Section information last updated ${updated}.`) : null,
         d.source === 'wtw'
-          ? h('span', { class: 'guide-notice-date' }, ' Section information from ', wtwLink(), ' (', h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'), ').')
+          ? h('span', { class: 'guide-notice-date' }, ' Section information from ', wtwLink(), ' (', ccLink(), ').')
           : null,
       ),
     );

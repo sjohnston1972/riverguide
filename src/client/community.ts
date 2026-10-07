@@ -80,7 +80,7 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
   function progressText(s: CommunityReports): string {
     if (s.band) return `Paddling band set from ${s.band.reports} reports by ${s.band.people} people.`;
     const { reports, people, days } = s.progress;
-    if (!reports) return `Tell others how it was. With ${BAND_RULES.reports} reports from ${BAND_RULES.people} people on ${BAND_RULES.days} different days, the community sets this river's levels.`;
+    if (!reports) return `Tell others how it was. With ${BAND_RULES.reports} reports from ${BAND_RULES.people} people on ${BAND_RULES.days} different days, the community sets this river's paddleable ranges.`;
     const left: string[] = [];
     if (reports < BAND_RULES.reports) left.push(`${BAND_RULES.reports - reports} more report${BAND_RULES.reports - reports === 1 ? '' : 's'}`);
     if (people < BAND_RULES.people) left.push(`${BAND_RULES.people - people} more ${BAND_RULES.people - people === 1 ? 'person' : 'people'}`);
