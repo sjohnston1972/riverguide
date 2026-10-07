@@ -64,10 +64,22 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
     };
     const dpr = window.devicePixelRatio || 1;
 
+    /** A threshold drawn on the chart, or, when it is off the scale, an arrowed label at that edge. */
     const hLine = (u: uPlot, v: number, color: string, label: string, below: boolean) => {
       const y = Math.round(u.valToPos(v, 'y', true));
       const { left, top, width, height } = u.bbox;
-      if (y < top || y > top + height) return;
+      if (y < top || y > top + height) {
+        const above = y < top;
+        const ctx = u.ctx;
+        ctx.save();
+        ctx.fillStyle = color;
+        ctx.font = `600 ${11 * dpr}px system-ui, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = above ? 'top' : 'bottom';
+        ctx.fillText(`${label} ${above ? '↑' : '↓'}`, left + width - 6 * dpr, above ? top + 4 * dpr : top + height - 4 * dpr);
+        ctx.restore();
+        return;
+      }
       const ctx = u.ctx;
       ctx.save();
       ctx.strokeStyle = color;
@@ -95,12 +107,18 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
       scales: {
         x: { time: true },
         y: {
+          // Fit the readings; pull in a threshold only when it is near them, so a
+          // distant "too high" line doesn't flatten the curve (it gets an edge label instead).
           range: (_u, dmin, dmax) => {
+            if (!Number.isFinite(dmin) || !Number.isFinite(dmax)) return [0, 1];
             let lo = dmin;
             let hi = dmax;
-            if (min != null) lo = Math.min(lo, min);
-            if (max != null) hi = Math.max(hi, max);
-            if (!Number.isFinite(lo) || !Number.isFinite(hi)) return [0, 1];
+            const reach = Math.max(0.25, dmax - dmin);
+            for (const t of [min, max]) {
+              if (t == null || t < dmin - reach || t > dmax + reach) continue;
+              lo = Math.min(lo, t);
+              hi = Math.max(hi, t);
+            }
             const pad = Math.max((hi - lo) * 0.12, 0.05);
             return [lo - pad, hi + pad];
           },
@@ -143,8 +161,13 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
         ],
         draw: [
           (u) => {
-            if (min != null) hLine(u, min, c.run, `Runnable from ${min.toFixed(2)} m`, true);
-            if (max != null) hLine(u, max, c.high, `Too high above ${max.toFixed(2)} m`, false);
+            const yMin = u.scales.y.min ?? 0;
+            const yMax = u.scales.y.max ?? 0;
+            // Both thresholds off the same edge: only label the nearer one.
+            const bothAbove = min != null && max != null && min > yMax;
+            const bothBelow = min != null && max != null && max < yMin;
+            if (min != null && !bothBelow) hLine(u, min, c.run, `Runnable from ${min.toFixed(2)} m`, true);
+            if (max != null && !bothAbove) hLine(u, max, c.high, `Too high above ${max.toFixed(2)} m`, false);
           },
         ],
       },

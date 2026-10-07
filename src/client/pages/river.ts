@@ -128,7 +128,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
     else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
-    else basis = 'No SEPA gauge is linked to this section.';
+    else if (d.status_basis === 'none') basis = 'No SEPA gauge is linked to this section.';
 
     const top = h(
       'div',
