@@ -2,9 +2,9 @@
 // gauge's typical range.
 
 import { VERDICT_LABEL } from '../shared/community.ts';
-import type { SectionGaugeLink, Verdict } from '../shared/types.ts';
+import type { PaddlerLevels, PaddlerStep, SectionGaugeLink, Verdict } from '../shared/types.ts';
 import { h } from './dom.ts';
-import { formatLevel } from './labels.ts';
+import { formatLevel, STEP_LABEL } from './labels.ts';
 
 function niceStep(range: number): number {
   for (const s of [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5]) if (range / s <= 5) return s;
@@ -94,7 +94,7 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   else if (max != null) parts.push(`Too high above ${formatLevel(max)}.`);
   if (tLow != null && tHigh != null) parts.push(`Typical range ${formatLevel(tLow)} to ${formatLevel(tHigh)}.`);
 
-  return h(
+  const bar = h(
     'div',
     { class: 'bandbar', role: 'img', 'aria-label': parts.join(' ') },
     h('div', { class: 'bb-track' }, zones, typical, marker),
@@ -103,13 +103,36 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
     h(
       'div',
       { class: 'bb-key', 'aria-hidden': 'true' },
-      pl
-        ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-step-key' }), 'Paddler scale: empty, scrapeable, low, medium, high, very high, huge')
-        : min != null || max != null
-          ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band')
-          : null,
+      !pl && (min != null || max != null) ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band') : null,
       typical ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-typical-swatch' }), 'Typical range') : null,
       dots.length ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-dot-key' }), `Paddler reports (${dots.length})`) : null,
+    ),
+  );
+  return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step)) : bar;
+}
+
+/** The paddler scale as labelled chips: colour, name and the level each step starts at; the current step is highlighted. */
+function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null): HTMLElement {
+  const steps: Array<[PaddlerStep, string]> = [
+    ['empty', `under ${formatLevel(pl.scrape)}`],
+    ['scrape', `from ${formatLevel(pl.scrape)}`],
+    ['low', `from ${formatLevel(pl.low)}`],
+    ['medium', `from ${formatLevel(pl.medium)}`],
+    ['high', `from ${formatLevel(pl.high)}`],
+    ['very_high', `from ${formatLevel(pl.very_high)}`],
+    ['huge', `from ${formatLevel(pl.huge)}`],
+  ];
+  return h(
+    'ol',
+    { class: 'step-ladder', 'aria-label': 'Paddler level scale' },
+    steps.map(([step, range]) =>
+      h(
+        'li',
+        { class: `step-chip s-${step}`, 'aria-current': step === current ? 'true' : null },
+        h('span', { class: 'step-chip-name' }, STEP_LABEL[step]),
+        h('span', { class: 'step-chip-range' }, range),
+        step === current ? h('span', { class: 'step-chip-now' }, 'Now') : null,
+      ),
     ),
   );
 }
