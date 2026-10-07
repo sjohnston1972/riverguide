@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
+import { gaugeTrend, isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
 import { latestAndHourAgo, parseTable } from '../src/shared/sepa.ts';
 
 describe('sectionStatus', () => {
@@ -89,5 +89,19 @@ describe('paddlerStep / ukToday', () => {
   it('uses the UK date, not UTC', () => {
     expect(ukToday(new Date('2026-07-01T23:30:00Z'))).toBe('2026-07-02'); // BST
     expect(ukToday(new Date('2026-12-01T23:30:00Z'))).toBe('2026-12-01'); // GMT
+  });
+});
+
+describe('gaugeTrend', () => {
+  const at = '2026-10-07T19:15:00.000Z';
+  it("uses SEPA's rising/falling flag while it is current", () => {
+    // A slow fall (0.3 cm in the hour) reads steady from the hourly change, but SEPA says falling.
+    expect(gaugeTrend(0.803, 0.806, at, -1, at)).toBe('falling');
+    expect(gaugeTrend(0.8, 0.8, at, 1, '2026-10-07T18:45:00.000Z')).toBe('rising');
+    expect(gaugeTrend(0.8, 0.7, at, 0, at)).toBe('steady');
+  });
+  it('falls back to the hourly change when the flag is missing or old', () => {
+    expect(gaugeTrend(0.803, 0.806, at, null, null)).toBe('steady');
+    expect(gaugeTrend(0.9, 0.8, at, -1, '2026-10-07T15:00:00.000Z')).toBe('rising');
   });
 });

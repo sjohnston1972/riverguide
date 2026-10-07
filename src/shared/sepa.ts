@@ -98,6 +98,12 @@ export async function fetchLevelStations(fetcher: typeof fetch = fetch): Promise
 }
 
 /** Values for many series in one request. `period` is an ISO-8601 duration such as PT3H or P7D. */
+/** SEPA's rising/falling indicator series (15m.RisingFalling.Cmd) for each river level station: station_no -> ts_id. */
+export async function fetchRisingFallingIds(fetcher: typeof fetch = fetch): Promise<Map<string, string>> {
+  const raw = await getJson('request=getTimeseriesList&ts_name=15m.RisingFalling.Cmd&returnfields=station_no,ts_id,parametertype_name&format=json', fetcher);
+  return new Map(parseTable(raw).filter((r) => r.parametertype_name === 'S').map((r) => [r.station_no, r.ts_id]));
+}
+
 export async function fetchSeriesValues(tsIds: string[], period: string, fetcher: typeof fetch = fetch): Promise<SepaSeries[]> {
   if (tsIds.length === 0) return [];
   if (!/^P(T?\d+[HDMWY])+$/.test(period)) throw new Error(`Bad period ${period}`);

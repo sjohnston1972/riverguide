@@ -10,6 +10,26 @@ export function isStale(levelAt: string | null, now = Date.now()): boolean {
   return now - Date.parse(levelAt) > STALE_AFTER_MS;
 }
 
+/** How long SEPA's rising/falling flag counts as current, relative to the level reading. */
+const SEPA_TREND_MAX_LAG_MS = 60 * 60_000;
+
+/**
+ * The trend shown for a gauge: SEPA's own rising/falling indicator (the one behind
+ * the arrows on SEPA's site) while it is current, otherwise the change over the last hour.
+ */
+export function gaugeTrend(
+  latest: number | null,
+  hourAgo: number | null,
+  levelAt: string | null,
+  sepaFlag: number | null,
+  sepaAt: string | null,
+): Trend {
+  if (sepaFlag != null && sepaAt && levelAt && Math.abs(Date.parse(levelAt) - Date.parse(sepaAt)) <= SEPA_TREND_MAX_LAG_MS) {
+    return sepaFlag > 0 ? 'rising' : sepaFlag < 0 ? 'falling' : 'steady';
+  }
+  return trendFrom(latest, hourAgo);
+}
+
 export function trendFrom(latest: number | null, hourAgo: number | null): Trend {
   if (latest == null || hourAgo == null) return 'unknown';
   const d = latest - hourAgo;
