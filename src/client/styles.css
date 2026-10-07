@@ -1650,44 +1650,119 @@ button {
   margin-bottom: 6px;
 }
 
-.rain-strip {
+
+
+
+
+
+/* Hourly rain chart: summary, labelled mm/h scale, 6-hourly times, intensity colours. */
+.rain-chart {
+  display: grid;
+  gap: 10px;
+}
+
+.rc-summary {
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.rc-plot {
+  position: relative;
+  height: 96px;
+  margin: 4px 0 24px 52px;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.rc-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--rule-strong);
+}
+
+.rc-y {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: -0.65em;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-bars {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: stretch;
   gap: 1px;
-  height: 64px;
-  padding-bottom: 18px;
-  box-sizing: content-box;
-  position: relative;
 }
 
-.rain-bar {
+.rc-bar {
   position: relative;
   flex: 1 1 0;
   min-width: 0;
   display: flex;
   align-items: flex-end;
-  background: var(--surface-2);
-  border-radius: 1px;
 }
 
-.rain-bar.day-start {
+.rc-bar.rc-tick {
+  box-shadow: -1px 0 0 color-mix(in srgb, var(--rule-strong) 60%, transparent);
+}
+
+.rc-bar.rc-day {
   box-shadow: -1px 0 0 var(--ink-3);
 }
 
-.rain-fill {
+.rc-fill {
   display: block;
   width: 100%;
-  background: var(--loch);
-  border-radius: 1px 1px 0 0;
+  border-radius: 2px 2px 0 0;
 }
 
-.rain-day {
+.rc-slight { background: color-mix(in srgb, var(--loch) 45%, var(--surface)); }
+.rc-moderate { background: var(--loch); }
+.rc-heavy { background: var(--st-high); }
+
+.rc-x {
   position: absolute;
-  top: calc(100% + 3px);
+  top: calc(100% + 5px);
   left: 0;
-  font-size: 0.72rem;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
   color: var(--ink-2);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.rc-bar:first-child .rc-x {
+  transform: none;
+}
+
+.rc-x-day {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rc-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.rc-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rc-sw {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
 }
 
 .wx-line {
@@ -2855,10 +2930,6 @@ button {
   .source,
   .fine-print {
     font-size: 0.875rem;
-  }
-
-  .rain-day {
-    font-size: 0.85rem;
   }
 
   .nearby-side .reading-time,
