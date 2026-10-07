@@ -138,7 +138,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     const step = headline?.step ?? null;
     let basis: string | Node | null = null;
-    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), '.', graphLink(headline?.calibration_url ?? null));
+    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), ' (', ccLink(), ').', graphLink(headline?.calibration_url ?? null));
     else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = h('span', null, 'These levels are an estimate. ', calibrationLink(), '.');
@@ -213,7 +213,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     }
 
     function renderPanel(): void {
-      panel.replaceChildren(...gaugeDetail(links[selected]));
+      panel.replaceChildren(...gaugeDetail(links[selected], d.status_basis === 'paddler' ? d.station_no : null));
     }
 
     async function draw(): Promise<void> {
@@ -256,7 +256,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   /** One linked gauge: reading, band bar and compact facts. */
-  function gaugeDetail(l: SectionGaugeLink): Node[] {
+  /** `citedGauge`: the gauge whose Where's the Water levels the status header already cites. */
+  function gaugeDetail(l: SectionGaugeLink, citedGauge: string | null = null): Node[] {
     const g = l.gauge;
     let band = 'None set for this gauge';
     if (l.levels && l.basis === 'paddler')
@@ -288,7 +289,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const bar = bandBar(l);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
-    if (l.basis === 'paddler')
+    if (l.basis === 'paddler') {
+      // The header already cites the headline gauge's levels; only other gauges need their own line.
+      if (l.levels && l.station_no === citedGauge) return out;
       out.push(
         h(
           'p',
@@ -301,7 +304,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           graphLink(l.calibration_url),
         ),
       );
-    else if (!estimate && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
+    } else if (!estimate && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
   }
 
