@@ -17,9 +17,11 @@ export interface Filters {
   sort: SortKey;
   /** Only this device's favourite rivers. */
   fav: boolean;
+  /** Only rivers rising now or expected to rise. */
+  rise: boolean;
 }
 
-export const DEFAULT_FILTERS: Filters = { q: '', region: '', gmin: 1, gmax: 6, status: 'any', sort: 'status', fav: false };
+export const DEFAULT_FILTERS: Filters = { q: '', region: '', gmin: 1, gmax: 6, status: 'any', sort: 'status', fav: false, rise: false };
 
 const STATUSES: StatusFilter[] = ['any', 'runnable', 'low', 'high', 'unknown'];
 
@@ -42,6 +44,7 @@ export function filtersFromQuery(search: string): Filters {
     status: p.get('now') === '1' ? 'runnable' : STATUSES.includes(status) ? status : 'any',
     sort: p.get('sort') === 'name' ? 'name' : 'status',
     fav: p.get('fav') === '1',
+    rise: p.get('rise') === '1',
   };
 }
 
@@ -54,6 +57,7 @@ export function filtersToQuery(f: Filters): string {
   if (f.status !== 'any') p.set('status', f.status);
   if (f.sort !== 'status') p.set('sort', f.sort);
   if (f.fav) p.set('fav', '1');
+  if (f.rise) p.set('rise', '1');
   const s = p.toString();
   return s ? `?${s}` : '';
 }
@@ -62,9 +66,15 @@ export function activeFilterCount(f: Filters): number {
   return (f.region ? 1 : 0) + (f.gmin !== 1 || f.gmax !== 6 ? 1 : 0) + (f.status !== 'any' ? 1 : 0);
 }
 
-/** Search, region, grade and favourites; status is applied separately so counts can ignore it. */
+/** On the rise: the gauge is rising now (SEPA's indicator) or the outlook expects a rise. */
+export function isRising(s: SectionSummary): boolean {
+  return !s.stale && (s.trend === 'rising' || s.outlook === 'rise');
+}
+
+/** Search, region, grade, favourites and rising; status is applied separately so counts can ignore it. */
 export function matchesBase(s: SectionSummary, f: Filters, favs: ReadonlySet<string> = new Set()): boolean {
   if (f.fav && !favs.has(s.slug)) return false;
+  if (f.rise && !isRising(s)) return false;
   if (f.region && s.region !== f.region) return false;
   if (f.gmin !== 1 || f.gmax !== 6) {
     const lo = s.grade_min ?? s.grade_max;

@@ -2722,23 +2722,23 @@ button {
   height: 18px;
 }
 
+/* Phones: the four quick filters sit in two even rows. */
 @media (max-width: 420px) {
   .quick-row .chip {
     padding: 0 12px;
   }
+}
 
-  .quick-row .fav-chip {
-    padding: 0 12px;
-  }
+/* On the rise: blue like the water, with an arrow. */
+.rise-arrow {
+  font-weight: 700;
+  color: var(--loch);
+}
 
-  .fav-chip-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
+.rise-chip[aria-pressed='true'] {
+  background: var(--loch-tint);
+  border-color: var(--loch);
+  color: var(--loch);
 }
 
 .river-item {

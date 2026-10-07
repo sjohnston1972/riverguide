@@ -165,6 +165,18 @@ describe('list filters', () => {
     expect(filtersFromQuery('?region=Nowhere&gmin=9').region).toBe('');
     expect(filtersFromQuery('?fav=1').fav).toBe(true);
     expect(filtersToQuery({ ...DEFAULT_FILTERS, fav: true })).toBe('?fav=1');
+    expect(filtersFromQuery('?rise=1').rise).toBe(true);
+    expect(filtersToQuery({ ...DEFAULT_FILTERS, rise: true })).toBe('?rise=1');
+  });
+
+  it('shows rivers rising now or expected to rise', () => {
+    const list = [
+      s({ slug: 'up', trend: 'rising' }),
+      s({ slug: 'soon', trend: 'falling', outlook: 'rise' }),
+      s({ slug: 'flat', trend: 'steady', outlook: 'steady' }),
+      s({ slug: 'old', trend: 'rising', stale: true }),
+    ];
+    expect(applyFilters(list, { ...DEFAULT_FILTERS, rise: true }).shown.map((x) => x.slug).sort()).toEqual(['soon', 'up']);
   });
 
   it('shows only favourites when asked', () => {

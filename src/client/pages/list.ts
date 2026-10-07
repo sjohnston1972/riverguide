@@ -69,6 +69,12 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     changed();
   });
 
+  const riseChip = h('button', { type: 'button', class: 'chip rise-chip', 'aria-pressed': 'false' }, h('span', { class: 'rise-arrow', 'aria-hidden': 'true' }, '↗'), 'On the rise');
+  riseChip.addEventListener('click', () => {
+    filters = { ...filters, rise: !filters.rise };
+    changed();
+  });
+
   const filterToggle = h('button', { type: 'button', class: 'chip chip-ghost filter-toggle', 'aria-expanded': 'false', 'aria-controls': 'filter-panel' }, icon(ICONS.sliders), h('span', { class: 'filter-toggle-text' }, 'Filters'));
 
   const select = (label: string, options: [string, string][], onChange: (v: string) => void) => {
@@ -159,7 +165,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
           'aside',
           { class: 'filters', 'aria-label': 'Search and filters' },
           h('div', { class: 'search-wrap' }, icon(ICONS.search, 'icon search-icon'), search),
-          h('div', { class: 'quick-row' }, runningNow, favChip, filterToggle),
+          h('div', { class: 'quick-row' }, runningNow, riseChip, favChip, filterToggle),
           panel,
         ),
         h('section', { class: 'results', 'aria-label': 'River sections' }, h('div', { class: 'results-bar' }, resultCount, h('nav', { class: 'segmented', 'aria-label': 'View' }, listLink, mapLink)), listBody, mapBody),
@@ -177,6 +183,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     sort.sel.value = filters.sort;
     runningNow.setAttribute('aria-pressed', String(filters.status === 'runnable'));
     favChip.setAttribute('aria-pressed', String(filters.fav));
+    riseChip.setAttribute('aria-pressed', String(filters.rise));
     const n = activeFilterCount(filters);
     filterToggle.querySelector('.filter-toggle-text')!.textContent = n ? `Filters (${n})` : 'Filters';
     clearBtn.hidden = n === 0 && !filters.q;
@@ -250,7 +257,15 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
         h(
           'div',
           { class: 'empty' },
-          h('p', null, sections!.length ? 'No sections match these filters.' : 'No river sections yet. Check back soon.'),
+          h(
+            'p',
+            null,
+            !sections!.length
+              ? 'No river sections yet. Check back soon.'
+              : filters.rise && activeFilterCount(filters) === 0 && !filters.q && !filters.fav
+                ? 'No rivers are rising or expected to rise right now.'
+                : 'No sections match these filters.',
+          ),
           sections!.length ? h('button', { type: 'button', class: 'btn', onclick: () => { filters = { ...DEFAULT_FILTERS }; changed(); } }, 'Clear search and filters') : null,
         ),
       );
