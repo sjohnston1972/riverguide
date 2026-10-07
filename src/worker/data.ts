@@ -7,6 +7,7 @@ import type {
   BandBasis,
   Confidence,
   Gauge,
+  GaugeOutlook,
   GuideText,
   PaddlerLevels,
   PlacePoint,
@@ -31,6 +32,7 @@ interface GaugeRow {
   level_at: string | null;
   level_hour_ago: number | null;
   duration_curve: string | null;
+  outlook: string | null;
 }
 
 interface SectionRow {
@@ -69,6 +71,10 @@ interface LinkRow {
   levels: string | null;
 }
 
+/** Gauge columns needed for API objects (not the large forecast model / rain blobs). */
+const GAUGE_COLUMNS =
+  'station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, level, level_at, level_hour_ago, duration_curve, outlook';
+
 const SUMMARY_COLUMNS =
   'slug, name, river, section_name, region, grade_text, grade_min, grade_max, lat, lon, location_precision';
 
@@ -90,11 +96,19 @@ export function toGauge(r: GaugeRow, now = Date.now()): Gauge {
     typical_status: stale ? 'unknown' : typicalStatus(r.level, r.typical_low, r.typical_high),
     days_reached_pct: stale || r.level == null || !curve?.length ? null : pctForLevel(curve, r.level),
     stale,
+    // Computed after each poll (worker/outlook.ts); ignored once the reading or the outlook is old.
+    outlook: stale || r.level == null ? null : freshOutlook(parseJson<GaugeOutlook>(r.outlook), now),
   };
+}
+
+const OUTLOOK_MAX_AGE_MS = 2 * 3_600_000;
+function freshOutlook(o: GaugeOutlook | null, now: number): GaugeOutlook | null {
+  return o && now - Date.parse(o.at) <= OUTLOOK_MAX_AGE_MS ? o : null;
 }
 
 function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
   const levels = parseJson<PaddlerLevels>(l.levels);
+  const tomorrow = gauge.outlook?.tomorrow?.level ?? null;
   return {
     station_no: l.station_no,
     relation: l.relation,
@@ -107,6 +121,8 @@ function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
     status: sectionStatus(gauge.level, gauge.stale, l.min_level, l.max_level),
     levels,
     step: paddlerStep(gauge.level, gauge.stale, levels),
+    status_tomorrow: tomorrow == null ? null : sectionStatus(tomorrow, false, l.min_level, l.max_level),
+    step_tomorrow: paddlerStep(tomorrow, false, levels),
   };
 }
 
@@ -181,11 +197,14 @@ function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>,
     trend: h.link?.gauge.trend ?? 'unknown',
     step: h.link?.step ?? null,
     release_today: releaseToday,
+    outlook: h.link?.gauge.outlook?.direction ?? null,
+    status_tomorrow: h.link?.status_tomorrow ?? null,
+    step_tomorrow: h.link?.step_tomorrow ?? null,
   };
 }
 
 async function allGauges(db: D1Database): Promise<Map<string, Gauge>> {
-  const { results } = await db.prepare('SELECT * FROM gauges').all<GaugeRow>();
+  const { results } = await db.prepare(`SELECT ${GAUGE_COLUMNS} FROM gauges`).all<GaugeRow>();
   const now = Date.now();
   return new Map(results.map((r) => [r.station_no, toGauge(r, now)]));
 }
@@ -271,14 +290,14 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
 }
 
 export async function getGauge(db: D1Database, stationNo: string): Promise<(Gauge & { ts_id: string }) | null> {
-  const r = await db.prepare('SELECT * FROM gauges WHERE station_no = ?').bind(stationNo).first<GaugeRow>();
+  const r = await db.prepare(`SELECT ${GAUGE_COLUMNS} FROM gauges WHERE station_no = ?`).bind(stationNo).first<GaugeRow>();
   return r ? { ...toGauge(r), ts_id: r.ts_id } : null;
 }
 
 export async function searchGauges(db: D1Database, query: string, limit = 10): Promise<Gauge[]> {
   const like = `%${query.trim().replace(/[%_]/g, '')}%`;
   const { results } = await db
-    .prepare('SELECT * FROM gauges WHERE name LIKE ?1 OR river LIKE ?1 OR catchment LIKE ?1 ORDER BY name LIMIT ?2')
+    .prepare(`SELECT ${GAUGE_COLUMNS} FROM gauges WHERE name LIKE ?1 OR river LIKE ?1 OR catchment LIKE ?1 ORDER BY name LIMIT ?2`)
     .bind(like, limit)
     .all<GaugeRow>();
   const now = Date.now();

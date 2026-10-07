@@ -17,7 +17,7 @@ import {
   type StatusFilter,
 } from '../filters.ts';
 import { ICONS } from '../icons.ts';
-import { gradeLabel, STEP_LABEL } from '../labels.ts';
+import { gradeLabel, OUTLOOK_ARROW, STATUS_LABEL, STEP_LABEL } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 import type { SectionsMap } from '../mapview.ts';
 import { replaceUrl, type Route } from '../router.ts';
@@ -326,9 +326,20 @@ function row(s: SectionSummary): HTMLLIElement {
         h('span', { class: 'row-status' }, statusPill(s.status),
           s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : estimateMark(s.status_basis, s.status_confidence),
           s.release_today ? h('span', { class: 'release-tag' }, 'Release today') : null,
+          tomorrowNote(s),
         ),
         s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
       ),
     ),
   );
+}
+
+/** "↗ Runnable tomorrow" when the predicted status or paddler step differs from now. */
+function tomorrowNote(s: SectionSummary): HTMLElement | null {
+  if (!s.outlook) return null;
+  const changedStatus = s.status_tomorrow && s.status_tomorrow !== 'unknown' && s.status_tomorrow !== s.status;
+  const changedStep = !changedStatus && s.step_tomorrow && s.step_tomorrow !== s.step;
+  if (!changedStatus && !changedStep) return null;
+  const label = changedStatus ? STATUS_LABEL[s.status_tomorrow!] : STEP_LABEL[s.step_tomorrow!];
+  return h('span', { class: `tomorrow-tag outlook-${s.outlook}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[s.outlook]} ${label} tomorrow`);
 }

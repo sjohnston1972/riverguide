@@ -77,6 +77,18 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         ),
       ),
 
+      h('h2', null, 'Level outlook'),
+      h(
+        'p',
+        null,
+        "For about 110 gauges, river pages show where the level is likely to be tomorrow and the day after, with a likely range. It is worked out from that gauge's own history: on the most similar past days (similar level, similar rain that day and the next), how much did the river change? It uses the rain forecast for the gauge's location.",
+      ),
+      h(
+        'p',
+        null,
+        'Each gauge was tested on six months of data it had not seen, and only gauges where it clearly beat "tomorrow will be the same as today" get a prediction. Other gauges show just a direction (likely to rise, drop or stay about the same) from the current trend and the rain due. Treat all of it as a rough guide: rain forecasts can be wrong, and rain falling higher up a catchment may not be in the forecast for the gauge.',
+      ),
+
       h('h2', null, 'Scheduled releases'),
       h(
         'p',

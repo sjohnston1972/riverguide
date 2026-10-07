@@ -130,6 +130,9 @@ describe('list filters', () => {
     trend: 'unknown',
     step: null,
     release_today: false,
+    outlook: null,
+    status_tomorrow: null,
+    step_tomorrow: null,
     ...over,
   });
   const all = [

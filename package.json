@@ -13,6 +13,7 @@
     "data:sections": "node scripts/build-sections.ts",
     "data:gauges": "node scripts/fetch-gauges.ts",
     "data:durations": "node scripts/fetch-durations.ts",
+    "data:forecast": "node scripts/fit-forecast.ts",
     "data:enrich": "node --env-file=.env scripts/enrich.ts",
     "data:wtw": "node scripts/import-wtw.ts",
     "data:seed": "node scripts/build-seed.ts",

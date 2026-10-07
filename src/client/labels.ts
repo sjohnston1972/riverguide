@@ -117,3 +117,10 @@ export const STEP_LABEL: Record<PaddlerStep, string> = {
 export const WTW_URL = 'https://www.andyjacksonfund.org.uk/wheres-the-water/';
 export const WTW_DATA_URL = 'https://github.com/jriddell/wheres-the-water';
 export const CC_BY_SA_URL = 'https://creativecommons.org/licenses/by-sa/4.0/';
+
+export const OUTLOOK_WORDS: Record<'rise' | 'fall' | 'steady', string> = {
+  rise: 'Likely to rise',
+  fall: 'Likely to drop',
+  steady: 'Likely to stay about the same',
+};
+export const OUTLOOK_ARROW: Record<'rise' | 'fall' | 'steady', string> = { rise: '↗', fall: '↘', steady: '→' };

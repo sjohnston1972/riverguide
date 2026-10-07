@@ -15,7 +15,7 @@ import {
   verifySession,
   verifyTurnstile,
 } from './guard.ts';
-import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata } from './poll.ts';
+import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRain } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { configureSepa } from './sepa-auth.ts';
 import { getWeather } from './weather.ts';
@@ -129,5 +129,13 @@ export default {
       return;
     }
     ctx.waitUntil(pollReadings(env.DB).then((r) => console.log(`poll: ${r.updated} updated, ${r.empty} empty`)));
+    // Refresh the rainfall used for level outlooks when it is more than ~an hour old.
+    ctx.waitUntil(
+      (async () => {
+        const last = await env.DB.prepare("SELECT max(json_extract(rain, '$.at')) AS at FROM gauges WHERE forecast_model IS NOT NULL").first<{ at: string | null }>();
+        if (last?.at && Date.now() - Date.parse(last.at) < 55 * 60_000) return;
+        console.log(`rain outlook: ${await refreshRain(env.DB)} gauges`);
+      })().catch((e) => console.error('rain outlook failed', e)),
+    );
   },
 } satisfies ExportedHandler<AppEnv>;
