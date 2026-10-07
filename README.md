@@ -50,7 +50,11 @@ Basis:
 - `typical-relative`: the fallback for the few gauges without enough history. The threshold is placed within SEPA's median annual min–max range.
 
 Every gauge also reports `days_reached_pct`, the share of days on which its current level is reached. The river page shows this as "How often".
+- `paddler`: levels set by paddlers on [Where's the Water](https://www.andyjacksonfund.org.uk/wheres-the-water/) (about 110 sections). Each gauge has six steps: scrapeable, low, medium, high, very high, huge. Runnable starts at scrapeable and too high starts at huge, and the current step is shown in the list and on the page.
+- `community`: set from community level reports (below).
 - `manual`: set by a person in `data/overrides.json`.
+
+Precedence: **manual > community > paddler (Where's the Water) > estimate**.
 
 ## Community level reports
 
@@ -93,6 +97,7 @@ A typical question costs about 1¢.
 - **SEPA** level data: Open Government Licence v3.0.
 - **Open-Meteo**: CC BY 4.0, free for non-commercial use (commercial use needs their paid plan).
 - **OpenStreetMap** tiles and Nominatim geocoding: © OpenStreetMap contributors, ODbL.
+- **Where's the Water** (Scottish Canoe Association; data maintained by Jonathan Riddell and contributors): its paddler level bands, 37 extra sections and scheduled release dates are used under **CC BY-SA 4.0** with attribution on the site. Our adaptation (`data/wtw-import.json`) is shared under the same licence; see `data/wtw/README.md`.
 - **River section information** is derived from the [UK Rivers Guidebook](https://www.ukriversguidebook.co.uk). The full write-ups are community content, so the public site shows only short facts (grade, length, location, gauge) and links each section to its UKRGB page for hazards, access and route detail. The full text is used only server-side to ground the assistant. The assistant is told to summarise, never to quote. If UKRGB agree to wider use, set `SHOW_FULL_GUIDE_TEXT=true` and river pages will show it.
 - The guidebook text is **not** in this repository (it lives in `data/private/`, which is gitignored). Earlier commits did include it.
 
@@ -118,6 +123,7 @@ The source is the scraped UKRGB Scotland dataset, which the previous version had
 npm run data:gauges      # SEPA → data/gauges.json
 npm run data:durations   # SEPA daily maxima, 3 years → data/gauge-durations.json (re-run yearly)
 npm run data:sections    # source → data/private/sections.raw.json (slugs, grid refs → lat/lon)
+npm run data:wtw         # Where's the Water (CC BY-SA 4.0) → data/wtw/, data/wtw-import.json (paddler levels, 37 extra sections, release dates)
 npm run data:enrich      # Claude Sonnet 5.5 + Nominatim → data/enrichment.json  (~$3.50 for all 232; cached per section, resumable)
                          #   --relink redoes only the gauge links and thresholds (~$2.50)
 npm run data:seed        # → data/private/seed.sql
@@ -154,6 +160,7 @@ npm run deploy
 npx wrangler secret put ANTHROPIC_API_KEY
 npx wrangler secret put SESSION_SECRET      # any long random string
 npx wrangler secret put TURNSTILE_SECRET    # from the Turnstile widget
+npx wrangler secret put SEPA_API_KEY        # optional: SEPA API key (base64 credentials); without it, keyless access is used
 ```
 
 Optional: set `AI_GATEWAY_URL` (for example `https://gateway.ai.cloudflare.com/v1/<account>/<gateway>/anthropic`) to route Claude calls through Cloudflare AI Gateway for logs and analytics.

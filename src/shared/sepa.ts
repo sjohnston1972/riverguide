@@ -20,8 +20,15 @@ export interface SepaSeries {
   points: Array<[string, number]>;
 }
 
+/** Optional authentication (SEPA API key -> bearer token). Without it, the public keyless access is used. */
+type AuthProvider = () => Promise<Record<string, string>>;
+let authHeaders: AuthProvider = async () => ({});
+export function setSepaAuth(provider: AuthProvider): void {
+  authHeaders = provider;
+}
+
 async function getJson(params: string, fetcher: typeof fetch): Promise<unknown> {
-  const res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json' } });
+  const res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json', ...(await authHeaders()) } });
   if (!res.ok) throw new Error(`SEPA ${res.status} for ${params.split('&')[0]}`);
   const body = (await res.json()) as unknown;
   if (body && typeof body === 'object' && !Array.isArray(body) && (body as { type?: string }).type === 'error') {

@@ -17,12 +17,18 @@ import {
 } from './guard.ts';
 import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
+import { configureSepa } from './sepa-auth.ts';
 import { getWeather } from './weather.ts';
 
 type HonoEnv = { Bindings: AppEnv };
 const app = new Hono<HonoEnv>();
 
 const chatEnabled = (env: AppEnv) => flag(env.CHAT_ENABLED) && Boolean(env.ANTHROPIC_API_KEY && env.SESSION_SECRET);
+
+app.use('*', async (c, next) => {
+  configureSepa(c.env);
+  await next();
+});
 
 app.onError((err, c) => {
   console.error(err);
@@ -117,6 +123,7 @@ app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 export default {
   fetch: app.fetch,
   async scheduled(event, env, ctx) {
+    configureSepa(env);
     if (event.cron === '0 3 * * *') {
       ctx.waitUntil(refreshGaugeMetadata(env.DB).then((n) => console.log(`gauge metadata refreshed: ${n}`)));
       return;

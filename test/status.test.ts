@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isStale, linkRank, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus } from '../src/shared/status.ts';
+import { isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
 import { latestAndHourAgo, parseTable } from '../src/shared/sepa.ts';
 
 describe('sectionStatus', () => {
@@ -69,5 +69,25 @@ describe('SEPA parsing', () => {
     ];
     expect(latestAndHourAgo(pts)).toEqual({ latest: ['2026-10-06T11:15:00Z', 1.25], hourAgo: 1.0 });
     expect(latestAndHourAgo([])).toEqual({ latest: null, hourAgo: null });
+  });
+});
+
+describe('paddlerStep / ukToday', () => {
+  const levels = { scrape: 0.4, low: 0.6, medium: 0.8, high: 1.0, very_high: 1.4, huge: 1.8 };
+  it('places a level on the paddler scale (thresholds start each step)', () => {
+    expect(paddlerStep(0.3, false, levels)).toBe('empty');
+    expect(paddlerStep(0.4, false, levels)).toBe('scrape');
+    expect(paddlerStep(0.85, false, levels)).toBe('medium');
+    expect(paddlerStep(1.5, false, levels)).toBe('very_high');
+    expect(paddlerStep(2.5, false, levels)).toBe('huge');
+  });
+  it('is null when stale, missing or unscaled', () => {
+    expect(paddlerStep(0.85, true, levels)).toBeNull();
+    expect(paddlerStep(null, false, levels)).toBeNull();
+    expect(paddlerStep(0.85, false, null)).toBeNull();
+  });
+  it('uses the UK date, not UTC', () => {
+    expect(ukToday(new Date('2026-07-01T23:30:00Z'))).toBe('2026-07-02'); // BST
+    expect(ukToday(new Date('2026-12-01T23:30:00Z'))).toBe('2026-12-01'); // GMT
   });
 });

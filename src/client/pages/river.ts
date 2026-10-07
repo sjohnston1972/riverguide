@@ -21,6 +21,9 @@ import {
   relativeTime,
   TREND_LABEL,
   TYPICAL_LABEL,
+  STEP_LABEL,
+  WTW_URL,
+  CC_BY_SA_URL,
 } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 
@@ -88,7 +91,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         .catch(() => undefined);
     };
     const community = communityPanel({ slug, gaugeName: d.gauge_name, siteKey: ctx.config()?.turnstile_site_key ?? null, data: reports, onChange });
-    const main = h('div', { class: 'col-main' }, now, community, guideBanner(d), d.guide ? guideSection(d.guide) : null);
+    const main = h('div', { class: 'col-main' }, now, releasesSection(d), community, guideBanner(d), d.guide ? guideSection(d.guide) : null);
     const side = h('div', { class: 'col-side' }, weatherSection(d), placesSection(d), nearbySection(d));
     clear(body);
     body.append(h('div', { class: 'river-grid' }, main, side));
@@ -112,8 +115,11 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const headline = d.links.find((l) => l.station_no === d.station_no) ?? null;
     const links = headline ? [headline, ...d.links.filter((l) => l !== headline)] : d.links;
 
-    let basis: string;
-    if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
+    const step = headline?.step ?? null;
+    let basis: string | Node;
+    if (d.status_basis === 'paddler')
+      basis = h('span', null, step ? `${STEP_LABEL[step]} on the paddler scale from ` : 'Paddler-set levels from ', wtwLink(), '.');
+    else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
     else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
@@ -122,7 +128,13 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const top = h(
       'div',
       { class: `status-hero st-${d.status}`, 'aria-label': 'Current status' },
-      h('div', { class: 'hero-top' }, statusPill(d.status, 'lg'), h('p', { class: 'hero-basis' }, basis)),
+      h(
+        'div',
+        { class: 'hero-top' },
+        h('div', { class: 'hero-pills' }, statusPill(d.status, 'lg'), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null),
+        h('p', { class: 'hero-basis' }, basis),
+        d.release_today ? h('p', { class: 'release-today' }, 'Scheduled release today.') : null,
+      ),
       h('div', { class: 'hero-actions' }, askBtn),
     );
     const card = h('section', { class: 'now-card' }, top);
@@ -242,7 +254,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function gaugeDetail(l: SectionGaugeLink, single: boolean, dots: ReportDot[] = []): Node[] {
     const g = l.gauge;
     let band = 'None set for this gauge';
-    if (l.min_level != null && l.max_level != null) band = `Runnable ${formatLevel(l.min_level)} to ${formatLevel(l.max_level)}`;
+    if (l.levels && l.basis === 'paddler')
+      band = `Scrapeable ${formatLevel(l.levels.scrape)} · low ${formatLevel(l.levels.low)} · medium ${formatLevel(l.levels.medium)} · high ${formatLevel(l.levels.high)} · very high ${formatLevel(l.levels.very_high)} · huge ${formatLevel(l.levels.huge)}`;
+    else if (l.min_level != null && l.max_level != null) band = `Runnable ${formatLevel(l.min_level)} to ${formatLevel(l.max_level)}`;
     else if (l.min_level != null) band = `Runnable from ${formatLevel(l.min_level)}`;
     else if (l.max_level != null) band = `Too high above ${formatLevel(l.max_level)}`;
     const typical =
@@ -266,14 +280,38 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const bar = bandBar(l, dots);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
-    if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
+    if (l.basis === 'paddler') out.push(h('p', { class: 'reason' }, l.levels ? 'Levels set by paddlers on ' : 'Gauge used by ', wtwLink(), l.levels ? '.' : '; paddler levels not set yet.'));
+    else if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
+  }
+
+  function wtwLink(): HTMLElement {
+    return h('a', { href: WTW_URL, target: '_blank', rel: 'noopener' }, "Where's the Water");
+  }
+
+  // ---- Scheduled releases (dam releases and tidal windows) ----
+  function releasesSection(d: SectionDetail): HTMLElement | null {
+    if (!d.releases.length) return null;
+    const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+    return h(
+      'section',
+      { class: 'block releases' },
+      h('h2', null, 'Scheduled releases'),
+      h(
+        'ul',
+        { class: 'release-days' },
+        d.releases.map((day) => h('li', { class: day === today ? 'is-today' : null }, day === today ? 'Today' : fmt.format(new Date(`${day}T12:00:00Z`)))),
+      ),
+      d.release_note ? h('p', { class: 'muted' }, d.release_note) : null,
+      h('p', { class: 'source muted' }, 'Release dates from ', wtwLink(), '. Check with the operator before travelling; releases can be cancelled.'),
+    );
   }
 
   function daysText(pct: number): string {
     if (pct >= 99) return 'over 99%';
     if (pct <= 0.5) return 'under 1%';
-    return `${pct < 10 ? pct.toFixed(1).replace(/.0$/, '') : Math.round(pct)}%`;
+    return `${pct < 10 ? pct.toFixed(1).replace(/\.0$/, '') : Math.round(pct)}%`;
   }
 
   function facts(d: SectionDetail): HTMLElement {
@@ -301,6 +339,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         h('strong', null, 'Before paddling: '),
         'check a current guidebook and local knowledge for hazards, access and route details. River Guide does not show them, and trees, landslips and works change without notice.',
         updated ? h('span', { class: 'guide-notice-date' }, ` Section information last updated ${updated}.`) : null,
+        d.source === 'wtw'
+          ? h('span', { class: 'guide-notice-date' }, ' Section information from ', wtwLink(), ' (', h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'), ').')
+          : null,
       ),
     );
   }
@@ -413,7 +454,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       h('h2', null, 'Put-in and take-out'),
       mapEl,
       list,
-      h('p', { class: 'muted precision' }, approx ? 'Approximate location: positions are estimated, not from a grid reference.' : 'Positions from guidebook grid references.'),
+      h('p', { class: 'muted precision' }, approx ? 'Approximate location: positions are estimated from place names.' : 'Exact positions.'),
     );
   }
 

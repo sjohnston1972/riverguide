@@ -63,7 +63,11 @@ const footer = h(
     h(
       'p',
       null,
-      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Weather: Open-Meteo. Maps © OpenStreetMap contributors.',
+      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Paddler levels, extra sections and release dates adapted from ',
+      h('a', { href: 'https://www.andyjacksonfund.org.uk/wheres-the-water/', target: '_blank', rel: 'noopener' }, "Where's the Water"),
+      ' (Scottish Canoe Association), ',
+      h('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'),
+      '. Weather: Open-Meteo. Maps © OpenStreetMap contributors.',
     ),
     h('p', null, h('a', { href: '/about' }, 'About River Guide, data sources and licences')),
   ),

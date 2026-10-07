@@ -1,6 +1,6 @@
 // Pure display helpers: wording, units and times. No DOM.
 
-import type { BandBasis, Confidence, Relation, SectionStatus, Trend, TypicalStatus } from '../shared/types.ts';
+import type { BandBasis, Confidence, PaddlerStep, Relation, SectionStatus, Trend, TypicalStatus } from '../shared/types.ts';
 
 export const STATUS_LABEL: Record<SectionStatus, string> = {
   runnable: 'Runnable',
@@ -56,6 +56,7 @@ export const COMMUNITY_TOOLTIP = 'Thresholds set from community paddling reports
 export function basisWording(basis: BandBasis, confidence: Confidence): string {
   if (basis === 'manual') return 'Set manually';
   if (basis === 'community') return `Set from community paddling reports — ${confidence} confidence`;
+  if (basis === 'paddler') return "Set by paddlers on Where's the Water";
   const conf = `${confidence} confidence`;
   if (basis === 'guide') return `Estimated from the guidebook — ${conf}`;
   if (basis === 'duration') return `Guidebook description matched to how often this gauge reaches each level — ${conf}`;
@@ -101,3 +102,18 @@ export function normalize(s: string): string {
 export function gradeLabel(grade: string): string {
   return /^grade/i.test(grade) ? grade : `Grade ${grade}`;
 }
+
+export const STEP_LABEL: Record<PaddlerStep, string> = {
+  empty: 'Empty',
+  scrape: 'Scrapeable',
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  very_high: 'Very high',
+  huge: 'Huge',
+};
+
+/** Where's the Water, whose paddler levels, extra sections and release dates are used under CC BY-SA 4.0. */
+export const WTW_URL = 'https://www.andyjacksonfund.org.uk/wheres-the-water/';
+export const WTW_DATA_URL = 'https://github.com/jriddell/wheres-the-water';
+export const CC_BY_SA_URL = 'https://creativecommons.org/licenses/by-sa/4.0/';

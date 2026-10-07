@@ -44,6 +44,12 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         ),
         h('dt', null, 'Based on SEPA typical range'),
         h('dd', null, "For the few gauges without enough history: thresholds are placed within the gauge's typical range (between its median annual low and high)."),
+        h('dt', null, "Set by paddlers on Where's the Water"),
+        h(
+          'dd',
+          null,
+          "About 110 sections use levels that paddlers have set on Where's the Water: scrapeable, low, medium, high, very high and huge, each a level on a SEPA gauge. The river list and pages show which step the river is on now. Runnable means scrapeable or above, and too high means huge.",
+        ),
         h('dt', null, 'Set from community reports'),
         h(
           'dd',
@@ -65,6 +71,17 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, h('strong', null, 'Weather: '), ext('https://open-meteo.com/', 'Open-Meteo'), ', licensed under ', ext('https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0'), '.'),
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
         h('li', null, h('strong', null, 'River sections: '), 'section names, grades and level advice are compiled from paddling guidebook information. River Guide does not cover hazards, access or route details: always check a current guidebook and local knowledge before you paddle.'),
+        h(
+          'li',
+          null,
+          h('strong', null, 'Paddler levels, extra sections and release dates: '),
+          ext('https://www.andyjacksonfund.org.uk/wheres-the-water/', "Where's the Water"),
+          " (Copyright Scottish Canoe Association; data maintained by Jonathan Riddell and contributors), used under ",
+          ext('https://creativecommons.org/licenses/by-sa/4.0/', 'CC BY-SA 4.0'),
+          '. River Guide adapts it: sections are matched to ours, levels are mapped onto our status, and some data is left out. Our adapted copy is shared under the same licence in the ',
+          ext('https://github.com/sjohnston1972/riverguide/tree/main/data', 'River Guide repository'),
+          ' (data/wtw-import.json).',
+        ),
       ),
 
       h('h2', null, 'Community reports'),

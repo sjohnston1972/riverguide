@@ -1,0 +1,2722 @@
+{
+ "source": "https://github.com/jriddell/wheres-the-water/tree/ec78813017cffa0822d048256bd27c6a8debd636/data",
+ "licence": "CC BY-SA 4.0. Adapted from Where's the Water (Scottish Canoe Association).",
+ "bands": [
+  {
+   "slug": "river-garry",
+   "wtw_name": "Garry (Great Glen)",
+   "station_no": "234189",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.4,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "tweed-berwick",
+   "wtw_name": "Tweed (Berwick)",
+   "station_no": "9514",
+   "levels": {
+    "scrape": 0,
+    "low": 1.2,
+    "medium": 1.7,
+    "high": 2,
+    "very_high": 2.5,
+    "huge": 3.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "ness",
+   "wtw_name": "Ness",
+   "station_no": "234287",
+   "levels": {
+    "scrape": 0,
+    "low": 0.9,
+    "medium": 1.3,
+    "high": 1.6,
+    "very_high": 2,
+    "huge": 2.3
+   },
+   "match": "new"
+  },
+  {
+   "slug": "gryfe",
+   "wtw_name": "Gryfe",
+   "station_no": "133073",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.45,
+    "medium": 0.5,
+    "high": 0.6,
+    "very_high": 0.8,
+    "huge": 1
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-yarrow-yarrowford-to-generals-brig",
+   "wtw_name": "Yarrow",
+   "station_no": "14985",
+   "levels": {
+    "scrape": 0.35,
+    "low": 0.5,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1,
+    "huge": 1.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "ayr",
+   "wtw_name": "Ayr",
+   "station_no": "133111",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.6,
+    "medium": 1.3,
+    "high": 1.6,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-findhorn-gorge",
+   "wtw_name": "Findhorn (Gorge)",
+   "station_no": "234306",
+   "levels": {
+    "scrape": 0,
+    "low": 0.2,
+    "medium": 0.3,
+    "high": 0.37,
+    "very_high": 0.5,
+    "huge": 0.8
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "brora",
+   "wtw_name": "Brora",
+   "station_no": "234174",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.9,
+    "medium": 1.1,
+    "high": 1.6,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-inver",
+   "wtw_name": "Inver",
+   "station_no": "234264",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.75,
+    "high": 0.9,
+    "very_high": 1,
+    "huge": 1.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-meig-upper-section-above-dam",
+   "wtw_name": "Upper Meig",
+   "station_no": "234227",
+   "levels": {
+    "scrape": 0.55,
+    "low": 0.65,
+    "medium": 0.7,
+    "high": 0.8,
+    "very_high": 1.3,
+    "huge": 1.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-allan",
+   "wtw_name": "Allan Water",
+   "station_no": "14890",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.9,
+    "medium": 1.1,
+    "high": 1.3,
+    "very_high": 1.5,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tay-stanley-to-thistlebrig",
+   "wtw_name": "Tay (Stanley)",
+   "station_no": "14937",
+   "levels": {
+    "scrape": 0,
+    "low": 0,
+    "medium": 1,
+    "high": 2,
+    "very_high": 2.7,
+    "huge": 5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-findhorn-middle-section",
+   "wtw_name": "Findhorn (Middle)",
+   "station_no": "234306",
+   "levels": {
+    "scrape": 0.2,
+    "low": 0.3,
+    "medium": 0.4,
+    "high": 0.8,
+    "very_high": 1,
+    "huge": 1.4
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "water-of-girvan",
+   "wtw_name": "Girvan",
+   "station_no": "133123",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.75,
+    "medium": 1.2,
+    "high": 1.5,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-kelvin-art-galleries-wave",
+   "wtw_name": "Kelvin",
+   "station_no": "133080",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.4,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-findhorn-upper-section",
+   "wtw_name": "Findhorn (Upper)",
+   "station_no": "234306",
+   "levels": {
+    "scrape": 0.2,
+    "low": 0.3,
+    "medium": 0.35,
+    "high": 0.8,
+    "very_high": 1,
+    "huge": 1.4
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "river-lochay",
+   "wtw_name": "Lochay",
+   "station_no": "14933",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.3,
+    "very_high": 1.6,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "avon-glasgow",
+   "wtw_name": "Avon (Glasgow)",
+   "station_no": "133084",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1.1,
+    "very_high": 1.5,
+    "huge": 1.7
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-falloch-upper",
+   "wtw_name": "Falloch (Upper)",
+   "station_no": "133089",
+   "levels": {
+    "scrape": 1,
+    "low": 1.1,
+    "medium": 1.3,
+    "high": 1.6,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-spean-the-spean-gorge",
+   "wtw_name": "Spean (Gorge)",
+   "station_no": "234178",
+   "levels": {
+    "scrape": 0,
+    "low": 0.7,
+    "medium": 1.6,
+    "high": 2.5,
+    "very_high": 3,
+    "huge": 4
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "river-spey-ballindalloch-to-tandhu-distillery",
+   "wtw_name": "Spey",
+   "station_no": "234167",
+   "levels": {
+    "scrape": 0,
+    "low": 0.4,
+    "medium": 0.8,
+    "high": 1.4,
+    "very_high": 2,
+    "huge": 2.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tilt",
+   "wtw_name": "Tilt (Marble Lodge)",
+   "station_no": "14959",
+   "levels": {
+    "scrape": 0.35,
+    "low": 0.4,
+    "medium": 0.6,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-leny-a84-layby-to-lade-inn",
+   "wtw_name": "Garbh Uisge (Leny)",
+   "station_no": "14888",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.7,
+    "medium": 1,
+    "high": 1.3,
+    "very_high": 1.6,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-falloch-falls-of-falloch-to-loch-lomond",
+   "wtw_name": "Falloch (Lower)",
+   "station_no": "133089",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.9,
+    "medium": 1,
+    "high": 1.2,
+    "very_high": 1.3,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tay-sca-access-point-to-grandtully",
+   "wtw_name": "Tay (Grandtully)",
+   "station_no": "14935",
+   "levels": {
+    "scrape": 0,
+    "low": 0,
+    "medium": 1,
+    "high": 1.5,
+    "very_high": 2,
+    "huge": 3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-oykel",
+   "wtw_name": "Oykel",
+   "station_no": "234209",
+   "levels": {
+    "scrape": 0.55,
+    "low": 0.7,
+    "medium": 0.9,
+    "high": 1.5,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-findhorn-top-section-to-dulsie-bridge",
+   "wtw_name": "Findhorn (Top)",
+   "station_no": "234306",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.35,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.4,
+    "huge": 1.6
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "thurso-river",
+   "wtw_name": "Thurso",
+   "station_no": "234231",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "tarff",
+   "wtw_name": "Tarff",
+   "station_no": "234155",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.9,
+    "medium": 1.1,
+    "high": 1.2,
+    "very_high": 1.4,
+    "huge": 1.6
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-esk-langholm-canonbie",
+   "wtw_name": "Border Esk",
+   "station_no": "133148",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.8,
+    "medium": 1.1,
+    "high": 1.3,
+    "very_high": 1.7,
+    "huge": 1.9
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "river-nith-glen-airlie-picnic-site-to-drumlanrig-bridge",
+   "wtw_name": "Nith (Drumlanrig)",
+   "station_no": "133154",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.45,
+    "medium": 0.9,
+    "high": 1.2,
+    "very_high": 1.5,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-averon",
+   "wtw_name": "Averon of Alness",
+   "station_no": "234152",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.7,
+    "medium": 0.9,
+    "high": 1.4,
+    "very_high": 1.6,
+    "huge": 1.75
+   },
+   "match": "link"
+  },
+  {
+   "slug": "snizort",
+   "wtw_name": "Snizort",
+   "station_no": "234313",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.5,
+    "medium": 0.9,
+    "high": 1,
+    "very_high": 1.1,
+    "huge": 1.3
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-blackwater-2",
+   "wtw_name": "Blackwater (Perthshire)",
+   "station_no": "14956",
+   "levels": {
+    "scrape": 0.75,
+    "low": 0.85,
+    "medium": 0.9,
+    "high": 1.2,
+    "very_high": 1.4,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-cree",
+   "wtw_name": "Cree",
+   "station_no": "502896",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.9,
+    "medium": 1,
+    "high": 1.2,
+    "very_high": 1.3,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-nevis-steall-gorge-to-polldubh-falls",
+   "wtw_name": "Nevis (Upper)",
+   "station_no": "116011",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.65,
+    "medium": 0.85,
+    "high": 1,
+    "very_high": 1.3,
+    "huge": 1.6
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-lochy-tyndrum",
+   "wtw_name": "Lochy (nr Orchy)",
+   "station_no": "133097",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.3,
+    "very_high": 1.5,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-clyde-stonebyres-to-crossford",
+   "wtw_name": "Clyde (Stonebyres)",
+   "station_no": "133094",
+   "levels": {
+    "scrape": 0.31,
+    "low": 0.5,
+    "medium": 0.8,
+    "high": 1.6,
+    "very_high": 2,
+    "huge": 2.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-luss",
+   "wtw_name": "Luss Water",
+   "station_no": "133108",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.7,
+    "medium": 0.9,
+    "high": 1,
+    "very_high": 1.1,
+    "huge": 1.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "helmsdale",
+   "wtw_name": "Helmsdale",
+   "station_no": "234253",
+   "levels": {
+    "scrape": 0.9,
+    "low": 1,
+    "medium": 1.2,
+    "high": 1.5,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-feshie",
+   "wtw_name": "Feshie",
+   "station_no": "234217",
+   "levels": {
+    "scrape": 0.65,
+    "low": 0.7,
+    "medium": 1,
+    "high": 1.3,
+    "very_high": 1.7,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-carron-loch-sgamhain-to-loch-dughail",
+   "wtw_name": "Carron (Wester Ross)",
+   "station_no": "234289",
+   "levels": {
+    "scrape": 1.2,
+    "low": 1.3,
+    "medium": 1.35,
+    "high": 1.4,
+    "very_high": 1.5,
+    "huge": 1.55
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "river-braan-upper-section-to-rumbling-bridge",
+   "wtw_name": "Braan (Upper)",
+   "station_no": "8402",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.9,
+    "medium": 1.1,
+    "high": 1.3,
+    "very_high": 1.5,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-lochy-ben-nevis",
+   "wtw_name": "Lochy (Fort William)",
+   "station_no": "234178",
+   "levels": {
+    "scrape": 0,
+    "low": 0.6,
+    "medium": 0.9,
+    "high": 1.4,
+    "very_high": 2.4,
+    "huge": 3
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "naver",
+   "wtw_name": "Naver",
+   "station_no": "234153",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.5,
+    "medium": 0.6,
+    "high": 0.7,
+    "very_high": 0.8,
+    "huge": 1
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-teith",
+   "wtw_name": "Teith",
+   "station_no": "14887",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1.5,
+    "very_high": 2,
+    "huge": 3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-orchy-middle-section",
+   "wtw_name": "Orchy (Middle)",
+   "station_no": "133087",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1.1,
+    "very_high": 1.5,
+    "huge": 2
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "water-of-minnoch-palgowan-bridge-to-stroan-bridge",
+   "wtw_name": "Water of Minnoch (Middle)",
+   "station_no": "133168",
+   "levels": {
+    "scrape": 1,
+    "low": 1.3,
+    "medium": 1.5,
+    "high": 1.8,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-carron",
+   "wtw_name": "Carron (Easter Ross)",
+   "station_no": "234305",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.85,
+    "medium": 1,
+    "high": 1.4,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-dee-potarch-to-banchory",
+   "wtw_name": "Dee (Grampian) (Middle)",
+   "station_no": "234333",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.5,
+    "medium": 0.9,
+    "high": 1.2,
+    "very_high": 1.6,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-lyon",
+   "wtw_name": "Lyon",
+   "station_no": "14951",
+   "levels": {
+    "scrape": 0.2,
+    "low": 0.5,
+    "medium": 0.6,
+    "high": 1,
+    "very_high": 1.4,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-dochart-falls-of-dochart",
+   "wtw_name": "Dochart",
+   "station_no": "14933",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.5,
+    "medium": 0.6,
+    "high": 0.8,
+    "very_high": 1,
+    "huge": 1.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-ericht",
+   "wtw_name": "Ericht (Blairgowrie)",
+   "station_no": "14956",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.2,
+    "very_high": 1.4,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-braan-rumbling-bridge-to-the-hermitage",
+   "wtw_name": "Braan (Gorge)",
+   "station_no": "8402",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 0.9,
+    "very_high": 1.15,
+    "huge": 1.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-muick-falls-of-muick",
+   "wtw_name": "Muick",
+   "station_no": "234247",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.5,
+    "medium": 0.7,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-almond-edinburgh",
+   "wtw_name": "Almond (Lothian)",
+   "station_no": "14869",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tay-loch-tay-to-aberfeldy",
+   "wtw_name": "Tay (Kenmore)",
+   "station_no": "8295",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.5,
+    "medium": 0.7,
+    "high": 1,
+    "very_high": 1.5,
+    "huge": 2
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "river-tweed-peel-to-fairnilee-farm",
+   "wtw_name": "Tweed (Fairnilee)",
+   "station_no": "14979",
+   "levels": {
+    "scrape": 0,
+    "low": 0.21,
+    "medium": 0.4,
+    "high": 0.945,
+    "very_high": 1.613,
+    "huge": 1.9
+   },
+   "match": "link"
+  },
+  {
+   "slug": "south-esk",
+   "wtw_name": "South Esk (Angus)",
+   "station_no": "14916",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.4,
+    "very_high": 1.6,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "don-lower",
+   "wtw_name": "Don (Lower)",
+   "station_no": "234292",
+   "levels": {
+    "scrape": 0,
+    "low": 0.4,
+    "medium": 1,
+    "high": 1.7,
+    "very_high": 2,
+    "huge": 3
+   },
+   "match": "new"
+  },
+  {
+   "slug": "water-of-ruchill",
+   "wtw_name": "Water of Ruchill",
+   "station_no": "14965",
+   "levels": {
+    "scrape": 0.9,
+    "low": 1.1,
+    "medium": 1.4,
+    "high": 1.7,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-cuileig-upper",
+   "wtw_name": "Cuileig (Upper)",
+   "station_no": "356328",
+   "levels": {
+    "scrape": 1.1,
+    "low": 1.2,
+    "medium": 1.3,
+    "high": 1.6,
+    "very_high": 1.8,
+    "huge": 1.9
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tweed-st-boswells-to-kelso",
+   "wtw_name": "Tweed (Makerstoun)",
+   "station_no": "533744",
+   "levels": {
+    "scrape": 0,
+    "low": 0.53,
+    "medium": 0.7,
+    "high": 1,
+    "very_high": 1.5,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-einig",
+   "wtw_name": "Einig",
+   "station_no": "234209",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "corriemulzie-river",
+   "wtw_name": "Corriemulzie",
+   "station_no": "234209",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.2,
+    "very_high": 1.4,
+    "huge": 1.6
+   },
+   "match": "link"
+  },
+  {
+   "slug": "doon-lower",
+   "wtw_name": "Doon (Lower)",
+   "station_no": "133060",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 1,
+    "high": 1.2,
+    "very_high": 1.5,
+    "huge": 1.8
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-ettrick-ettrickbridge-to-selkirk",
+   "wtw_name": "Ettrick (Gorge)",
+   "station_no": "14990",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 0.85,
+    "high": 1.2,
+    "very_high": 1.5,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-whiteadder",
+   "wtw_name": "Whiteadder Water",
+   "station_no": "15018",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.5,
+    "medium": 0.7,
+    "high": 0.9,
+    "very_high": 1.2,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-teviot-martins-bridge-to-riverside-caravan-park",
+   "wtw_name": "Teviot",
+   "station_no": "15001",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.7,
+    "medium": 1,
+    "high": 1.5,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-north-esk-scout-camp-to-edzell",
+   "wtw_name": "North Esk (Lower)",
+   "station_no": "371579",
+   "levels": {
+    "scrape": 0.14,
+    "low": 0.24,
+    "medium": 0.3,
+    "high": 0.5,
+    "very_high": 0.7,
+    "huge": 0.95
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-blackwater",
+   "wtw_name": "Blackwater (Garve)",
+   "station_no": "234225",
+   "levels": {
+    "scrape": 0.1,
+    "low": 0.4,
+    "medium": 0.6,
+    "high": 0.9,
+    "very_high": 1.1,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "scaur-water",
+   "wtw_name": "Scaur Water",
+   "station_no": "133149",
+   "levels": {
+    "scrape": 0.8,
+    "low": 0.89,
+    "medium": 1.1,
+    "high": 1.4,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-ettrick-upper-section",
+   "wtw_name": "Ettrick (Upper)",
+   "station_no": "14987",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.75,
+    "medium": 0.9,
+    "high": 1.2,
+    "very_high": 1.3,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "dee-grampian-garthdee",
+   "wtw_name": "Dee (Grampian) (Garthdee)",
+   "station_no": "368014",
+   "levels": {
+    "scrape": 0,
+    "low": 0.77,
+    "medium": 1,
+    "high": 2,
+    "very_high": 2,
+    "huge": 2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-dye",
+   "wtw_name": "Dye",
+   "station_no": "234237",
+   "levels": {
+    "scrape": 1.8,
+    "low": 2.2,
+    "medium": 2.5,
+    "high": 2.8,
+    "very_high": 2.9,
+    "huge": 3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "avon-spey",
+   "wtw_name": "Avon (Spey)",
+   "station_no": "234198",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 0.85,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.3
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-dee-above-braemar-to-potarch",
+   "wtw_name": "Dee (Grampian) (Top)",
+   "station_no": "234274",
+   "levels": {
+    "scrape": 0.65,
+    "low": 0.7,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "deveron",
+   "wtw_name": "Deveron",
+   "station_no": "369548",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.5,
+    "medium": 0.7,
+    "high": 0.8,
+    "very_high": 1,
+    "huge": 1.2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "big-water-of-fleet",
+   "wtw_name": "Big Water of Fleet",
+   "station_no": "133177",
+   "levels": {
+    "scrape": 0.8,
+    "low": 1,
+    "medium": 1.1,
+    "high": 1.8,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-ling",
+   "wtw_name": "Ling",
+   "station_no": "234252",
+   "levels": {
+    "scrape": 0.47,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 0.9,
+    "very_high": 1.1,
+    "huge": 1.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "gairn",
+   "wtw_name": "Gairn",
+   "station_no": "234243",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.65,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "guide-to-the-urr-water",
+   "wtw_name": "Urr Water",
+   "station_no": "133151",
+   "levels": {
+    "scrape": 0.8,
+    "low": 1,
+    "medium": 1.3,
+    "high": 1.6,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "kinnel-water",
+   "wtw_name": "Kinnel Water",
+   "station_no": "133175",
+   "levels": {
+    "scrape": 0.9,
+    "low": 1.1,
+    "medium": 1.3,
+    "high": 1.5,
+    "very_high": 1.7,
+    "huge": 1.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "water-of-minnoch-lower",
+   "wtw_name": "Water of Minnoch (Lower)",
+   "station_no": "133168",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 1.5,
+    "high": 1.8,
+    "very_high": 2,
+    "huge": 2.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "almond-perthshire",
+   "wtw_name": "Almond (Perthshire)",
+   "station_no": "14953",
+   "levels": {
+    "scrape": 0.38,
+    "low": 0.4,
+    "medium": 0.7,
+    "high": 0.8,
+    "very_high": 1.5,
+    "huge": 1.7
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-moriston-upper-section",
+   "wtw_name": "Moriston",
+   "station_no": "234262",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.5,
+    "medium": 0.8,
+    "high": 0.9,
+    "very_high": 1,
+    "huge": 1.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-tummel-pitlochry-to-the-tay",
+   "wtw_name": "Tummel (Bottom)",
+   "station_no": "14963",
+   "levels": {
+    "scrape": 0.2,
+    "low": 0.278,
+    "medium": 0.51,
+    "high": 1,
+    "very_high": 1.8,
+    "huge": 2.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "lugar-water",
+   "wtw_name": "Lugar Water",
+   "station_no": "133103",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 0.9,
+    "high": 1,
+    "very_high": 1.6,
+    "huge": 1.7
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-avon-a801-to-linlithgow",
+   "wtw_name": "Avon (Lothian)",
+   "station_no": "14884",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.7,
+    "medium": 1.2,
+    "high": 1.5,
+    "very_high": 2,
+    "huge": 2.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-clyde-falls-of-clyde",
+   "wtw_name": "Falls of Clyde",
+   "station_no": "133130",
+   "levels": {
+    "scrape": 0.7,
+    "low": 0.8,
+    "medium": 0.85,
+    "high": 1,
+    "very_high": 1.3,
+    "huge": 1.4
+   },
+   "match": "link"
+  },
+  {
+   "slug": "garry-perthshire",
+   "wtw_name": "Garry (Perthshire)",
+   "station_no": "14958",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.6,
+    "medium": 1.1,
+    "high": 1.4,
+    "very_high": 1.6,
+    "huge": 1.8
+   },
+   "match": "new"
+  },
+  {
+   "slug": "west-water",
+   "wtw_name": "West Water",
+   "station_no": "14925",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.75,
+    "medium": 1,
+    "high": 1.1,
+    "very_high": 1.2,
+    "huge": 1.3
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-north-esk-penicuik-to-the-sea",
+   "wtw_name": "North Esk (Lothian)",
+   "station_no": "14873",
+   "levels": {
+    "scrape": 0.09,
+    "low": 0.244,
+    "medium": 0.3,
+    "high": 0.468,
+    "very_high": 0.5,
+    "huge": 0.6
+   },
+   "match": "link"
+  },
+  {
+   "slug": "water-of-leith-balerno-to-stockbridge",
+   "wtw_name": "Water of Leith (Lower)",
+   "station_no": "14868",
+   "levels": {
+    "scrape": 0.45,
+    "low": 0.7,
+    "medium": 1,
+    "high": 1.3,
+    "very_high": 1.5,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "river-divie",
+   "wtw_name": "Divie",
+   "station_no": "234206",
+   "levels": {
+    "scrape": 0.2,
+    "low": 0.25,
+    "medium": 0.4,
+    "high": 0.6,
+    "very_high": 0.8,
+    "huge": 1.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "liddel-water",
+   "wtw_name": "Liddel Water",
+   "station_no": "133170",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 1.2,
+    "high": 1.3,
+    "very_high": 1.4,
+    "huge": 1.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-annan-johnstonebridge-to-st-mungos-church",
+   "wtw_name": "Annan",
+   "station_no": "133146",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.6,
+    "medium": 1,
+    "high": 1.46,
+    "very_high": 1.7,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "don-middle",
+   "wtw_name": "Don (Middle)",
+   "station_no": "234170",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 1,
+    "very_high": 1.2,
+    "huge": 1.4
+   },
+   "match": "new"
+  },
+  {
+   "slug": "dee-grampian-upper",
+   "wtw_name": "Dee (Grampian) (Upper)",
+   "station_no": "234294",
+   "levels": {
+    "scrape": 0.45,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 0.8,
+    "very_high": 1,
+    "huge": 1.5
+   },
+   "match": "new"
+  },
+  {
+   "slug": "dee-grampian-drumoak",
+   "wtw_name": "Dee (Grampian) (Drumoak)",
+   "station_no": "234291",
+   "levels": null,
+   "match": "new"
+  },
+  {
+   "slug": "river-nethan-holmhead-farm-to-crossford",
+   "wtw_name": "Nethan",
+   "station_no": "133102",
+   "levels": null,
+   "match": "nearby"
+  },
+  {
+   "slug": "evan-water",
+   "wtw_name": "Evan Water",
+   "station_no": "133143",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.5,
+    "medium": 0.8,
+    "high": 1,
+    "very_high": 1.1,
+    "huge": 1.2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "kirk-burn",
+   "wtw_name": "Kirk Burn",
+   "station_no": "133104",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.6,
+    "medium": 0.65,
+    "high": 0.75,
+    "very_high": 0.85,
+    "huge": 0.9
+   },
+   "match": "new"
+  },
+  {
+   "slug": "north-esk-lower-old",
+   "wtw_name": "North Esk (Lower) (Old)",
+   "station_no": "14927",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.45,
+    "medium": 0.5,
+    "high": 0.55,
+    "very_high": 0.75,
+    "huge": 1.2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "water-of-leith-upper",
+   "wtw_name": "Water of Leith (Upper)",
+   "station_no": "14880",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.45,
+    "medium": 0.55,
+    "high": 0.65,
+    "very_high": 0.75,
+    "huge": 1
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-alladale",
+   "wtw_name": "Carron (Easter Ross) (Top)",
+   "station_no": "234305",
+   "levels": {
+    "scrape": 0.9,
+    "low": 1.1,
+    "medium": 1.2,
+    "high": 1.4,
+    "very_high": 1.6,
+    "huge": 2
+   },
+   "match": "link"
+  },
+  {
+   "slug": "abhain-deabhag",
+   "wtw_name": "Abhainn Deabhag",
+   "station_no": "234215",
+   "levels": {
+    "scrape": 0.4,
+    "low": 0.45,
+    "medium": 0.5,
+    "high": 0.65,
+    "very_high": 0.8,
+    "huge": 1
+   },
+   "match": "nearby"
+  },
+  {
+   "slug": "clyde-elvanfoot-to-wiston",
+   "wtw_name": "Clyde (Elvanfoot to Wiston)",
+   "station_no": "322551",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.5,
+    "medium": 0.7,
+    "high": 1.5,
+    "very_high": 1.7,
+    "huge": 2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "earn",
+   "wtw_name": "Earn",
+   "station_no": "14967",
+   "levels": null,
+   "match": "new"
+  },
+  {
+   "slug": "clyde-sills-of-clyde",
+   "wtw_name": "Clyde (Sills of Clyde)",
+   "station_no": "133126",
+   "levels": {
+    "scrape": 0.5,
+    "low": 0.8,
+    "medium": 1.1,
+    "high": 1.5,
+    "very_high": 1.8,
+    "huge": 2
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-etive-triple-falls-to-the-allt-achaorainn",
+   "wtw_name": "Etive (Middle)",
+   "station_no": "133131",
+   "levels": {
+    "scrape": 0.3,
+    "low": 0.4,
+    "medium": 0.52,
+    "high": 0.65,
+    "very_high": 0.75,
+    "huge": 0.8
+   },
+   "match": "link"
+  },
+  {
+   "slug": "white-cart-water",
+   "wtw_name": "White Cart Water",
+   "station_no": "133118",
+   "levels": null,
+   "match": "new"
+  },
+  {
+   "slug": "white-cart-water-linn-park-fall",
+   "wtw_name": "White Cart Water (Linn Park Fall)",
+   "station_no": "133118",
+   "levels": {
+    "scrape": 0.47,
+    "low": 0.6,
+    "medium": 0.7,
+    "high": 0.8,
+    "very_high": 0.9,
+    "huge": 1
+   },
+   "match": "new"
+  },
+  {
+   "slug": "river-north-esk-tribs-to-dalbrack-bridge",
+   "wtw_name": "North Esk (Upper) (Invermark Gauge)",
+   "station_no": "14926",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.7,
+    "medium": 0.9,
+    "high": 1.1,
+    "very_high": 1.4,
+    "huge": 1.7
+   },
+   "match": "link"
+  },
+  {
+   "slug": "north-esk-middle",
+   "wtw_name": "North Esk (Middle)",
+   "station_no": "369554",
+   "levels": {
+    "scrape": 0.6,
+    "low": 0.7,
+    "medium": 0.8,
+    "high": 1.1,
+    "very_high": 1.4,
+    "huge": 1.6
+   },
+   "match": "new"
+  },
+  {
+   "slug": "garry-perthshire-calvine",
+   "wtw_name": "Garry (Perthshire) (Calvine)",
+   "station_no": "14960",
+   "levels": null,
+   "match": "new"
+  },
+  {
+   "slug": "blackwater-garve-upper",
+   "wtw_name": "Blackwater (Garve) (Upper)",
+   "station_no": "234225",
+   "levels": {
+    "scrape": 1.1,
+    "low": 1.2,
+    "medium": 1.3,
+    "high": 1.5,
+    "very_high": 1.7,
+    "huge": 1.7
+   },
+   "match": "new"
+  },
+  {
+   "slug": "gala-water",
+   "wtw_name": "Gala Water",
+   "station_no": "9683",
+   "levels": null,
+   "match": "new"
+  },
+  {
+   "slug": "lyon-upper",
+   "wtw_name": "Lyon (Upper)",
+   "station_no": "14949",
+   "levels": {
+    "scrape": 0.4,
+    "low": 1,
+    "medium": 1,
+    "high": 1,
+    "very_high": 1,
+    "huge": 1
+   },
+   "match": "new"
+  }
+ ],
+ "new_sections": [
+  {
+   "slug": "tweed-berwick",
+   "name": "Tweed (Berwick)",
+   "river": "Tweed",
+   "region": "Southern Uplands",
+   "grade_text": "1",
+   "grade_min": 1,
+   "grade_max": 1,
+   "lat": 55.722689,
+   "lon": -2.1633731,
+   "put_in": null,
+   "take_out": null
+  },
+  {
+   "slug": "ness",
+   "name": "Ness",
+   "river": "Ness",
+   "region": "North East",
+   "grade_text": "1/2",
+   "grade_min": 1,
+   "grade_max": 2,
+   "lat": 57.4631,
+   "lon": -4.23265,
+   "put_in": {
+    "lat": 57.4327,
+    "lon": -4.3036,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.4665,
+    "lon": -4.23,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "gryfe",
+   "name": "Gryfe",
+   "river": "Gryfe",
+   "region": "West Highlands",
+   "grade_text": "3(4+)",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 55.8566,
+   "lon": -4.56654,
+   "put_in": {
+    "lat": 55.8605,
+    "lon": -4.5929,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.8637,
+    "lon": -4.5304,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "ayr",
+   "name": "Ayr",
+   "river": "Ayr",
+   "region": "Southern Uplands",
+   "grade_text": "2 (3/4)",
+   "grade_min": 2,
+   "grade_max": 4,
+   "lat": 55.4798,
+   "lon": -4.48036,
+   "put_in": {
+    "lat": 55.4997,
+    "lon": -4.3518,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.4749,
+    "lon": -4.5533,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "brora",
+   "name": "Brora",
+   "river": "Brora",
+   "region": "Far North",
+   "grade_text": "2",
+   "grade_min": 2,
+   "grade_max": 2,
+   "lat": 58.0126,
+   "lon": -3.90392,
+   "put_in": {
+    "lat": 58.0246,
+    "lon": -3.9328,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 58.0113,
+    "lon": -3.8505,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "avon-glasgow",
+   "name": "Avon (Glasgow)",
+   "river": "Avon",
+   "region": "Southern Uplands",
+   "grade_text": "3(4)",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 55.7399,
+   "lon": -3.98838,
+   "put_in": {
+    "lat": 55.7039,
+    "lon": -3.9892,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.7895,
+    "lon": -4.0217,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "tarff",
+   "name": "Tarff",
+   "river": "Tarff",
+   "region": "Far North",
+   "grade_text": "5",
+   "grade_min": 5,
+   "grade_max": 5,
+   "lat": 57.1474,
+   "lon": -4.60276,
+   "put_in": {
+    "lat": 57.0961,
+    "lon": -4.6616,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.1294,
+    "lon": -4.6778,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "snizort",
+   "name": "Snizort",
+   "river": "Snizort",
+   "region": "West Highlands",
+   "grade_text": "3/4",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 57.4124,
+   "lon": -6.29448,
+   "put_in": {
+    "lat": 57.4155,
+    "lon": -6.2965,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.4527,
+    "lon": -6.304,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "helmsdale",
+   "name": "Helmsdale",
+   "river": "Helmsdale",
+   "region": "Far North",
+   "grade_text": "3/4(4+)",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 58.158,
+   "lon": -3.84727,
+   "put_in": {
+    "lat": 58.2019,
+    "lon": -3.8939,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 58.1541,
+    "lon": -3.8284,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "naver",
+   "name": "Naver",
+   "river": "Naver",
+   "region": "Far North",
+   "grade_text": "2",
+   "grade_min": 2,
+   "grade_max": 2,
+   "lat": 58.4362,
+   "lon": -4.19266,
+   "put_in": {
+    "lat": 58.3355,
+    "lon": -4.253,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 58.5261,
+    "lon": -4.2337,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "don-lower",
+   "name": "Don (Lower)",
+   "river": "Don",
+   "region": "North East",
+   "grade_text": "2-3",
+   "grade_min": 2,
+   "grade_max": 3,
+   "lat": 57.218321,
+   "lon": -2.1875865,
+   "put_in": {
+    "lat": 57.1978,
+    "lon": -2.1721,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.1727,
+    "lon": -2.1058,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "doon-lower",
+   "name": "Doon (Lower)",
+   "river": "Doon",
+   "region": "Southern Uplands",
+   "grade_text": "2",
+   "grade_min": 2,
+   "grade_max": 2,
+   "lat": 55.404293,
+   "lon": -4.630728,
+   "put_in": {
+    "lat": 55.4046,
+    "lon": -4.6308,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.4405,
+    "lon": -4.6511,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "dee-grampian-garthdee",
+   "name": "Dee (Grampian) (Garthdee)",
+   "river": "Dee",
+   "region": "North East",
+   "grade_text": "1",
+   "grade_min": 1,
+   "grade_max": 1,
+   "lat": 57.11882,
+   "lon": -2.12439,
+   "put_in": {
+    "lat": 57.101929,
+    "lon": -2.222189,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.140775,
+    "lon": -2.070994,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "avon-spey",
+   "name": "Avon (Spey)",
+   "river": "Avon",
+   "region": "North East",
+   "grade_text": "3(5)",
+   "grade_min": 3,
+   "grade_max": 5,
+   "lat": 57.2396,
+   "lon": -3.389,
+   "put_in": {
+    "lat": 57.2396,
+    "lon": -3.389,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.4056,
+    "lon": -3.361,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "deveron",
+   "name": "Deveron",
+   "river": "Deveron",
+   "region": "North East",
+   "grade_text": "1-2",
+   "grade_min": 1,
+   "grade_max": 2,
+   "lat": 57.454986,
+   "lon": -2.8075603,
+   "put_in": {
+    "lat": 57.4549,
+    "lon": -2.81,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.6631,
+    "lon": -2.5129,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "gairn",
+   "name": "Gairn",
+   "river": "Gairn",
+   "region": "North East",
+   "grade_text": "2(3/4)",
+   "grade_min": 2,
+   "grade_max": 4,
+   "lat": 57.0662,
+   "lon": -3.0776,
+   "put_in": {
+    "lat": 57.0662,
+    "lon": -3.0776,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.0603,
+    "lon": -3.0695,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "water-of-minnoch-lower",
+   "name": "Water of Minnoch (Lower)",
+   "river": "Water of Minnoch",
+   "region": "Southern Uplands",
+   "grade_text": "3/4",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 55.0748,
+   "lon": -4.5529,
+   "put_in": {
+    "lat": 55.0748,
+    "lon": -4.5529,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.0408,
+    "lon": -4.5644,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "almond-perthshire",
+   "name": "Almond (Perthshire)",
+   "river": "Almond",
+   "region": "Central Highlands",
+   "grade_text": "2/3(5)",
+   "grade_min": 2,
+   "grade_max": 5,
+   "lat": 56.4623,
+   "lon": -3.807,
+   "put_in": {
+    "lat": 56.4623,
+    "lon": -3.807,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 56.4354,
+    "lon": -3.7308,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "lugar-water",
+   "name": "Lugar Water",
+   "river": "Lugar Water",
+   "region": "Southern Uplands",
+   "grade_text": "2/3",
+   "grade_min": 2,
+   "grade_max": 3,
+   "lat": 55.4661,
+   "lon": -4.2255,
+   "put_in": {
+    "lat": 55.4661,
+    "lon": -4.2255,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.499,
+    "lon": -4.3913,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "garry-perthshire",
+   "name": "Garry (Perthshire)",
+   "river": "Garry",
+   "region": "Central Highlands",
+   "grade_text": "2/3(5)",
+   "grade_min": 2,
+   "grade_max": 5,
+   "lat": 56.7437,
+   "lon": -3.7808,
+   "put_in": {
+    "lat": 56.7553,
+    "lon": -3.814,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 56.714795,
+    "lon": -3.766611,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "liddel-water",
+   "name": "Liddel Water",
+   "river": "Liddel Water",
+   "region": "Southern Uplands",
+   "grade_text": "4",
+   "grade_min": 4,
+   "grade_max": 4,
+   "lat": 55.088377,
+   "lon": -2.889856,
+   "put_in": {
+    "lat": 55.088377,
+    "lon": -2.889856,
+    "label": "Put-in"
+   },
+   "take_out": null
+  },
+  {
+   "slug": "don-middle",
+   "name": "Don (Middle)",
+   "river": "Don",
+   "region": "North East",
+   "grade_text": "1/2",
+   "grade_min": 1,
+   "grade_max": 2,
+   "lat": 57.2423,
+   "lon": -2.71712,
+   "put_in": {
+    "lat": 57.2115,
+    "lon": -2.9305,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.2755,
+    "lon": -2.3731,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "dee-grampian-upper",
+   "name": "Dee (Grampian) (Upper)",
+   "river": "Dee",
+   "region": "North East",
+   "grade_text": "1/2",
+   "grade_min": 1,
+   "grade_max": 2,
+   "lat": 57.05514,
+   "lon": -3.08318,
+   "put_in": {
+    "lat": 57.065216,
+    "lon": -2.648754,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.047445,
+    "lon": -2.500788,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "dee-grampian-drumoak",
+   "name": "Dee (Grampian) (Drumoak)",
+   "river": "Dee",
+   "region": "North East",
+   "grade_text": "1",
+   "grade_min": 1,
+   "grade_max": 1,
+   "lat": 57.06646,
+   "lon": -2.3317,
+   "put_in": {
+    "lat": 57.053139,
+    "lon": -2.409091,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.094381,
+    "lon": -2.235541,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "kirk-burn",
+   "name": "Kirk Burn",
+   "river": "Kirk Burn",
+   "region": "West Highlands",
+   "grade_text": "4/5 (5+)",
+   "grade_min": 4,
+   "grade_max": 5,
+   "lat": 55.995075,
+   "lon": -4.223761,
+   "put_in": {
+    "lat": 55.9998,
+    "lon": -4.209,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.9949,
+    "lon": -4.2257,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "north-esk-lower-old",
+   "name": "North Esk (Lower) (Old)",
+   "river": "North Esk",
+   "region": "North East",
+   "grade_text": "3(4)",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 56.766877,
+   "lon": -2.4933655,
+   "put_in": null,
+   "take_out": null
+  },
+  {
+   "slug": "water-of-leith-upper",
+   "name": "Water of Leith (Upper)",
+   "river": "Water of Leith",
+   "region": "Southern Uplands",
+   "grade_text": "2/3",
+   "grade_min": 2,
+   "grade_max": 3,
+   "lat": 55.906074,
+   "lon": -3.263525,
+   "put_in": {
+    "lat": 55.900352,
+    "lon": -3.292493,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.923924,
+    "lon": -3.24877,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "clyde-elvanfoot-to-wiston",
+   "name": "Clyde (Elvanfoot to Wiston)",
+   "river": "Clyde",
+   "region": "Southern Uplands",
+   "grade_text": "?",
+   "grade_min": null,
+   "grade_max": null,
+   "lat": 55.450118,
+   "lon": -3.648983,
+   "put_in": {
+    "lat": 55.450118,
+    "lon": -3.648983,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.555474,
+    "lon": -3.63293,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "earn",
+   "name": "Earn",
+   "river": "Earn",
+   "region": "Central Highlands",
+   "grade_text": "1-2(3)",
+   "grade_min": 1,
+   "grade_max": 3,
+   "lat": 56.374036,
+   "lon": -3.985959,
+   "put_in": {
+    "lat": 56.366484,
+    "lon": -3.852155,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 56.330755,
+    "lon": -3.728747,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "clyde-sills-of-clyde",
+   "name": "Clyde (Sills of Clyde)",
+   "river": "Clyde",
+   "region": "Southern Uplands",
+   "grade_text": "2/3",
+   "grade_min": 2,
+   "grade_max": 3,
+   "lat": 55.663124,
+   "lon": -3.7050583,
+   "put_in": null,
+   "take_out": null
+  },
+  {
+   "slug": "white-cart-water",
+   "name": "White Cart Water",
+   "river": "White Cart Water",
+   "region": "West Highlands",
+   "grade_text": "?",
+   "grade_min": null,
+   "grade_max": null,
+   "lat": 55.7531,
+   "lon": -4.2646,
+   "put_in": {
+    "lat": 55.7531,
+    "lon": -4.2646,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.8138,
+    "lon": -4.2591,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "white-cart-water-linn-park-fall",
+   "name": "White Cart Water (Linn Park Fall)",
+   "river": "White Cart Water",
+   "region": "West Highlands",
+   "grade_text": "4",
+   "grade_min": 4,
+   "grade_max": 4,
+   "lat": 55.806223,
+   "lon": -4.264467,
+   "put_in": {
+    "lat": 55.806223,
+    "lon": -4.264467,
+    "label": "Put-in"
+   },
+   "take_out": null
+  },
+  {
+   "slug": "north-esk-middle",
+   "name": "North Esk (Middle)",
+   "river": "North Esk",
+   "region": "North East",
+   "grade_text": "2(3+)",
+   "grade_min": 2,
+   "grade_max": 3,
+   "lat": 56.8931,
+   "lon": -2.8727,
+   "put_in": null,
+   "take_out": null
+  },
+  {
+   "slug": "garry-perthshire-calvine",
+   "name": "Garry (Perthshire) (Calvine)",
+   "river": "Garry",
+   "region": "Central Highlands",
+   "grade_text": "3",
+   "grade_min": 3,
+   "grade_max": 3,
+   "lat": 56.778117,
+   "lon": -3.993997,
+   "put_in": {
+    "lat": 56.778117,
+    "lon": -3.993997,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 56.767294,
+    "lon": -3.961484,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "blackwater-garve-upper",
+   "name": "Blackwater (Garve) (Upper)",
+   "river": "Blackwater",
+   "region": "Far North",
+   "grade_text": "3-4",
+   "grade_min": 3,
+   "grade_max": 4,
+   "lat": 57.6974,
+   "lon": -4.7316,
+   "put_in": {
+    "lat": 57.6974,
+    "lon": -4.7316,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 57.6868,
+    "lon": -4.6881,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "gala-water",
+   "name": "Gala Water",
+   "river": "Gala Water",
+   "region": "Southern Uplands",
+   "grade_text": "1",
+   "grade_min": 1,
+   "grade_max": 1,
+   "lat": 55.691946,
+   "lon": -2.864393,
+   "put_in": {
+    "lat": 55.691946,
+    "lon": -2.864393,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 55.603864,
+    "lon": -2.780203,
+    "label": "Take-out"
+   }
+  },
+  {
+   "slug": "lyon-upper",
+   "name": "Lyon (Upper)",
+   "river": "Lyon",
+   "region": "Central Highlands",
+   "grade_text": "2-4",
+   "grade_min": 2,
+   "grade_max": 4,
+   "lat": 56.5423,
+   "lon": -4.5171,
+   "put_in": {
+    "lat": 56.5423,
+    "lon": -4.5171,
+    "label": "Put-in"
+   },
+   "take_out": {
+    "lat": 56.5454,
+    "lon": -4.4503,
+    "label": "Take-out"
+   }
+  }
+ ],
+ "releases": [
+  {
+   "slug": "falls-of-lora-tidal-rapid",
+   "wtw_name": "Falls of Lora",
+   "dates": [
+    "2026-01-04",
+    "2026-01-05",
+    "2026-02-02",
+    "2026-02-03",
+    "2026-02-04",
+    "2026-02-18",
+    "2026-02-19",
+    "2026-02-20",
+    "2026-02-21",
+    "2026-03-03",
+    "2026-03-04",
+    "2026-03-05",
+    "2026-03-18",
+    "2026-03-19",
+    "2026-03-20",
+    "2026-03-21",
+    "2026-03-22",
+    "2026-04-02",
+    "2026-04-03",
+    "2026-04-16",
+    "2026-04-17",
+    "2026-04-18",
+    "2026-04-19",
+    "2026-04-20",
+    "2026-04-21",
+    "2026-05-16",
+    "2026-05-17",
+    "2026-05-18",
+    "2026-05-19",
+    "2026-05-20",
+    "2026-06-15",
+    "2026-06-16",
+    "2026-06-17",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-18",
+    "2026-08-13",
+    "2026-08-14",
+    "2026-08-15",
+    "2026-08-16",
+    "2026-08-31",
+    "2026-09-10",
+    "2026-09-11",
+    "2026-09-12",
+    "2026-09-13",
+    "2026-09-14",
+    "2026-09-27",
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-10",
+    "2026-10-11",
+    "2026-10-12",
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28",
+    "2026-11-23",
+    "2026-11-25",
+    "2026-11-26",
+    "2026-12-25",
+    "2026-12-26",
+    "2026-12-27",
+    "2026-12-31"
+   ],
+   "note": "Dates listed here are daylight ebb flows over 3.2m range, check link below for full details"
+  },
+  {
+   "slug": "river-awe",
+   "wtw_name": "Awe",
+   "dates": [
+    "2026-05-02",
+    "2026-05-03",
+    "2026-05-09",
+    "2026-07-26",
+    "2026-08-30",
+    "2026-09-27",
+    "2026-10-09",
+    "2026-10-10",
+    "2026-10-11",
+    "2026-10-12",
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25",
+    "2026-10-26",
+    "2026-11-06",
+    "2026-11-07",
+    "2026-11-08",
+    "2026-11-09",
+    "2026-11-20",
+    "2026-11-21",
+    "2026-11-22",
+    "2026-11-23",
+    "2026-12-04",
+    "2026-12-05",
+    "2026-12-06",
+    "2026-12-07",
+    "2026-12-18",
+    "2026-12-19",
+    "2026-12-20",
+    "2026-12-21"
+   ],
+   "note": "Releases are either one day or Friday midday to Monday midday"
+  },
+  {
+   "slug": "river-garry",
+   "wtw_name": "Garry (Great Glen)",
+   "dates": [
+    "2026-03-19",
+    "2026-03-26",
+    "2026-04-02",
+    "2026-04-04",
+    "2026-04-09",
+    "2026-04-10",
+    "2026-04-16",
+    "2026-04-23",
+    "2026-04-30",
+    "2026-05-07",
+    "2026-05-08",
+    "2026-05-14",
+    "2026-05-17",
+    "2026-05-21",
+    "2026-05-28",
+    "2026-06-04",
+    "2026-06-11",
+    "2026-06-18",
+    "2026-06-25",
+    "2026-07-02",
+    "2026-07-04",
+    "2026-07-09",
+    "2026-07-11",
+    "2026-07-16",
+    "2026-07-23",
+    "2026-07-30",
+    "2026-08-01",
+    "2026-08-08",
+    "2026-08-13",
+    "2026-08-15",
+    "2026-08-20",
+    "2026-08-27",
+    "2026-08-29",
+    "2026-09-03",
+    "2026-09-06",
+    "2026-09-17",
+    "2026-09-27",
+    "2026-10-03",
+    "2026-10-08",
+    "2026-10-15"
+   ],
+   "note": "Check calendar for times."
+  },
+  {
+   "slug": "river-lyon",
+   "wtw_name": "Lyon",
+   "dates": [
+    "2026-04-05",
+    "2026-04-16",
+    "2026-04-28",
+    "2026-05-07",
+    "2026-05-14",
+    "2026-05-21",
+    "2026-05-27",
+    "2026-06-04",
+    "2026-06-12",
+    "2026-06-16",
+    "2026-06-24",
+    "2026-07-02",
+    "2026-07-09",
+    "2026-07-17",
+    "2026-07-21",
+    "2026-07-29",
+    "2026-08-04",
+    "2026-08-12",
+    "2026-08-21",
+    "2026-08-28",
+    "2026-09-03",
+    "2026-09-11",
+    "2026-09-17",
+    "2026-09-23",
+    "2026-09-30",
+    "2026-10-08",
+    "2026-10-14"
+   ],
+   "note": "Dates listed are the day after water release when it arrives at the paddled section"
+  },
+  {
+   "slug": "river-moriston-upper-section",
+   "wtw_name": "Moriston",
+   "dates": [
+    "2026-03-31",
+    "2026-04-01",
+    "2026-04-07",
+    "2026-04-08",
+    "2026-04-14",
+    "2026-04-15",
+    "2026-04-21",
+    "2026-04-22",
+    "2026-04-28",
+    "2026-04-29",
+    "2026-05-05",
+    "2026-05-06",
+    "2026-05-19",
+    "2026-05-20",
+    "2026-05-23",
+    "2026-05-24",
+    "2026-06-02",
+    "2026-06-03",
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-09",
+    "2026-06-10",
+    "2026-06-16",
+    "2026-06-17",
+    "2026-06-23",
+    "2026-06-24",
+    "2026-07-07",
+    "2026-07-08",
+    "2026-07-11",
+    "2026-07-12",
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-28",
+    "2026-07-29",
+    "2026-08-01",
+    "2026-08-02",
+    "2026-08-15",
+    "2026-08-16",
+    "2026-08-22",
+    "2026-08-23",
+    "2026-08-25",
+    "2026-08-26",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-05",
+    "2026-09-06",
+    "2026-09-12",
+    "2026-09-13",
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-06",
+    "2026-10-07",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-20",
+    "2026-10-21",
+    "2026-10-27",
+    "2026-10-28"
+   ],
+   "note": "Time vary, check calendar"
+  },
+  {
+   "slug": "river-tummel-dunalastair-water-to-loch-tummel",
+   "wtw_name": "Tummel (Upper)",
+   "dates": [
+    "2026-05-27",
+    "2026-05-28",
+    "2026-05-29",
+    "2026-06-05",
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-17",
+    "2026-06-18",
+    "2026-06-19",
+    "2026-06-29",
+    "2026-06-30",
+    "2026-07-01",
+    "2026-07-10",
+    "2026-07-11",
+    "2026-07-12",
+    "2026-07-20",
+    "2026-07-21",
+    "2026-07-22",
+    "2026-07-29",
+    "2026-07-30",
+    "2026-07-31",
+    "2026-08-07",
+    "2026-08-08",
+    "2026-08-09",
+    "2026-08-19",
+    "2026-08-20",
+    "2026-08-21",
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-11",
+    "2026-09-12",
+    "2026-09-13",
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-12",
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-23",
+    "2026-10-24",
+    "2026-10-25"
+   ],
+   "note": "Releases commence at 14:00 on the first day continuing for 47 hours until 13:00 on day three."
+  },
+  {
+   "slug": "river-tummel-loch-tummel-to-loch-faskally",
+   "wtw_name": "Tummel (Lower)",
+   "dates": [
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-13",
+    "2026-06-14",
+    "2026-06-20",
+    "2026-06-21",
+    "2026-06-27",
+    "2026-06-28",
+    "2026-07-04",
+    "2026-07-05",
+    "2026-07-11",
+    "2026-07-12",
+    "2026-07-18",
+    "2026-07-19",
+    "2026-07-25",
+    "2026-07-26",
+    "2026-08-01",
+    "2026-08-02",
+    "2026-08-08",
+    "2026-08-09",
+    "2026-08-15",
+    "2026-08-16",
+    "2026-08-22",
+    "2026-08-23",
+    "2026-08-29",
+    "2026-08-30",
+    "2026-09-05",
+    "2026-09-06",
+    "2026-09-12",
+    "2026-09-13",
+    "2026-09-19",
+    "2026-09-20",
+    "2026-09-26",
+    "2026-09-27"
+   ],
+   "note": "Releases are 16:00 Fridays to 08:00 Mondays"
+  }
+ ]
+}

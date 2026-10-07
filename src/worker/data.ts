@@ -2,12 +2,13 @@
 
 import { distanceKm } from '../shared/geo.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
-import { isStale, linkRank, sectionStatus, trendFrom, typicalStatus } from '../shared/status.ts';
+import { isStale, linkRank, paddlerStep, sectionStatus, trendFrom, typicalStatus, ukToday } from '../shared/status.ts';
 import type {
   BandBasis,
   Confidence,
   Gauge,
   GuideText,
+  PaddlerLevels,
   PlacePoint,
   Relation,
   SectionDetail,
@@ -52,6 +53,8 @@ interface SectionRow {
   ukrgb_url: string;
   source_updated: string | null;
   guide_text: string | null;
+  source: 'guidebook' | 'wtw';
+  release_note: string | null;
 }
 
 interface LinkRow {
@@ -63,6 +66,7 @@ interface LinkRow {
   basis: BandBasis;
   confidence: Confidence;
   reason: string;
+  levels: string | null;
 }
 
 const SUMMARY_COLUMNS =
@@ -90,6 +94,7 @@ export function toGauge(r: GaugeRow, now = Date.now()): Gauge {
 }
 
 function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
+  const levels = parseJson<PaddlerLevels>(l.levels);
   return {
     station_no: l.station_no,
     relation: l.relation,
@@ -100,6 +105,8 @@ function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
     reason: l.reason,
     gauge,
     status: sectionStatus(gauge.level, gauge.stale, l.min_level, l.max_level),
+    levels,
+    step: paddlerStep(gauge.level, gauge.stale, levels),
   };
 }
 
@@ -142,14 +149,15 @@ function headline(links: SectionGaugeLink[]): {
   const sorted = [...links].sort((a, b) => linkRank(a) - linkRank(b));
   const banded = sorted.find((l) => l.min_level != null || l.max_level != null);
   if (banded) {
-    const basis: StatusBasis = banded.basis === 'manual' ? 'manual' : banded.basis === 'community' ? 'community' : 'estimate';
+    const basis: StatusBasis =
+      banded.basis === 'manual' || banded.basis === 'community' || banded.basis === 'paddler' ? banded.basis : 'estimate';
     return { status: banded.status, status_basis: basis, link: banded };
   }
   const first = sorted[0] ?? null;
   return { status: 'unknown', status_basis: first ? 'typical' : 'none', link: first };
 }
 
-function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>, links: SectionGaugeLink[]): SectionSummary {
+function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>, links: SectionGaugeLink[], releaseToday: boolean): SectionSummary {
   const h = headline(links);
   return {
     slug: s.slug,
@@ -171,6 +179,8 @@ function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>,
     level_at: h.link?.gauge.level_at ?? null,
     stale: h.link?.gauge.stale ?? false,
     trend: h.link?.gauge.trend ?? 'unknown',
+    step: h.link?.step ?? null,
+    release_today: releaseToday,
   };
 }
 
@@ -181,12 +191,14 @@ async function allGauges(db: D1Database): Promise<Map<string, Gauge>> {
 }
 
 export async function listSections(db: D1Database): Promise<SectionSummary[]> {
-  const [sections, links, gauges, bands] = await Promise.all([
+  const [sections, links, gauges, bands, releases] = await Promise.all([
     db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM sections ORDER BY name`).all<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges ORDER BY rowid').all<LinkRow>(),
     allGauges(db),
     communityBands(db),
+    db.prepare('SELECT slug FROM releases WHERE day = ?').bind(ukToday()).all<{ slug: string }>(),
   ]);
+  const releasing = new Set(releases.results.map((r) => r.slug));
   const bySlug = new Map<string, SectionGaugeLink[]>();
   for (const l of links.results) {
     const g = gauges.get(l.station_no);
@@ -195,7 +207,7 @@ export async function listSections(db: D1Database): Promise<SectionSummary[]> {
     arr.push(toLink(withCommunity(l, bands.get(`${l.slug}|${l.station_no}`)), g));
     bySlug.set(l.slug, arr);
   }
-  return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? []));
+  return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? [], releasing.has(s.slug)));
 }
 
 function parseJson<T>(v: string | null): T | null {
@@ -214,11 +226,13 @@ export interface DetailWithGuide {
 
 /** Section detail. `guide` is returned separately so callers decide whether it may leave the server. */
 export async function getSection(db: D1Database, slug: string): Promise<DetailWithGuide | null> {
-  const [row, links, gauges, bands] = await Promise.all([
+  const today = ukToday();
+  const [row, links, gauges, bands, releases] = await Promise.all([
     db.prepare('SELECT * FROM sections WHERE slug = ?').bind(slug).first<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges WHERE slug = ? ORDER BY rowid').bind(slug).all<LinkRow>(),
     allGauges(db),
     communityBands(db, slug),
+    db.prepare('SELECT day FROM releases WHERE slug = ? AND day >= ? ORDER BY day LIMIT 12').bind(slug, today).all<{ day: string }>(),
   ]);
   if (!row) return null;
   const linked = links.results
@@ -240,7 +254,7 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
     : [];
 
   const detail: SectionDetail = {
-    ...summarise(row, linked),
+    ...summarise(row, linked, releases.results[0]?.day === today),
     length_text: row.length_text,
     time_text: row.time_text,
     character: row.character,
@@ -249,6 +263,9 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
     source_updated: row.source_updated,
     links: linked,
     nearby_gauges: nearby,
+    source: row.source ?? 'guidebook',
+    releases: releases.results.map((r) => r.day),
+    release_note: row.release_note,
   };
   return { detail, guide: parseJson<GuideText>(row.guide_text) };
 }

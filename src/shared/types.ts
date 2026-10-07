@@ -10,9 +10,20 @@ export type Relation = 'on-section' | 'upstream' | 'downstream' | 'proxy';
  * guide = metres stated in the guidebook; duration = guidebook wording mapped onto how often the gauge
  * reaches each level; typical-relative = wording mapped onto SEPA's typical range (gauges without a curve).
  */
-export type BandBasis = 'guide' | 'duration' | 'typical-relative' | 'community' | 'manual';
+export type BandBasis = 'guide' | 'duration' | 'typical-relative' | 'paddler' | 'community' | 'manual';
 /** How the headline status was decided. */
-export type StatusBasis = 'manual' | 'community' | 'estimate' | 'typical' | 'none';
+export type StatusBasis = 'manual' | 'community' | 'paddler' | 'estimate' | 'typical' | 'none';
+
+/** Paddler-set thresholds (metres) from Where's the Water: the level at which each step starts. */
+export interface PaddlerLevels {
+  scrape: number;
+  low: number;
+  medium: number;
+  high: number;
+  very_high: number;
+  huge: number;
+}
+export type PaddlerStep = 'empty' | 'scrape' | 'low' | 'medium' | 'high' | 'very_high' | 'huge';
 
 export interface Gauge {
   station_no: string;
@@ -43,6 +54,10 @@ export interface SectionGaugeLink {
   reason: string;
   gauge: Gauge;
   status: SectionStatus;
+  /** Paddler level scale for this gauge, when Where's the Water has one. */
+  levels: PaddlerLevels | null;
+  /** Where the current reading sits on that scale. */
+  step: PaddlerStep | null;
 }
 
 export interface SectionSummary {
@@ -67,6 +82,10 @@ export interface SectionSummary {
   level_at: string | null;
   stale: boolean;
   trend: Trend;
+  /** Paddler scale step of the headline reading (e.g. "medium"), when available. */
+  step: PaddlerStep | null;
+  /** A scheduled dam release or tidal window falls today (UK date). */
+  release_today: boolean;
 }
 
 export interface PlacePoint {
@@ -93,6 +112,11 @@ export interface SectionDetail extends SectionSummary {
   source_updated: string | null;
   links: SectionGaugeLink[];
   nearby_gauges: Gauge[];
+  /** 'wtw' when the section itself comes from Where's the Water. */
+  source: 'guidebook' | 'wtw';
+  /** Upcoming scheduled release days (YYYY-MM-DD, UK), soonest first. */
+  releases: string[];
+  release_note: string | null;
   /** Only present when the site is configured to show full guide text. */
   guide?: GuideText;
 }
