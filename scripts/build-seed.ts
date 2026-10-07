@@ -2,7 +2,12 @@
 //   data/gauges.json        SEPA gauge snapshot (public)
 //   data/gauge-durations.json  level-duration curves from SEPA daily maxima (public)
 //   data/enrichment.json    reviewed facts + gauge links (public)
+//   data/wtw-import.json    paddler levels, extra sections and release dates adapted from
+//                           Where's the Water (CC BY-SA 4.0)
 //   data/overrides.json     manual corrections — always win (public)
+//
+// Sections are upserted, never bulk-deleted: community reports reference them
+// (ON DELETE CASCADE), so only sections that no longer exist are removed.
 //   data/private/sections.raw.json   guide text (private, server-side only)
 //
 // Apply with:  npx wrangler d1 execute riverguide --local  --file data/private/seed.sql
@@ -14,6 +19,7 @@ import { relativeToAbsolute } from '../src/shared/status.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
 import type { GuideText } from '../src/shared/types.ts';
 import type { RawSection } from './build-sections.ts';
+import type { WtwImport } from './import-wtw.ts';
 
 interface EnrichedLink {
   station_no: string;
@@ -67,6 +73,7 @@ const raw = new Map(read<RawSection[]>('data/private/sections.raw.json').map((s)
 const gaugeByNo = new Map(gauges.map((g) => [g.station_no, g]));
 const curves = read<{ curves: Record<string, { curve: DurationCurve } | null> }>('data/gauge-durations.json').curves;
 const curveOf = (stationNo: string) => curves[stationNo]?.curve ?? null;
+const wtw = read<WtwImport>('data/wtw-import.json');
 
 function sql(v: unknown): string {
   if (v == null) return 'NULL';
@@ -77,7 +84,17 @@ function sql(v: unknown): string {
 }
 const row = (vals: unknown[]) => `(${vals.map(sql).join(', ')})`;
 
-const out: string[] = ['DELETE FROM section_gauges;', 'DELETE FROM sections;'];
+const out: string[] = ['DELETE FROM section_gauges;', 'DELETE FROM releases;'];
+const SECTION_COLS = [
+  'slug', 'name', 'river', 'section_name', 'region', 'grade_text', 'grade_min', 'grade_max', 'length_text', 'time_text', 'character',
+  'lat', 'lon', 'location_precision', 'put_in', 'take_out', 'ukrgb_url', 'source_updated', 'guide_text', 'source', 'release_note',
+];
+const upsertSection = (vals: unknown[]) =>
+  `INSERT INTO sections (${SECTION_COLS.join(', ')}) VALUES ${row(vals)} ON CONFLICT(slug) DO UPDATE SET ${SECTION_COLS.slice(1)
+    .map((c) => `${c} = excluded.${c}`)
+    .join(', ')};`;
+const releaseNote = new Map(wtw.releases.map((r) => [r.slug, r.note]));
+const seedSlugs: string[] = [];
 
 for (const g of gauges) {
   out.push(
@@ -95,11 +112,13 @@ for (const e of enriched) {
   const guide: GuideText | null = t
     ? { description: t.description, hazards: t.hazards, access: t.access, water_level: t.water_level, other: [t.where_is_it, t.other].filter(Boolean).join('\n\n') }
     : null;
+  seedSlugs.push(s.slug);
   out.push(
-    `INSERT INTO sections (slug, name, river, section_name, region, grade_text, grade_min, grade_max, length_text, time_text, character, lat, lon, location_precision, put_in, take_out, ukrgb_url, source_updated, guide_text) VALUES ${row([
+    upsertSection([
       s.slug, s.name, s.river, s.section_name, s.region, s.grade_text, s.grade_min, s.grade_max, s.length_text, s.time_text,
-      s.character, s.lat, s.lon, s.location_precision, s.put_in, s.take_out, s.ukrgb_url, s.source_updated, guide,
-    ])};`,
+      s.character, s.lat, s.lon, s.location_precision, s.put_in, s.take_out, s.ukrgb_url, s.source_updated, guide, 'guidebook',
+      releaseNote.get(s.slug) ?? null,
+    ]),
   );
 
   const manual = overrides.links?.[e.slug];
@@ -137,5 +156,53 @@ for (const e of enriched) {
   }
 }
 
+// ---- Where's the Water (CC BY-SA 4.0): extra sections, paddler levels, release dates ----
+for (const n of wtw.new_sections) {
+  const s = { ...n, ...(overrides.sections?.[n.slug] ?? {}) };
+  seedSlugs.push(s.slug);
+  out.push(
+    upsertSection([
+      s.slug, s.name, s.river, null, s.region, s.grade_text, s.grade_min, s.grade_max, null, null, null,
+      s.lat, s.lon, 'grid', s.put_in, s.take_out, '', null, null, 'wtw', releaseNote.get(s.slug) ?? null,
+    ]),
+  );
+}
+
+const estimatedRelation = new Map<string, string>(enriched.flatMap((e) => e.links.map((l): [string, string] => [`${e.slug}|${l.station_no}`, l.relation])));
+let paddlerCount = 0;
+for (const b of wtw.bands) {
+  if (overrides.links?.[b.slug] || !gaugeByNo.has(b.station_no)) continue; // manual links replace everything
+  const key = `${b.slug}|${b.station_no}`;
+  const relation = estimatedRelation.get(key) ?? 'on-section';
+  if (!b.levels) {
+    if (estimatedRelation.has(key)) continue; // keep the estimate on a gauge Where's the Water hasn't calibrated
+    out.push(
+      `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels) VALUES ${row([
+        b.slug, b.station_no, relation, null, null, 'paddler', 'medium', "Gauge used by Where's the Water; paddler levels not set yet.", null,
+      ])};`,
+    );
+    linkCount++;
+    continue;
+  }
+  out.push(
+    `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels) VALUES ${row([
+      b.slug, b.station_no, relation, b.levels.scrape, b.levels.huge, 'paddler', 'high',
+      "Levels set by paddlers on Where's the Water.", b.levels,
+    ])};`,
+  );
+  linkCount++;
+  paddlerCount++;
+}
+
+for (const r of wtw.releases) {
+  for (const day of r.dates) out.push(`INSERT OR IGNORE INTO releases (slug, day) VALUES ${row([r.slug, day])};`);
+}
+
+// Remove sections that are no longer in the data (their reports go with them).
+out.push(`DELETE FROM sections WHERE slug NOT IN (${seedSlugs.map(sql).join(', ')});`);
+
 writeFileSync('data/private/seed.sql', out.join('\n') + '\n');
-console.log(`seed.sql: ${gauges.length} gauges, ${enriched.length} sections, ${linkCount} links (${manualCount} manual)`);
+const releaseDays = wtw.releases.reduce((n, r) => n + r.dates.length, 0);
+console.log(
+  `seed.sql: ${gauges.length} gauges, ${seedSlugs.length} sections (${wtw.new_sections.length} from Where's the Water), ${linkCount} links (${paddlerCount} paddler, ${manualCount} manual), ${releaseDays} release days`,
+);

@@ -1,4 +1,4 @@
-import type { Confidence, Relation, SectionStatus, Trend, TypicalStatus } from './types.ts';
+import type { Confidence, PaddlerLevels, PaddlerStep, Relation, SectionStatus, Trend, TypicalStatus } from './types.ts';
 
 /** A reading older than this is treated as unknown rather than current. */
 export const STALE_AFTER_MS = 3 * 60 * 60 * 1000;
@@ -35,10 +35,30 @@ export function sectionStatus(level: number | null, stale: boolean, min: number 
 const CONFIDENCE_RANK: Record<Confidence, number> = { high: 0, medium: 1, low: 2 };
 const RELATION_RANK: Record<Relation, number> = { 'on-section': 0, upstream: 1, downstream: 1, proxy: 2 };
 
-/** Sort key for choosing a section's headline gauge: manual, then community, then confidence and proximity of relation. */
+/** Sort key for choosing a section's headline gauge: manual, community, paddler-set, then confidence and proximity of relation. */
 export function linkRank(l: { basis: string; confidence: Confidence; relation: Relation }): number {
-  const basis = l.basis === 'manual' ? 0 : l.basis === 'community' ? 50 : 100;
+  const basis = l.basis === 'manual' ? 0 : l.basis === 'community' ? 50 : l.basis === 'paddler' ? 70 : 100;
   return basis + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
+}
+
+/** Where a level sits on a paddler scale (each threshold is where that step starts). */
+export function paddlerStep(level: number | null, stale: boolean, levels: PaddlerLevels | null): PaddlerStep | null {
+  if (level == null || stale || !levels) return null;
+  const steps: Array<[PaddlerStep, number]> = [
+    ['huge', levels.huge],
+    ['very_high', levels.very_high],
+    ['high', levels.high],
+    ['medium', levels.medium],
+    ['low', levels.low],
+    ['scrape', levels.scrape],
+  ];
+  for (const [step, from] of steps) if (level >= from) return step;
+  return 'empty';
+}
+
+/** Today's date in the UK as YYYY-MM-DD. */
+export function ukToday(now = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
 /**

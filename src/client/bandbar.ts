@@ -23,7 +23,7 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   const { min_level: min, max_level: max } = link;
   const tLow = g.typical_low;
   const tHigh = g.typical_high;
-  const values = [g.level, min, max, tLow, tHigh, ...dots.map((d) => d.level)].filter((v): v is number => v != null && Number.isFinite(v));
+  const values = [g.level, min, max, tLow, tHigh, ...dots.map((d) => d.level), ...(link.levels ? Object.values(link.levels) : [])].filter((v): v is number => v != null && Number.isFinite(v));
   if (min == null && max == null && (tLow == null || tHigh == null) && !dots.length) return null;
   if (values.length < 2) return null;
 
@@ -40,7 +40,20 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   };
 
   const zones: HTMLElement[] = [];
-  if (min != null || max != null) {
+  const pl = link.basis === 'paddler' || link.basis === 'community' ? link.levels : null;
+  if (pl) {
+    // Paddler scale: each step runs from its threshold to the next one.
+    const edges: Array<[string, number, number]> = [
+      ['s-empty', lo, pl.scrape],
+      ['s-scrape', pl.scrape, pl.low],
+      ['s-low', pl.low, pl.medium],
+      ['s-medium', pl.medium, pl.high],
+      ['s-high', pl.high, pl.very_high],
+      ['s-very_high', pl.very_high, pl.huge],
+      ['s-huge', pl.huge, hi],
+    ];
+    for (const [cls, a, b] of edges) if (b > a) zones.push(zone(`bb-step ${cls}`, Math.max(a, lo), Math.min(b, hi)));
+  } else if (min != null || max != null) {
     const runFrom = min ?? lo;
     const runTo = max ?? hi;
     if (min != null) zones.push(zone('bb-low', lo, min));
@@ -90,7 +103,11 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
     h(
       'div',
       { class: 'bb-key', 'aria-hidden': 'true' },
-      min != null || max != null ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band') : null,
+      pl
+        ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-step-key' }), 'Paddler scale: empty, scrapeable, low, medium, high, very high, huge')
+        : min != null || max != null
+          ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band')
+          : null,
       typical ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-typical-swatch' }), 'Typical range') : null,
       dots.length ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-dot-key' }), `Paddler reports (${dots.length})`) : null,
     ),

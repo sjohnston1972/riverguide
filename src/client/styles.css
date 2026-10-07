@@ -2501,3 +2501,84 @@ button {
     display: none;
   }
 }
+
+/* ---------- Paddler level scale (Where's the Water) ---------- */
+.s-empty { --step: var(--st-unknown); }
+.s-scrape { --step: color-mix(in srgb, var(--st-low) 55%, var(--st-runnable)); }
+.s-low { --step: color-mix(in srgb, var(--st-runnable) 70%, var(--surface)); }
+.s-medium { --step: var(--st-runnable); }
+.s-high { --step: color-mix(in srgb, var(--st-runnable) 45%, var(--st-high)); }
+.s-very_high { --step: color-mix(in srgb, var(--st-high) 75%, var(--st-runnable)); }
+.s-huge { --step: var(--st-high); }
+
+.bb-step {
+  background: var(--step);
+  opacity: 0.75;
+}
+
+.bb-step-key {
+  background: linear-gradient(90deg, var(--st-unknown), var(--st-runnable), var(--st-high));
+}
+
+.step-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.step-tag::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--step);
+}
+
+.hero-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.hero-pills .step-tag {
+  font-size: 0.95rem;
+}
+
+.release-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--loch);
+  white-space: nowrap;
+}
+
+.release-today {
+  font-weight: 700;
+  color: var(--loch);
+}
+
+.release-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.release-days li {
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+}
+
+.release-days li.is-today {
+  border-color: var(--loch);
+  box-shadow: inset 0 0 0 1px var(--loch);
+}

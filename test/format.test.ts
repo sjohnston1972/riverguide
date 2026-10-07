@@ -128,6 +128,8 @@ describe('list filters', () => {
     level_at: null,
     stale: false,
     trend: 'unknown',
+    step: null,
+    release_today: false,
     ...over,
   });
   const all = [
