@@ -123,9 +123,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const links = headline ? [headline, ...d.links.filter((l) => l !== headline)] : d.links;
 
     const step = headline?.step ?? null;
-    // Paddler-scale sections need no explanation here: the step tag says it (credit is on the About page).
     let basis: string | Node | null = null;
-    if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
+    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), '.');
+    else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = h('span', null, 'These levels are an estimate. ', calibrationLink(), '.');
     else if (d.status_basis === 'typical') basis = h('span', null, 'No paddling band for this section yet. ', calibrationLink(), '.');
