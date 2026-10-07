@@ -1091,22 +1091,26 @@ button {
   line-height: 1.1;
 }
 
+/* One typeface for the whole pill: the display font used for all numbers on the site. */
+.grade-badge {
+  font-family: var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
 .grade-badge-label {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   opacity: 0.8;
 }
 
 .grade-badge-value {
-  font: 700 1.35rem/1.1 var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
-.grade-note {
-  font-size: 0.95rem;
-  color: var(--ink-2);
-}
 
 .river-sub {
   color: var(--ink-2);

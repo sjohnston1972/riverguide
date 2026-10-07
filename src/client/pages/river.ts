@@ -316,17 +316,14 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return `${pct < 10 ? pct.toFixed(1).replace(/\.0$/, '') : Math.round(pct)}%`;
   }
 
-  /** The grade, prominently, with a note when it has a bracketed harder feature. */
+  /** The grade, prominently, under the title. */
   function gradeLine(d: SectionDetail): HTMLElement {
-    const grade = d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade\s*/i, '') : '';
-    const bracket = grade.match(/\(([^)]+)\)/);
+    // Consistent spacing: "1(2)" -> "1 (2)", like "3/4 (5)".
+    const grade = d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade\s*/i, '').replace(/\s*\(/g, ' (').trim() : '';
     return h(
       'div',
       { class: 'river-grade', hidden: !grade },
       h('span', { class: 'grade-badge', 'aria-label': `Grade ${grade}` }, h('span', { class: 'grade-badge-label' }, 'Grade'), h('span', { class: 'grade-badge-value' }, grade)),
-      bracket && /^\s*\d/.test(bracket[1])
-        ? h('span', { class: 'grade-note' }, `(${bracket[1].trim()}): a harder rapid or optional feature, often portaged`)
-        : null,
     );
   }
 
