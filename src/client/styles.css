@@ -1042,9 +1042,6 @@ button {
   }
 }
 
-.leaflet-tile-pane {
-  will-change: transform;
-}
 
 :root[data-theme='dark'] .leaflet-control-attribution,
 :root[data-theme='dark'] .leaflet-bar a {
