@@ -1,8 +1,7 @@
 // Horizontal "gauge board": current level against the paddling band and the
 // gauge's typical range.
 
-import { VERDICT_LABEL } from '../shared/community.ts';
-import type { PaddlerLevels, PaddlerStep, SectionGaugeLink, Verdict } from '../shared/types.ts';
+import type { PaddlerLevels, PaddlerStep, SectionGaugeLink } from '../shared/types.ts';
 import { h } from './dom.ts';
 import { formatLevel, STEP_LABEL } from './labels.ts';
 
@@ -11,20 +10,15 @@ function niceStep(range: number): number {
   return 10;
 }
 
-/** A community report plotted at the gauge level it was made at. */
-export interface ReportDot {
-  level: number;
-  verdict: Verdict;
-}
 
-export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLElement | null {
+export function bandBar(link: SectionGaugeLink): HTMLElement | null {
   const g = link.gauge;
   const level = g.stale ? null : g.level;
   const { min_level: min, max_level: max } = link;
   const tLow = g.typical_low;
   const tHigh = g.typical_high;
-  const values = [g.level, min, max, tLow, tHigh, ...dots.map((d) => d.level), ...(link.levels ? Object.values(link.levels) : []), ...(link.gauge.outlook?.tomorrow ? [link.gauge.outlook.tomorrow.lo, link.gauge.outlook.tomorrow.hi] : [])].filter((v): v is number => v != null && Number.isFinite(v));
-  if (min == null && max == null && (tLow == null || tHigh == null) && !dots.length) return null;
+  const values = [g.level, min, max, tLow, tHigh, ...(link.levels ? Object.values(link.levels) : []), ...(link.gauge.outlook?.tomorrow ? [link.gauge.outlook.tomorrow.lo, link.gauge.outlook.tomorrow.hi] : [])].filter((v): v is number => v != null && Number.isFinite(v));
+  if (min == null && max == null && (tLow == null || tHigh == null)) return null;
   if (values.length < 2) return null;
 
   let lo = Math.min(...values);
@@ -32,6 +26,11 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   const pad = Math.max((hi - lo) * 0.15, 0.1);
   lo -= pad;
   hi += pad;
+  /** Pills near either end of the bar align to that end instead of centring (keeps them on screen). */
+  const edge = (v: number) => {
+    const p = (v - lo) / (hi - lo);
+    return p < 0.12 ? 'at-start' : p > 0.88 ? 'at-end' : '';
+  };
   const pct = (v: number) => `${(((v - lo) / (hi - lo)) * 100).toFixed(2)}%`;
   const span = (a: number, b: number) => ({ left: pct(a), width: `${(((b - a) / (hi - lo)) * 100).toFixed(2)}%` });
   const zone = (cls: string, a: number, b: number) => {
@@ -80,42 +79,33 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   const forecast = t
     ? [
         h('div', { class: 'bb-fc-range', style: `left:${pct(t.lo)};width:${pct(lo + Math.max(0.005, t.hi - t.lo))}`, title: `Likely range tomorrow ${formatLevel(t.lo)} to ${formatLevel(t.hi)}` }),
-        h('div', { class: 'bb-fc-marker', style: `left:${pct(t.level)}` }),
+        h('div', { class: 'bb-fc-marker', style: `left:${pct(t.level)}` }, h('span', { class: `bb-pill bb-pill-tomorrow ${edge(t.level)}` }, `Tomorrow ${formatLevel(t.level)}`)),
       ]
     : [];
 
   const marker =
     level != null
-      ? h('div', { class: 'bb-marker', style: `left:${pct(level)}` }, h('span', { class: 'bb-marker-label' }, formatLevel(level)))
+      ? h('div', { class: 'bb-marker', style: `left:${pct(level)}` }, h('span', { class: `bb-pill bb-pill-now ${edge(level)}` }, `Now ${formatLevel(level)}`))
       : null;
-
-  const dotRow = dots.length
-    ? h(
-        'div',
-        { class: 'bb-dots' },
-        dots.map((d) => h('span', { class: `bb-dot v-${d.verdict}`, style: `left:${pct(d.level)}`, title: `${VERDICT_LABEL[d.verdict]} at ${formatLevel(d.level)}` })),
-      )
-    : null;
 
   const parts: string[] = [level != null ? `Current level ${formatLevel(level)}.` : 'No current reading.'];
   if (min != null && max != null) parts.push(`Runnable between ${formatLevel(min)} and ${formatLevel(max)}.`);
   else if (min != null) parts.push(`Runnable from ${formatLevel(min)}.`);
   else if (max != null) parts.push(`Too high above ${formatLevel(max)}.`);
   if (tLow != null && tHigh != null) parts.push(`Typical range ${formatLevel(tLow)} to ${formatLevel(tHigh)}.`);
+  if (t) parts.push(`Tomorrow about ${formatLevel(t.level)}, likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)}.`);
 
   const bar = h(
     'div',
-    { class: 'bandbar', role: 'img', 'aria-label': parts.join(' ') },
+    { class: `bandbar${t ? ' has-forecast' : ''}`, role: 'img', 'aria-label': parts.join(' ') },
     h('div', { class: 'bb-track' }, zones, typical, forecast, marker),
-    dotRow,
     h('div', { class: 'bb-scale', 'aria-hidden': 'true' }, ticks),
     h(
       'div',
       { class: 'bb-key', 'aria-hidden': 'true' },
       !pl && (min != null || max != null) ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band') : null,
       typical ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-typical-swatch' }), 'Typical range') : null,
-      t ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-fc-swatch' }), `Tomorrow ~${formatLevel(t.level)} (likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)})`) : null,
-      dots.length ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-dot-key' }), `Paddler reports (${dots.length})`) : null,
+      t ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-fc-swatch' }), "Tomorrow's likely range") : null,
     ),
   );
   return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step, link.step_tomorrow)) : bar;
@@ -147,3 +137,4 @@ function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null, tomorrow: Pa
     ),
   );
 }
+
