@@ -2766,12 +2766,87 @@ button {
   letter-spacing: 0.02em;
 }
 
+
+/* ---------- Phones: readable text sizes and a vertical step ladder ---------- */
 @media (max-width: 599px) {
+  /* The paddler scale as a gauge board: huge at the top, empty at the bottom. */
   .step-ladder {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
   }
 
-  .step-chip:first-child {
-    grid-column: 1 / -1;
+  .step-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-top: 1px solid var(--rule);
+    border-left: 8px solid var(--step);
+  }
+
+  .step-chip[aria-current='true'] {
+    border-left-color: var(--step);
+  }
+
+  .step-chip-name {
+    flex: 1;
+    font-size: 1rem;
+  }
+
+  .step-chip-range {
+    font-size: 0.95rem;
+  }
+
+  .step-chip-now {
+    position: static;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+  }
+
+  /* Minimum sizes for small labels. */
+  .pill,
+  .step-tag,
+  .field-label,
+  .bb-tick,
+  .vote,
+  .report-when,
+  .place-tag {
+    font-size: 0.9rem;
+  }
+
+  .est,
+  .release-tag,
+  .rain-label,
+  .reading-time,
+  .hero-time,
+  .bb-marker-label,
+  .fact dt,
+  .gauge-facts dt,
+  .source,
+  .fine-print {
+    font-size: 0.875rem;
+  }
+
+  .rain-day {
+    font-size: 0.85rem;
+  }
+
+  .nearby-side .reading-time,
+  .reading-time {
+    font-size: 0.875rem;
+  }
+
+  .muted,
+  .gauge-facts,
+  .reason,
+  .report-note,
+  .row-meta {
+    font-size: 0.95rem;
+  }
+
+  body {
+    font-size: 1.0625rem;
   }
 }
