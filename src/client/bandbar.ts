@@ -23,7 +23,7 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   const { min_level: min, max_level: max } = link;
   const tLow = g.typical_low;
   const tHigh = g.typical_high;
-  const values = [g.level, min, max, tLow, tHigh, ...dots.map((d) => d.level), ...(link.levels ? Object.values(link.levels) : [])].filter((v): v is number => v != null && Number.isFinite(v));
+  const values = [g.level, min, max, tLow, tHigh, ...dots.map((d) => d.level), ...(link.levels ? Object.values(link.levels) : []), ...(link.gauge.outlook?.tomorrow ? [link.gauge.outlook.tomorrow.lo, link.gauge.outlook.tomorrow.hi] : [])].filter((v): v is number => v != null && Number.isFinite(v));
   if (min == null && max == null && (tLow == null || tHigh == null) && !dots.length) return null;
   if (values.length < 2) return null;
 
@@ -75,6 +75,15 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
     ticks.push(h('span', { class: 'bb-tick', style: `left:${pct(v)}` }, v.toFixed(step < 0.1 ? 2 : step < 1 ? 1 : 0)));
   }
 
+  // Tomorrow's predicted peak: dashed marker over its likely range.
+  const t = level != null ? link.gauge.outlook?.tomorrow : null;
+  const forecast = t
+    ? [
+        h('div', { class: 'bb-fc-range', style: `left:${pct(t.lo)};width:${pct(lo + Math.max(0.005, t.hi - t.lo))}`, title: `Likely range tomorrow ${formatLevel(t.lo)} to ${formatLevel(t.hi)}` }),
+        h('div', { class: 'bb-fc-marker', style: `left:${pct(t.level)}` }),
+      ]
+    : [];
+
   const marker =
     level != null
       ? h('div', { class: 'bb-marker', style: `left:${pct(level)}` }, h('span', { class: 'bb-marker-label' }, formatLevel(level)))
@@ -97,7 +106,7 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
   const bar = h(
     'div',
     { class: 'bandbar', role: 'img', 'aria-label': parts.join(' ') },
-    h('div', { class: 'bb-track' }, zones, typical, marker),
+    h('div', { class: 'bb-track' }, zones, typical, forecast, marker),
     dotRow,
     h('div', { class: 'bb-scale', 'aria-hidden': 'true' }, ticks),
     h(
@@ -105,14 +114,15 @@ export function bandBar(link: SectionGaugeLink, dots: ReportDot[] = []): HTMLEle
       { class: 'bb-key', 'aria-hidden': 'true' },
       !pl && (min != null || max != null) ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band') : null,
       typical ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-typical-swatch' }), 'Typical range') : null,
+      t ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-fc-swatch' }), `Tomorrow ~${formatLevel(t.level)} (likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)})`) : null,
       dots.length ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-dot-key' }), `Paddler reports (${dots.length})`) : null,
     ),
   );
-  return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step)) : bar;
+  return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step, link.step_tomorrow)) : bar;
 }
 
 /** The paddler scale as labelled chips: colour, name and the level each step starts at; the current step is highlighted. */
-function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null): HTMLElement {
+function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null, tomorrow: PaddlerStep | null = null): HTMLElement {
   const steps: Array<[PaddlerStep, string]> = [
     ['empty', `under ${formatLevel(pl.scrape)}`],
     ['scrape', `from ${formatLevel(pl.scrape)}`],
@@ -132,6 +142,7 @@ function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null): HTMLElement
         h('span', { class: 'step-chip-name' }, STEP_LABEL[step]),
         h('span', { class: 'step-chip-range' }, range),
         step === current ? h('span', { class: 'step-chip-now' }, 'Now') : null,
+        step === tomorrow && tomorrow !== current ? h('span', { class: 'step-chip-now step-chip-next' }, 'Tomorrow') : null,
       ),
     ),
   );

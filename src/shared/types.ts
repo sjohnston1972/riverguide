@@ -42,6 +42,28 @@ export interface Gauge {
   /** Share of days (from three years of daily maxima) on which the current level is reached; null without a curve. */
   days_reached_pct: number | null;
   stale: boolean;
+  /** Where the level is heading over the next two days; null without rain data or a current reading. */
+  outlook: GaugeOutlook | null;
+}
+
+export interface LevelRange {
+  level: number;
+  lo: number;
+  hi: number;
+}
+
+export interface GaugeOutlook {
+  /** model: predicted from this gauge's fitted rain response; trend: only a direction from the trend and rain. */
+  basis: 'model' | 'trend';
+  direction: 'rise' | 'fall' | 'steady';
+  /** Predicted daily peak tomorrow and the day after (model basis only). */
+  tomorrow: LevelRange | null;
+  day_after: LevelRange | null;
+  /** Forecast rain at the gauge today (rest of day included) and tomorrow, mm. */
+  rain_today_mm: number;
+  rain_tomorrow_mm: number;
+  /** When the outlook was computed (ISO). */
+  at: string;
 }
 
 export interface SectionGaugeLink {
@@ -54,6 +76,9 @@ export interface SectionGaugeLink {
   reason: string;
   gauge: Gauge;
   status: SectionStatus;
+  /** Status and paddler step at the predicted level tomorrow (model outlook only). */
+  status_tomorrow: SectionStatus | null;
+  step_tomorrow: PaddlerStep | null;
   /** Paddler level scale for this gauge, when Where's the Water has one. */
   levels: PaddlerLevels | null;
   /** Where the current reading sits on that scale. */
@@ -86,6 +111,10 @@ export interface SectionSummary {
   step: PaddlerStep | null;
   /** A scheduled dam release or tidal window falls today (UK date). */
   release_today: boolean;
+  /** Headline gauge outlook: direction, and tomorrow's status where a model prediction exists. */
+  outlook: 'rise' | 'fall' | 'steady' | null;
+  status_tomorrow: SectionStatus | null;
+  step_tomorrow: PaddlerStep | null;
 }
 
 export interface PlacePoint {

@@ -2,6 +2,7 @@
 
 import { fetchLevelStations, fetchSeriesValues, latestAndHourAgo } from '../shared/sepa.ts';
 import type { LevelHistory } from '../shared/types.ts';
+import { updateOutlooks } from './outlook.ts';
 
 const BATCH = 150; // ts_ids per KiWIS request; keeps URLs well under limits
 
@@ -31,6 +32,7 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
     }
   }
   if (stmts.length) await db.batch(stmts);
+  await updateOutlooks(db);
   return { updated: stmts.length, empty };
 }
 
@@ -70,4 +72,37 @@ export async function levelHistory(stationNo: string, tsId: string, period: Hist
     caches.default.put(key, new Response(JSON.stringify(history), { headers: { 'cache-control': 'public, max-age=900' } })),
   );
   return history;
+}
+
+/**
+ * Daily rainfall around now (yesterday, today, tomorrow, the day after) for
+ * every gauge with a forecast model, from Open-Meteo in batched multi-location
+ * requests. Feeds the level outlook; run hourly.
+ */
+export async function refreshRain(db: D1Database): Promise<number> {
+  const { results } = await db
+    .prepare('SELECT station_no, lat, lon FROM gauges WHERE forecast_model IS NOT NULL')
+    .all<{ station_no: string; lat: number; lon: number }>();
+  const at = new Date().toISOString();
+  const stmts: D1PreparedStatement[] = [];
+  for (let i = 0; i < results.length; i += 50) {
+    const batch = results.slice(i, i + 50);
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${batch.map((g) => g.lat.toFixed(3)).join(',')}` +
+      `&longitude=${batch.map((g) => g.lon.toFixed(3)).join(',')}&daily=precipitation_sum&past_days=1&forecast_days=3&timezone=Europe%2FLondon`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
+    const body = (await res.json()) as unknown;
+    const locs = (Array.isArray(body) ? body : [body]) as Array<{ daily?: { time: string[]; precipitation_sum: Array<number | null> } }>;
+    locs.forEach((loc, j) => {
+      const d = loc.daily;
+      if (!d || d.time.length < 4) return;
+      const p = d.precipitation_sum.map((v) => v ?? 0);
+      const rain = { day: d.time[1], yesterday: p[0], today: p[1], tomorrow: p[2], dayAfter: p[3], at };
+      stmts.push(db.prepare('UPDATE gauges SET rain = ? WHERE station_no = ?').bind(JSON.stringify(rain), batch[j].station_no));
+    });
+  }
+  if (stmts.length) await db.batch(stmts);
+  await updateOutlooks(db);
+  return stmts.length;
 }

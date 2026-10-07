@@ -23,6 +23,9 @@ import {
   TREND_LABEL,
   TYPICAL_LABEL,
   STEP_LABEL,
+  STATUS_LABEL,
+  OUTLOOK_WORDS,
+  OUTLOOK_ARROW,
   WTW_URL,
   CC_BY_SA_URL,
 } from '../labels.ts';
@@ -133,7 +136,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       h(
         'div',
         { class: 'hero-top' },
-        h('div', { class: 'hero-pills' }, statusPill(d.status, 'lg'), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null),
+        h('div', { class: 'hero-pills' }, statusPill(d.status, 'lg'), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null, tomorrowTag(d)),
         h('p', { class: 'hero-basis' }, basis),
         d.release_today ? h('p', { class: 'release-today' }, 'Scheduled release today.') : null,
       ),
@@ -279,12 +282,58 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
       ),
     ];
+    const ol = outlookLine(l);
+    if (ol) out.push(ol);
     const bar = bandBar(l, dots);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
     if (l.basis === 'paddler') out.push(h('p', { class: 'reason' }, l.levels ? 'Levels set by paddlers on ' : 'Gauge used by ', wtwLink(), l.levels ? '.' : '; paddler levels not set yet.'));
     else if (l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
+  }
+
+  /** Where this gauge is heading: a predicted level and range (model) or just a direction (trend). */
+  function outlookLine(l: SectionGaugeLink): HTMLElement | null {
+    const o = l.gauge.outlook;
+    if (!o) return null;
+    const rain = o.rain_today_mm + o.rain_tomorrow_mm;
+    const rainText = rain < 1 ? 'little rain due today or tomorrow' : `${rain < 10 ? rain.toFixed(1) : Math.round(rain)} mm of rain due today and tomorrow`;
+    const head = h('strong', null, `${OUTLOOK_WORDS[o.direction]}.`);
+    if (o.basis === 'model' && o.tomorrow) {
+      const toLabel = l.step_tomorrow ? `${STEP_LABEL[l.step_tomorrow]} on the paddler scale` : l.status_tomorrow && l.status_tomorrow !== 'unknown' ? STATUS_LABEL[l.status_tomorrow].toLowerCase() : null;
+      const same = l.step_tomorrow ? l.step_tomorrow === l.step : l.status_tomorrow === l.status;
+      const to = toLabel ? (same ? `still ${toLabel}` : `which would make it ${toLabel}`) : null;
+      return h(
+        'p',
+        { class: `outlook outlook-${o.direction}` },
+        h('span', { class: 'outlook-arrow', 'aria-hidden': 'true' }, OUTLOOK_ARROW[o.direction]),
+        h(
+          'span',
+          null,
+          head,
+          ` Tomorrow's peak about ${formatLevel(o.tomorrow.level)} (likely ${formatLevel(o.tomorrow.lo)} to ${formatLevel(o.tomorrow.hi)})${to ? `, ${to}` : ''}`,
+          o.day_after ? `; the day after about ${formatLevel(o.day_after.level)}` : '',
+          `. ${rainText[0].toUpperCase()}${rainText.slice(1)}. `,
+          h('span', { class: 'outlook-note' }, 'Rough estimate from how this gauge has responded to similar rain before.'),
+        ),
+      );
+    }
+    return h(
+      'p',
+      { class: `outlook outlook-${o.direction}` },
+      h('span', { class: 'outlook-arrow', 'aria-hidden': 'true' }, OUTLOOK_ARROW[o.direction]),
+      h('span', null, head, ` From the current trend, with ${rainText}. `, h('span', { class: 'outlook-note' }, 'No level prediction for this gauge.')),
+    );
+  }
+
+  /** "↗ Medium tomorrow" beside the status when tomorrow's step or status differs from today's. */
+  function tomorrowTag(d: SectionDetail): HTMLElement | null {
+    const o = d.outlook;
+    const changedStep = d.step_tomorrow && d.step_tomorrow !== d.step;
+    const changedStatus = d.status_tomorrow && d.status_tomorrow !== 'unknown' && d.status_tomorrow !== d.status;
+    if (!o || (!changedStep && !changedStatus)) return null;
+    const label = changedStep ? STEP_LABEL[d.step_tomorrow!] : STATUS_LABEL[d.status_tomorrow!];
+    return h('span', { class: `tomorrow-tag outlook-${o}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[o]} ${label} tomorrow`);
   }
 
   function wtwLink(): HTMLElement {

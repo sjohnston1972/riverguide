@@ -13,7 +13,7 @@
 // Apply with:  npx wrangler d1 execute riverguide --local  --file data/private/seed.sql
 //              npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { type DurationCurve, levelForPct } from '../src/shared/duration.ts';
 import { relativeToAbsolute } from '../src/shared/status.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
@@ -74,6 +74,9 @@ const gaugeByNo = new Map(gauges.map((g) => [g.station_no, g]));
 const curves = read<{ curves: Record<string, { curve: DurationCurve } | null> }>('data/gauge-durations.json').curves;
 const curveOf = (stationNo: string) => curves[stationNo]?.curve ?? null;
 const wtw = read<WtwImport>('data/wtw-import.json');
+// Level-outlook models (scripts/fit-forecast.ts); absent for gauges no section uses.
+const forecast = existsSync('data/gauge-forecast.json') ? read<{ models: Record<string, unknown | null> }>('data/gauge-forecast.json').models : {};
+const forecastOf = (stationNo: string) => forecast[stationNo] ?? null;
 
 function sql(v: unknown): string {
   if (v == null) return 'NULL';
@@ -98,9 +101,9 @@ const seedSlugs: string[] = [];
 
 for (const g of gauges) {
   out.push(
-    `INSERT INTO gauges (station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, duration_curve) VALUES ${row([
-      g.station_no, g.name, g.river, g.catchment, g.lat, g.lon, g.ts_id, g.typical_low, g.typical_high, curveOf(g.station_no),
-    ])} ON CONFLICT(station_no) DO UPDATE SET name = excluded.name, river = excluded.river, catchment = excluded.catchment, lat = excluded.lat, lon = excluded.lon, ts_id = excluded.ts_id, typical_low = excluded.typical_low, typical_high = excluded.typical_high, duration_curve = excluded.duration_curve;`,
+    `INSERT INTO gauges (station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, duration_curve, forecast_model) VALUES ${row([
+      g.station_no, g.name, g.river, g.catchment, g.lat, g.lon, g.ts_id, g.typical_low, g.typical_high, curveOf(g.station_no), forecastOf(g.station_no),
+    ])} ON CONFLICT(station_no) DO UPDATE SET name = excluded.name, river = excluded.river, catchment = excluded.catchment, lat = excluded.lat, lon = excluded.lon, ts_id = excluded.ts_id, typical_low = excluded.typical_low, typical_high = excluded.typical_high, duration_curve = excluded.duration_curve, forecast_model = excluded.forecast_model;`,
   );
 }
 
