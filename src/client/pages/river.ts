@@ -15,7 +15,6 @@ import { ICONS } from '../icons.ts';
 import {
   basisWording,
   characterLabel,
-  ESTIMATE_TOOLTIP,
   formatDate,
   formatLevel,
   gradeLabel,
@@ -85,7 +84,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     reports.catch(() => undefined);
     let now = nowCard(d);
     // A new report or vote can move the community band: refresh the status card in place.
+    // A report or vote can recalibrate the band at once: refresh this page's status and the river list.
     const onChange = () => {
+      void api.sections(true).catch(() => undefined);
       void api
         .section(slug, true)
         .then((fresh) => {
@@ -126,8 +127,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     let basis: string | Node | null = null;
     if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
-    else if (d.status_basis === 'estimate') basis = headline ? `${basisWording(headline.basis, headline.confidence)}.` : `${ESTIMATE_TOOLTIP}.`;
-    else if (d.status_basis === 'typical') basis = 'No paddling band for this section yet. Compare the gauge with its typical range.';
+    else if (d.status_basis === 'estimate') basis = h('span', null, 'These levels are an estimate. ', calibrationLink(), '.');
+    else if (d.status_basis === 'typical') basis = h('span', null, 'No paddling band for this section yet. ', calibrationLink(), '.');
     else if (d.status_basis === 'none') basis = 'No SEPA gauge is linked to this section.';
 
     const top = h(
@@ -254,7 +255,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         ? `${TYPICAL_LABEL[g.typical_status]} (${formatLevel(g.typical_low)} to ${formatLevel(g.typical_high)})`
         : TYPICAL_LABEL[g.typical_status];
     const rows: [string, string][] = [['Gauge', `${g.name}, ${RELATION_LABEL[l.relation]}`], ['Paddling band', band]];
-    if ((l.min_level != null || l.max_level != null) && l.basis !== 'paddler') rows.push(['Basis', basisWording(l.basis, l.confidence)]);
+    const estimate = l.basis === 'guide' || l.basis === 'duration' || l.basis === 'typical-relative';
+    if ((l.min_level != null || l.max_level != null) && l.basis !== 'paddler') rows.push(['Basis', estimate ? 'Estimate' : basisWording(l.basis, l.confidence)]);
     if (g.days_reached_pct != null) rows.push(['How often', `This level is reached on ${daysText(g.days_reached_pct)} of days`]);
     rows.push(['Typical range', typical]);
 
@@ -272,7 +274,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const bar = bandBar(l);
     if (bar) out.push(bar);
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
-    if (l.basis !== 'paddler' && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
+    if (l.basis === 'paddler')
+      out.push(h('p', { class: 'reason' }, 'Paddler levels from ', wtwLink(), ' (', h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'), ').'));
+    else if (!estimate && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
     return out;
   }
 
@@ -318,6 +322,20 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     if (!o || (!changedStep && !changedStatus)) return null;
     const label = changedStep ? STEP_LABEL[d.step_tomorrow!] : STATUS_LABEL[d.status_tomorrow!];
     return h('span', { class: `tomorrow-tag outlook-${o}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[o]} ${label} tomorrow`);
+  }
+
+  /** Jumps to the community panel and opens its report form. */
+  function calibrationLink(): HTMLElement {
+    const a = h('a', { href: '#report' }, 'Please help provide calibration data');
+    a.addEventListener('click', (e) => {
+      const panel = document.getElementById('report');
+      if (!panel) return;
+      e.preventDefault();
+      panel.dispatchEvent(new CustomEvent('rg:open-report'));
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.focus({ preventScroll: true });
+    });
+    return a;
   }
 
   function wtwLink(): HTMLElement {

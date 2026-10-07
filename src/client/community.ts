@@ -39,7 +39,7 @@ function dayOptions(now = new Date()): { label: string; date: Date }[] {
 }
 
 export function communityPanel(o: CommunityPanelOptions): HTMLElement {
-  const root = h('section', { class: 'community', 'aria-label': 'Community level reports' });
+  const root = h('section', { class: 'community', id: 'report', tabindex: '-1', 'aria-label': 'Community level reports' });
   const tsBox = h('div', { class: 'community-check' });
   let widget: TurnstileWidget | null = null;
   let state: CommunityReports | null = null;
@@ -273,6 +273,13 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
       : h('p', { class: 'muted' }, 'Community reports are paused at the moment.');
     root.replaceChildren(head, flashMsg ? h('p', { class: 'notice notice-ok', role: 'status' }, flashMsg) : '', cta, list ?? '', more ?? '', expanded ? '' : tsBox);
   }
+
+  // Links elsewhere on the page ("please help provide calibration data") open the form.
+  root.addEventListener('rg:open-report', () => {
+    if (!state?.enabled) return;
+    expanded = true;
+    render();
+  });
 
   root.append(h('div', { class: 'community-head' }, h('h2', null, 'Paddled it recently?'), h('p', { class: 'muted loading' }, 'Loading community reports…')));
   o.data
