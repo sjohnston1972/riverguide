@@ -9,6 +9,7 @@ import { rainChart } from '../rainchart.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
 import { clear, h, icon } from '../dom.ts';
+import { favButton, setFavouriteName } from '../favourites.ts';
 import { lastListHref } from '../filters.ts';
 import type { LevelGraph } from '../graph.ts';
 import { ICONS } from '../icons.ts';
@@ -44,7 +45,13 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   let destroyed = false;
 
   const title = h('h1', { class: 'river-title' }, 'Loading river');
-  const head = h('header', { class: 'river-head' }, h('a', { class: 'back-link', href: lastListHref() }, icon(ICONS.back), 'All rivers'), title);
+  const star = favButton(slug, '', 'fav-title');
+  const head = h(
+    'header',
+    { class: 'river-head' },
+    h('a', { class: 'back-link', href: lastListHref() }, icon(ICONS.back), 'All rivers'),
+    h('div', { class: 'title-row' }, title, star),
+  );
   const body = h('div', { class: 'river-body' }, skeletonLines(3, 'skel-block'));
   container.append(h('article', { class: 'wrap river-page' }, head, body));
   ctx.setTitle('Loading');
@@ -73,6 +80,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function render(d: SectionDetail): void {
     ctx.setTitle(d.name);
     title.textContent = d.name;
+    setFavouriteName(star, d.name);
     const sub = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
     head.querySelector('.river-grade')?.remove();
     head.querySelector('.river-sub')?.remove();

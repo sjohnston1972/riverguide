@@ -163,6 +163,15 @@ describe('list filters', () => {
     expect(filtersFromQuery(filtersToQuery(f))).toEqual(f);
     expect(filtersToQuery(DEFAULT_FILTERS)).toBe('');
     expect(filtersFromQuery('?region=Nowhere&gmin=9').region).toBe('');
+    expect(filtersFromQuery('?fav=1').fav).toBe(true);
+    expect(filtersToQuery({ ...DEFAULT_FILTERS, fav: true })).toBe('?fav=1');
+  });
+
+  it('shows only favourites when asked', () => {
+    const favs = new Set(['etive', 'orchy']);
+    expect(applyFilters(all, { ...DEFAULT_FILTERS, fav: true }, favs).shown.map((x) => x.slug)).toEqual(['etive', 'orchy']);
+    expect(applyFilters(all, { ...DEFAULT_FILTERS, fav: true }).shown).toEqual([]);
+    expect(applyFilters(all, DEFAULT_FILTERS, favs).shown).toHaveLength(4);
   });
 });
 

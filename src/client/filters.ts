@@ -15,9 +15,11 @@ export interface Filters {
   gmax: number; // 1..6
   status: StatusFilter;
   sort: SortKey;
+  /** Only this device's favourite rivers. */
+  fav: boolean;
 }
 
-export const DEFAULT_FILTERS: Filters = { q: '', region: '', gmin: 1, gmax: 6, status: 'any', sort: 'status' };
+export const DEFAULT_FILTERS: Filters = { q: '', region: '', gmin: 1, gmax: 6, status: 'any', sort: 'status', fav: false };
 
 const STATUSES: StatusFilter[] = ['any', 'runnable', 'low', 'high', 'unknown'];
 
@@ -39,6 +41,7 @@ export function filtersFromQuery(search: string): Filters {
     gmax,
     status: p.get('now') === '1' ? 'runnable' : STATUSES.includes(status) ? status : 'any',
     sort: p.get('sort') === 'name' ? 'name' : 'status',
+    fav: p.get('fav') === '1',
   };
 }
 
@@ -50,6 +53,7 @@ export function filtersToQuery(f: Filters): string {
   if (f.gmax !== 6) p.set('gmax', String(f.gmax));
   if (f.status !== 'any') p.set('status', f.status);
   if (f.sort !== 'status') p.set('sort', f.sort);
+  if (f.fav) p.set('fav', '1');
   const s = p.toString();
   return s ? `?${s}` : '';
 }
@@ -58,8 +62,9 @@ export function activeFilterCount(f: Filters): number {
   return (f.region ? 1 : 0) + (f.gmin !== 1 || f.gmax !== 6 ? 1 : 0) + (f.status !== 'any' ? 1 : 0);
 }
 
-/** Search, region and grade; status is applied separately so counts can ignore it. */
-export function matchesBase(s: SectionSummary, f: Filters): boolean {
+/** Search, region, grade and favourites; status is applied separately so counts can ignore it. */
+export function matchesBase(s: SectionSummary, f: Filters, favs: ReadonlySet<string> = new Set()): boolean {
+  if (f.fav && !favs.has(s.slug)) return false;
   if (f.region && s.region !== f.region) return false;
   if (f.gmin !== 1 || f.gmax !== 6) {
     const lo = s.grade_min ?? s.grade_max;
@@ -75,8 +80,12 @@ export function matchesBase(s: SectionSummary, f: Filters): boolean {
   return true;
 }
 
-export function applyFilters(all: SectionSummary[], f: Filters): { base: SectionSummary[]; shown: SectionSummary[] } {
-  const base = all.filter((s) => matchesBase(s, f));
+export function applyFilters(
+  all: SectionSummary[],
+  f: Filters,
+  favs: ReadonlySet<string> = new Set(),
+): { base: SectionSummary[]; shown: SectionSummary[] } {
+  const base = all.filter((s) => matchesBase(s, f, favs));
   const shown = f.status === 'any' ? base.slice() : base.filter((s) => s.status === f.status);
   shown.sort((a, b) => {
     if (f.sort === 'status') {

@@ -16,6 +16,7 @@ export const ICONS = {
   back: svg('<path d="M15 5l-7 7 7 7"/>'),
   send: svg('<path d="M4 12l16-8-6 16-2.5-6.5z"/>'),
   stop: svg('<rect x="7" y="7" width="10" height="10" rx="1.5"/>'),
+  star: svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.15 1 5.85L12 16.95 6.75 19.7l1-5.85L3.5 9.7l5.9-.9z"/>'),
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
   wave: svg('<path d="M2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>'),
 };

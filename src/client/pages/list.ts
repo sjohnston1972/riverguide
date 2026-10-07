@@ -16,6 +16,7 @@ import {
   type SortKey,
   type StatusFilter,
 } from '../filters.ts';
+import { FAVOURITES_EVENT, favButton, favourites } from '../favourites.ts';
 import { ICONS } from '../icons.ts';
 import { gradeLabel, OUTLOOK_ARROW, STATUS_LABEL, STEP_LABEL } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
@@ -59,6 +60,12 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   const runningNow = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false' }, h('span', { class: 'chip-dot', 'aria-hidden': 'true' }), 'Running now');
   runningNow.addEventListener('click', () => {
     filters = { ...filters, status: filters.status === 'runnable' ? 'any' : 'runnable' };
+    changed();
+  });
+
+  const favChip = h('button', { type: 'button', class: 'chip fav-chip', 'aria-pressed': 'false', title: 'Favourites' }, icon(ICONS.star), h('span', { class: 'fav-chip-label' }, 'Favourites'));
+  favChip.addEventListener('click', () => {
+    filters = { ...filters, fav: !filters.fav };
     changed();
   });
 
@@ -152,7 +159,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
           'aside',
           { class: 'filters', 'aria-label': 'Search and filters' },
           h('div', { class: 'search-wrap' }, icon(ICONS.search, 'icon search-icon'), search),
-          h('div', { class: 'quick-row' }, runningNow, filterToggle),
+          h('div', { class: 'quick-row' }, runningNow, favChip, filterToggle),
           panel,
         ),
         h('section', { class: 'results', 'aria-label': 'River sections' }, h('div', { class: 'results-bar' }, resultCount, h('nav', { class: 'segmented', 'aria-label': 'View' }, listLink, mapLink)), listBody, mapBody),
@@ -169,6 +176,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     status.sel.value = filters.status;
     sort.sel.value = filters.sort;
     runningNow.setAttribute('aria-pressed', String(filters.status === 'runnable'));
+    favChip.setAttribute('aria-pressed', String(filters.fav));
     const n = activeFilterCount(filters);
     filterToggle.querySelector('.filter-toggle-text')!.textContent = n ? `Filters (${n})` : 'Filters';
     clearBtn.hidden = n === 0 && !filters.q;
@@ -209,7 +217,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       return;
     }
 
-    const { base, shown } = applyFilters(sections, filters);
+    const { base, shown } = applyFilters(sections, filters, favourites());
     const runnable = base.filter((s) => s.status === 'runnable').length;
     headline.textContent = `${runnable} ${runnable === 1 ? 'section' : 'sections'} estimated runnable`;
     const narrowed = base.length !== sections.length;
@@ -226,6 +234,17 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
 
   function renderList(shown: SectionSummary[]): void {
     clear(listBody);
+    if (!shown.length && filters.fav && !favourites().size) {
+      listBody.append(
+        h(
+          'div',
+          { class: 'empty' },
+          h('p', null, 'No favourites yet. Tap the star on a river to add it here. Favourites are saved on this device.'),
+          h('button', { type: 'button', class: 'btn', onclick: () => { filters = { ...filters, fav: false }; changed(); } }, 'Show all rivers'),
+        ),
+      );
+      return;
+    }
     if (!shown.length) {
       listBody.append(
         h(
@@ -258,7 +277,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       const loaded = map as SectionsMap | null; // reassigned in the promise above
       if (!loaded || destroyed || view !== 'map') return;
       // Filters may have changed while loading.
-      loaded.setSections(applyFilters(sections ?? [], filters).shown);
+      loaded.setSections(applyFilters(sections ?? [], filters, favourites()).shown);
       return;
     }
     map.show();
@@ -288,6 +307,11 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   const timer = window.setInterval(() => {
     if (document.visibilityState === 'visible') void load(true, true);
   }, REFRESH_MS);
+  // Starring in the list (or another tab) changes what the favourites filter shows.
+  const onFavourites = () => {
+    if (filters.fav) renderResults();
+  };
+  document.addEventListener(FAVOURITES_EVENT, onFavourites);
 
   return {
     update(r: Route) {
@@ -301,6 +325,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     destroy() {
       destroyed = true;
       window.clearInterval(timer);
+      document.removeEventListener(FAVOURITES_EVENT, onFavourites);
       window.clearTimeout(searchTimer);
       map?.destroy();
     },
@@ -310,7 +335,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
 function row(s: SectionSummary): HTMLLIElement {
   return h(
     'li',
-    null,
+    { class: 'river-item' },
     h(
       'a',
       { class: `river-row st-${s.status}`, href: `/river/${encodeURIComponent(s.slug)}` },
@@ -331,6 +356,7 @@ function row(s: SectionSummary): HTMLLIElement {
         s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
       ),
     ),
+    favButton(s.slug, s.name, 'fav-row'),
   );
 }
 
