@@ -2,7 +2,7 @@
 
 import { distanceKm } from '../shared/geo.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
-import { isStale, linkRank, paddlerStep, sectionStatus, trendFrom, typicalStatus, ukToday } from '../shared/status.ts';
+import { gaugeTrend, isStale, linkRank, paddlerStep, sectionStatus, typicalStatus, ukToday } from '../shared/status.ts';
 import { damSchedule, releasingToday, sectionEbbs } from './schedules.ts';
 import type {
   BandBasis,
@@ -34,6 +34,8 @@ interface GaugeRow {
   level_hour_ago: number | null;
   duration_curve: string | null;
   outlook: string | null;
+  trend_sepa: number | null;
+  trend_sepa_at: string | null;
 }
 
 interface SectionRow {
@@ -75,7 +77,7 @@ interface LinkRow {
 
 /** Gauge columns needed for API objects (not the large forecast model / rain blobs). */
 const GAUGE_COLUMNS =
-  'station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, level, level_at, level_hour_ago, duration_curve, outlook';
+  'station_no, name, river, catchment, lat, lon, ts_id, typical_low, typical_high, level, level_at, level_hour_ago, duration_curve, outlook, trend_sepa, trend_sepa_at';
 
 const SUMMARY_COLUMNS =
   'slug, name, river, section_name, region, grade_text, grade_min, grade_max, lat, lon, location_precision';
@@ -92,7 +94,7 @@ export function toGauge(r: GaugeRow, now = Date.now()): Gauge {
     lon: r.lon,
     level: r.level,
     level_at: r.level_at,
-    trend: stale ? 'unknown' : trendFrom(r.level, r.level_hour_ago),
+    trend: stale ? 'unknown' : gaugeTrend(r.level, r.level_hour_ago, r.level_at, r.trend_sepa, r.trend_sepa_at),
     typical_low: r.typical_low,
     typical_high: r.typical_high,
     typical_status: stale ? 'unknown' : typicalStatus(r.level, r.typical_low, r.typical_high),

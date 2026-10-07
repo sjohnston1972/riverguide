@@ -2,7 +2,7 @@
 // rain refresh, stored as JSON on the gauge row so page loads stay cheap.
 
 import { type DailyRain, direction, type ForecastModel, predictLevels } from '../shared/forecast.ts';
-import { isStale, trendFrom, ukToday } from '../shared/status.ts';
+import { gaugeTrend, isStale, ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, Trend } from '../shared/types.ts';
 
 export interface StoredRain extends DailyRain {
@@ -40,14 +40,23 @@ const parse = <T>(v: string | null): T | null => {
 
 export async function updateOutlooks(db: D1Database): Promise<number> {
   const { results } = await db
-    .prepare('SELECT station_no, level, level_at, level_hour_ago, forecast_model, rain FROM gauges WHERE forecast_model IS NOT NULL')
-    .all<{ station_no: string; level: number | null; level_at: string | null; level_hour_ago: number | null; forecast_model: string; rain: string | null }>();
+    .prepare('SELECT station_no, level, level_at, level_hour_ago, trend_sepa, trend_sepa_at, forecast_model, rain FROM gauges WHERE forecast_model IS NOT NULL')
+    .all<{
+      station_no: string;
+      level: number | null;
+      level_at: string | null;
+      level_hour_ago: number | null;
+      trend_sepa: number | null;
+      trend_sepa_at: string | null;
+      forecast_model: string;
+      rain: string | null;
+    }>();
   const now = Date.now();
   const stmts = results.map((r) => {
     const o =
       r.level == null || isStale(r.level_at, now)
         ? null
-        : computeOutlook(r.level, trendFrom(r.level, r.level_hour_ago), parse<ForecastModel>(r.forecast_model), parse<StoredRain>(r.rain), now);
+        : computeOutlook(r.level, gaugeTrend(r.level, r.level_hour_ago, r.level_at, r.trend_sepa, r.trend_sepa_at), parse<ForecastModel>(r.forecast_model), parse<StoredRain>(r.rain), now);
     return db.prepare('UPDATE gauges SET outlook = ? WHERE station_no = ?').bind(o ? JSON.stringify(o) : null, r.station_no);
   });
   if (stmts.length) await db.batch(stmts);

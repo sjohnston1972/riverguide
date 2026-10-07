@@ -1,6 +1,6 @@
 // Scheduled jobs: latest readings for every gauge (15 min) and gauge metadata (daily).
 
-import { fetchLevelStations, fetchSeriesValues, latestAndHourAgo } from '../shared/sepa.ts';
+import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, latestAndHourAgo } from '../shared/sepa.ts';
 import type { LevelHistory } from '../shared/types.ts';
 import { updateOutlooks } from './outlook.ts';
 
@@ -32,8 +32,38 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
     }
   }
   if (stmts.length) await db.batch(stmts);
+  await pollRisingFalling(db).catch((e) => console.error('SEPA rising/falling poll failed', e));
   await updateOutlooks(db);
   return { updated: stmts.length, empty };
+}
+
+/** Latest SEPA rising/falling flag for every gauge (loads the series ids first if they are missing). */
+async function pollRisingFalling(db: D1Database): Promise<void> {
+  let { results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>();
+  if (!results.length) {
+    await refreshRisingFallingIds(db);
+    ({ results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>());
+  }
+  const byTs = new Map(results.map((r) => [r.rf_ts_id, r.station_no]));
+  const ids = [...byTs.keys()];
+  const stmts: D1PreparedStatement[] = [];
+  for (let i = 0; i < ids.length; i += BATCH) {
+    for (const s of await fetchSeriesValues(ids.slice(i, i + BATCH), 'PT1H')) {
+      const last = s.points[s.points.length - 1];
+      const station = byTs.get(s.ts_id);
+      if (!last || !station) continue;
+      stmts.push(db.prepare('UPDATE gauges SET trend_sepa = ?, trend_sepa_at = ? WHERE station_no = ?').bind(Math.sign(last[1]), last[0], station));
+    }
+  }
+  if (stmts.length) await db.batch(stmts);
+}
+
+export async function refreshRisingFallingIds(db: D1Database): Promise<number> {
+  const ids = await fetchRisingFallingIds();
+  const stmts = [...ids].map(([station, ts]) => db.prepare('UPDATE gauges SET rf_ts_id = ? WHERE station_no = ?').bind(ts, station));
+  if (stmts.length) await db.batch(stmts);
+  await refreshRisingFallingIds(db).catch((e) => console.error('SEPA rising/falling ids failed', e));
+  return stmts.length;
 }
 
 export async function refreshGaugeMetadata(db: D1Database): Promise<number> {
