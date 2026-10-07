@@ -145,10 +145,10 @@ function render(route: Route, nav: { pop: boolean }): void {
       page = mountRiver(main, route.slug, ctx);
       break;
     case 'releases':
-      page = mountReleases(main, ctx);
+      page = mountReleases(main, route, ctx);
       break;
     case 'lora':
-      page = mountLora(main, ctx);
+      page = mountLora(main, route, ctx);
       break;
     case 'about':
       page = mountAbout(main, ctx);
