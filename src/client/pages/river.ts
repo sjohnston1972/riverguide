@@ -27,7 +27,6 @@ import {
   OUTLOOK_WORDS,
   OUTLOOK_ARROW,
   WTW_URL,
-  CC_BY_SA_URL,
 } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 
@@ -91,7 +90,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       h('p', { class: 'river-sub' }, sub),
       facts(d),
       // Sections added from Where's the Water: their grade, length and access come from it.
-      d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), ' (', ccLink(), ').') : '',
+      d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : '',
     );
 
     const reports = api.reports(slug);
@@ -138,7 +137,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     const step = headline?.step ?? null;
     let basis: string | Node | null = null;
-    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), ' (', ccLink(), ').', graphLink(headline?.calibration_url ?? null));
+    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), '.', graphLink(headline?.calibration_url ?? null));
     else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = h('span', null, 'These levels are an estimate. ', calibrationLink(), '.');
@@ -298,9 +297,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           { class: 'reason' },
           l.levels ? 'Paddler levels from ' : 'Gauge chosen by ',
           wtwLink(),
-          ' (',
-          ccLink(),
-          l.levels ? ').' : '); no paddler levels set for it yet.',
+          l.levels ? '.' : '; no paddler levels set for it yet.',
           graphLink(l.calibration_url),
         ),
       );
@@ -370,10 +367,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function graphLink(url: string | null): (string | HTMLElement)[] {
     const href = safeUrl(url);
     return href ? [' See the ', h('a', { href, target: '_blank', rel: 'noopener' }, 'calibration graph'), '.'] : [];
-  }
-
-  function ccLink(): HTMLElement {
-    return h('a', { href: CC_BY_SA_URL, target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0');
   }
 
   function wtwLink(): HTMLElement {
