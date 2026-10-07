@@ -65,3 +65,36 @@ describe('direction', () => {
     expect(direction(0.2, { level: 0.22, lo: 0.15, hi: 0.3 })).toBe('steady');
   });
 });
+
+describe('trend-aware models', () => {
+  // Same synthetic gauge, plus a trend dimension: the next day's change carries on half of the last day's change.
+  const deltas = [-0.2, -0.05, 0, 0.05, 0.2];
+  const nd = deltas.length;
+  const size = levels.length * nd * RAIN_NODES.length * RAIN_NODES.length;
+  const tmed = Array(size).fill(0);
+  levels.forEach((L, li) =>
+    deltas.forEach((d, di) =>
+      RAIN_NODES.forEach((_, ai) =>
+        RAIN_NODES.forEach((b, bi) => {
+          tmed[gridIndex(li, ai, bi, di, nd)] = 0.01 * b - 0.1 * L + 0.5 * d;
+        }),
+      ),
+    ),
+  );
+  const trendModel: ForecastModel = { ...model, deltas, med: tmed, p10: tmed.map((v) => v - 0.1), p90: tmed.map((v) => v + 0.1) };
+
+  it('uses the change since yesterday when the model has it', () => {
+    expect(lookupChange(trendModel, 1.0, 0, 0, -0.2)[0]).toBeCloseTo(-0.1 - 0.1, 6);
+    expect(lookupChange(trendModel, 1.0, 0, 0, 0)[0]).toBeCloseTo(-0.1, 6);
+    expect(lookupChange(trendModel, 1.0, 0, 0, -0.1)[0]).toBeCloseTo(-0.1 - 0.05, 6); // interpolated
+  });
+
+  it('a falling river is predicted lower than a steady one at the same level and rain', () => {
+    const rain = { yesterday: 0, today: 1, tomorrow: 9, dayAfter: 0 };
+    expect(predictLevels(trendModel, 0.8, rain, -0.1).tomorrow.level).toBeLessThan(predictLevels(trendModel, 0.8, rain, 0).tomorrow.level);
+  });
+
+  it('plain models ignore the trend', () => {
+    expect(lookupChange(model, 1.0, 0, 0, -0.2)[0]).toBeCloseTo(lookupChange(model, 1.0, 0, 0, 0)[0], 9);
+  });
+});

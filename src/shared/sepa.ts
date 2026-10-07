@@ -104,6 +104,20 @@ export async function fetchRisingFallingIds(fetcher: typeof fetch = fetch): Prom
   return new Map(parseTable(raw).filter((r) => r.parametertype_name === 'S').map((r) => [r.station_no, r.ts_id]));
 }
 
+/** Values between two instants (ISO), for many series at once. */
+export async function fetchSeriesWindow(tsIds: string[], from: string, to: string, fetcher: typeof fetch = fetch): Promise<SepaSeries[]> {
+  if (tsIds.length === 0) return [];
+  const raw = await getJson(
+    `request=getTimeseriesValues&ts_id=${tsIds.map(encodeURIComponent).join(',')}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&returnfields=Timestamp,Value&format=json`,
+    fetcher,
+  );
+  if (!Array.isArray(raw)) return [];
+  return (raw as Array<{ ts_id: string; data?: Array<[string, number | null]> }>).map((s) => ({
+    ts_id: String(s.ts_id),
+    points: (s.data ?? []).filter((p): p is [string, number] => typeof p[1] === 'number' && Number.isFinite(p[1])),
+  }));
+}
+
 export async function fetchSeriesValues(tsIds: string[], period: string, fetcher: typeof fetch = fetch): Promise<SepaSeries[]> {
   if (tsIds.length === 0) return [];
   if (!/^P(T?\d+[HDMWY])+$/.test(period)) throw new Error(`Bad period ${period}`);

@@ -3,10 +3,12 @@
 //
 // Each usable gauge has an "analogue" model built offline by
 // scripts/fit-forecast.ts: for a grid of situations (level × rain today ×
-// rain tomorrow) it stores how much the gauge's daily peak typically changed
-// the next day on the most similar past days (median, and 10th/90th
-// percentiles for a likely range). At runtime the grid is interpolated, which
-// is cheap enough to run for every gauge on each poll.
+// rain tomorrow, and for most gauges also how much the peak changed since the
+// day before, so a falling river is told apart from a steady one) it stores
+// how much the gauge's daily peak typically changed the next day on the most
+// similar past days (median, and 10th/90th percentiles for a likely range).
+// At runtime the grid is interpolated, which is cheap enough to run for every
+// gauge on each poll.
 
 /** Rain amounts (mm/day) at the grid's rain nodes. */
 export const RAIN_NODES = [0, 2, 5, 10, 20, 40];
@@ -19,7 +21,9 @@ export interface ForecastModel {
   days: number;
   /** Level nodes (m), ascending. */
   levels?: number[];
-  /** Change in daily peak (m) per [level][rain today][rain tomorrow]: flat arrays of median, p10, p90. */
+  /** Change-since-yesterday nodes (m), ascending. Present when the model uses the trend (grid gains that dimension). */
+  deltas?: number[];
+  /** Change in daily peak (m) per [level][delta?][rain today][rain tomorrow]: flat arrays of median, p10, p90. */
   med?: number[];
   p10?: number[];
   p90?: number[];
@@ -57,36 +61,47 @@ function locate(nodes: number[], x: number): [number, number] {
   return [nodes.length - 2, 1];
 }
 
-export function gridIndex(li: number, a: number, b: number): number {
-  return (li * NR + a) * NR + b;
+export function gridIndex(li: number, a: number, b: number, di = 0, nd = 1): number {
+  return ((li * nd + di) * NR + a) * NR + b;
 }
 
-/** Interpolated change (median, p10, p90) for a level and the rain today and tomorrow. */
-export function lookupChange(model: ForecastModel, level: number, rainToday: number, rainTomorrow: number): [number, number, number] {
+/**
+ * Interpolated change (median, p10, p90) for a level, the rain today and tomorrow,
+ * and (for models that use it) how much the level changed since the day before.
+ */
+export function lookupChange(model: ForecastModel, level: number, rainToday: number, rainTomorrow: number, delta = 0): [number, number, number] {
   const levels = model.levels!;
+  const deltas = model.deltas ?? [0];
+  const nd = deltas.length;
   const [li, lf] = locate(levels, level);
+  const [di, df] = nd > 1 ? locate(deltas, delta) : [0, 0];
   const [ai, af] = locate(SQ_RAIN, Math.sqrt(Math.max(0, rainToday)));
   const [bi, bf] = locate(SQ_RAIN, Math.sqrt(Math.max(0, rainTomorrow)));
   const out: [number, number, number] = [0, 0, 0];
   const tables = [model.med!, model.p10!, model.p90!];
   for (let dl = 0; dl < 2; dl++) {
-    for (let da = 0; da < 2; da++) {
-      for (let db = 0; db < 2; db++) {
-        const w = (dl ? lf : 1 - lf) * (da ? af : 1 - af) * (db ? bf : 1 - bf);
-        if (w === 0) continue;
-        const idx = gridIndex(Math.min(li + dl, levels.length - 1), Math.min(ai + da, NR - 1), Math.min(bi + db, NR - 1));
-        for (let t = 0; t < 3; t++) out[t] += w * tables[t][idx];
+    for (let dd = 0; dd < (nd > 1 ? 2 : 1); dd++) {
+      for (let da = 0; da < 2; da++) {
+        for (let db = 0; db < 2; db++) {
+          const w = (dl ? lf : 1 - lf) * (nd > 1 ? (dd ? df : 1 - df) : 1) * (da ? af : 1 - af) * (db ? bf : 1 - bf);
+          if (w === 0) continue;
+          const idx = gridIndex(Math.min(li + dl, levels.length - 1), Math.min(ai + da, NR - 1), Math.min(bi + db, NR - 1), Math.min(di + dd, nd - 1), nd);
+          for (let t = 0; t < 3; t++) out[t] += w * tables[t][idx];
+        }
       }
     }
   }
   return out;
 }
 
-/** Predicted daily peak tomorrow and the day after, with likely ranges. Levels never go below 0. */
-export function predictLevels(model: ForecastModel, current: number, rain: DailyRain): LevelOutlook {
-  const [m1, lo1, hi1] = lookupChange(model, current, rain.today, rain.tomorrow);
+/**
+ * Predicted daily peak tomorrow and the day after, with likely ranges. Levels never go below 0.
+ * `delta`: change in level over the last 24 hours (used by models that take the trend into account).
+ */
+export function predictLevels(model: ForecastModel, current: number, rain: DailyRain, delta = 0): LevelOutlook {
+  const [m1, lo1, hi1] = lookupChange(model, current, rain.today, rain.tomorrow, delta);
   const t1 = Math.max(0, current + m1);
-  const [m2, lo2, hi2] = lookupChange(model, t1, rain.tomorrow, rain.dayAfter);
+  const [m2, lo2, hi2] = lookupChange(model, t1, rain.tomorrow, rain.dayAfter, t1 - current);
   const t2 = Math.max(0, t1 + m2);
   return {
     tomorrow: { level: r3(t1), lo: r3(Math.max(0, current + lo1)), hi: r3(Math.max(0, current + hi1)) },

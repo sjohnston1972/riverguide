@@ -105,3 +105,12 @@ describe('gaugeTrend', () => {
     expect(gaugeTrend(0.9, 0.8, at, -1, '2026-10-07T15:00:00.000Z')).toBe('rising');
   });
 });
+
+describe('dayChange', () => {
+  it('is the change over about a day, or null when the readings are not a day apart', async () => {
+    const { dayChange } = await import('../src/worker/outlook.ts');
+    expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-06T19:15:00Z')).toBeCloseTo(-0.1, 9);
+    expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-07T07:15:00Z')).toBeNull();
+    expect(dayChange(0.8, '2026-10-07T19:15:00Z', null, null)).toBeNull();
+  });
+});

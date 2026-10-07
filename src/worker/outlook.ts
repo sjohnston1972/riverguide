@@ -15,11 +15,19 @@ export interface StoredRain extends DailyRain {
 /** Rain data older than this is not used for an outlook. */
 const RAIN_MAX_AGE_MS = 6 * 3_600_000;
 
-export function computeOutlook(level: number, trend: Trend, model: ForecastModel | null, rain: StoredRain | null, now = Date.now()): GaugeOutlook | null {
+/** `dayChange`: level now minus 24 hours ago (null when unknown; models that use it then assume no change). */
+export function computeOutlook(
+  level: number,
+  trend: Trend,
+  model: ForecastModel | null,
+  rain: StoredRain | null,
+  now = Date.now(),
+  dayChange: number | null = null,
+): GaugeOutlook | null {
   if (!rain || rain.day !== ukToday(new Date(now)) || now - Date.parse(rain.at) > RAIN_MAX_AGE_MS) return null;
   const base = { rain_today_mm: rain.today, rain_tomorrow_mm: rain.tomorrow, at: new Date(now).toISOString() };
   if (model?.usable && model.levels) {
-    const p = predictLevels(model, level, rain);
+    const p = predictLevels(model, level, rain, dayChange ?? 0);
     return { basis: 'model', direction: direction(level, p.tomorrow), tomorrow: p.tomorrow, day_after: p.dayAfter, ...base };
   }
   // No trustworthy model: a plain direction from the trend and the rain to come.
@@ -38,14 +46,23 @@ const parse = <T>(v: string | null): T | null => {
   }
 };
 
+/** Level change over about a day, when the reading a day ago is 22-26 hours older than the latest. */
+export function dayChange(level: number | null, levelAt: string | null, dayAgo: number | null, dayAgoAt: string | null): number | null {
+  if (level == null || dayAgo == null || !levelAt || !dayAgoAt) return null;
+  const hours = (Date.parse(levelAt) - Date.parse(dayAgoAt)) / 3_600_000;
+  return hours >= 22 && hours <= 26 ? level - dayAgo : null;
+}
+
 export async function updateOutlooks(db: D1Database): Promise<number> {
   const { results } = await db
-    .prepare('SELECT station_no, level, level_at, level_hour_ago, trend_sepa, trend_sepa_at, forecast_model, rain FROM gauges WHERE forecast_model IS NOT NULL')
+    .prepare('SELECT station_no, level, level_at, level_hour_ago, level_day_ago, level_day_ago_at, trend_sepa, trend_sepa_at, forecast_model, rain FROM gauges WHERE forecast_model IS NOT NULL')
     .all<{
       station_no: string;
       level: number | null;
       level_at: string | null;
       level_hour_ago: number | null;
+      level_day_ago: number | null;
+      level_day_ago_at: string | null;
       trend_sepa: number | null;
       trend_sepa_at: string | null;
       forecast_model: string;
@@ -56,7 +73,14 @@ export async function updateOutlooks(db: D1Database): Promise<number> {
     const o =
       r.level == null || isStale(r.level_at, now)
         ? null
-        : computeOutlook(r.level, gaugeTrend(r.level, r.level_hour_ago, r.level_at, r.trend_sepa, r.trend_sepa_at), parse<ForecastModel>(r.forecast_model), parse<StoredRain>(r.rain), now);
+        : computeOutlook(
+            r.level,
+            gaugeTrend(r.level, r.level_hour_ago, r.level_at, r.trend_sepa, r.trend_sepa_at),
+            parse<ForecastModel>(r.forecast_model),
+            parse<StoredRain>(r.rain),
+            now,
+            dayChange(r.level, r.level_at, r.level_day_ago, r.level_day_ago_at),
+          );
     return db.prepare('UPDATE gauges SET outlook = ? WHERE station_no = ?').bind(o ? JSON.stringify(o) : null, r.station_no);
   });
   if (stmts.length) await db.batch(stmts);

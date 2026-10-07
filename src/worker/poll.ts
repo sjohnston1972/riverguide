@@ -1,6 +1,6 @@
 // Scheduled jobs: latest readings for every gauge (15 min) and gauge metadata (daily).
 
-import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, latestAndHourAgo } from '../shared/sepa.ts';
+import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, fetchSeriesWindow, latestAndHourAgo } from '../shared/sepa.ts';
 import type { LevelHistory } from '../shared/types.ts';
 import { updateOutlooks } from './outlook.ts';
 
@@ -15,6 +15,7 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
   let empty = 0;
   // SEPA's rising/falling flags load alongside the levels (the cron has ~30 s in all).
   const flags = pollRisingFalling(db).catch((e) => console.error('SEPA rising/falling poll failed', e));
+  const dayAgo = pollDayAgo(db, byTs, ids).catch((e) => console.error('SEPA level a day ago failed', e));
 
   for (let i = 0; i < ids.length; i += BATCH) {
     const series = await fetchSeriesValues(ids.slice(i, i + BATCH), 'PT3H');
@@ -34,9 +35,26 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
     }
   }
   if (stmts.length) await db.batch(stmts);
-  await flags;
+  await Promise.all([flags, dayAgo]);
   await updateOutlooks(db);
   return { updated: stmts.length, empty };
+}
+
+/** Each gauge's level 24 hours ago (the latest reading in the half hour before then): the outlook's trend input. */
+async function pollDayAgo(db: D1Database, byTs: Map<string, string>, ids: string[]): Promise<void> {
+  const at = Date.now() - 24 * 3_600_000;
+  const from = new Date(at - 30 * 60_000).toISOString();
+  const to = new Date(at).toISOString();
+  const stmts: D1PreparedStatement[] = [];
+  for (let i = 0; i < ids.length; i += BATCH) {
+    for (const s of await fetchSeriesWindow(ids.slice(i, i + BATCH), from, to)) {
+      const last = s.points[s.points.length - 1];
+      const station = byTs.get(s.ts_id);
+      if (!last || !station) continue;
+      stmts.push(db.prepare('UPDATE gauges SET level_day_ago = ?, level_day_ago_at = ? WHERE station_no = ?').bind(last[1], last[0], station));
+    }
+  }
+  if (stmts.length) await db.batch(stmts);
 }
 
 /** Latest SEPA rising/falling flag for every gauge. Series ids come from the daily metadata refresh. */
