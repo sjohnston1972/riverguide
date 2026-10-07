@@ -1025,14 +1025,21 @@ button {
   font-size: 11px;
 }
 
-:root[data-theme='dark'] .leaflet-tile-pane {
+/* Dark map tiles. The filter goes on each tile, not the whole tile pane:
+   filtering the pane makes the browser re-filter the moving layer on every
+   frame while dragging, which flickers. */
+:root[data-theme='dark'] .leaflet-tile {
   filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.88) saturate(0.6);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .leaflet-tile-pane {
+  :root:not([data-theme='light']) .leaflet-tile {
     filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.88) saturate(0.6);
   }
+}
+
+.leaflet-tile-pane {
+  will-change: transform;
 }
 
 :root[data-theme='dark'] .leaflet-control-attribution,

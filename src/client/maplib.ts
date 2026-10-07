@@ -15,6 +15,8 @@ export function baseMap(el: HTMLElement, opts: L.MapOptions = {}): L.Map {
   const map = L.map(el, opts);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18,
+    // Keep more off-screen tiles so fewer blank squares appear while dragging.
+    keepBuffer: 4,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
   }).addTo(map);
   return map;
