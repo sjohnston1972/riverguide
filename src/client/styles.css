@@ -1242,28 +1242,6 @@ button {
   gap: 8px;
 }
 
-.guide-notice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--loch);
-}
-
-.guide-notice-main {
-  flex: 1 1 280px;
-  font-size: 0.95rem;
-  line-height: 1.45;
-}
-
-.guide-notice-date {
-  color: var(--ink-2);
-}
-
 /* Now card: status header + gauge tabs + selected gauge + level history. */
 .now-card {
   display: grid;
@@ -3166,10 +3144,6 @@ button {
 
   .report {
     padding: 14px 0;
-  }
-
-  .guide-notice {
-    padding: 18px 24px;
   }
 
   .block {

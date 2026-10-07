@@ -15,7 +15,6 @@ import { ICONS } from '../icons.ts';
 import {
   basisWording,
   characterLabel,
-  formatDate,
   formatLevel,
   gradeLabel,
   RELATION_LABEL,
@@ -105,7 +104,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         .catch(() => undefined);
     };
     const community = communityPanel({ slug, gaugeName: d.gauge_name, siteKey: ctx.config()?.turnstile_site_key ?? null, data: reports, onChange });
-    const main = h('div', { class: 'col-main' }, now, releasesSection(d), community, guideBanner(d), d.guide ? guideSection(d.guide) : null);
+    const main = h('div', { class: 'col-main' }, now, releasesSection(d), community, d.guide ? guideSection(d.guide) : null);
     const side = h('div', { class: 'col-side' }, weatherSection(d), placesSection(d), nearbySection(d));
     clear(body);
     body.append(h('div', { class: 'river-grid' }, main, side));
@@ -446,24 +445,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       'dl',
       { class: 'facts', hidden: present.length === 0 },
       present.map(([k, v]) => h('div', { class: 'fact' }, h('dt', null, k), h('dd', null, v!))),
-    );
-  }
-
-  function guideBanner(d: SectionDetail): HTMLElement {
-    const updated = formatDate(d.source_updated);
-    return h(
-      'aside',
-      { class: 'guide-notice' },
-      h(
-        'p',
-        { class: 'guide-notice-main' },
-        h('strong', null, 'Before paddling: '),
-        'check a current guidebook and local knowledge for hazards, access and route details. River Guide does not show them, and trees, landslips and works change without notice.',
-        updated ? h('span', { class: 'guide-notice-date' }, ` Section information last updated ${updated}.`) : null,
-        d.source === 'wtw'
-          ? h('span', { class: 'guide-notice-date' }, ' Section information from ', wtwLink(), ' (', ccLink(), ').')
-          : null,
-      ),
     );
   }
 
