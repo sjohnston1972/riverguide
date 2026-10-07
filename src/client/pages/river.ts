@@ -6,6 +6,7 @@ import { ApiError, api } from '../api.ts';
 import { bandBar } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
+import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
 import { clear, h, icon } from '../dom.ts';
 import { lastListHref } from '../filters.ts';
@@ -327,6 +328,42 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
   // ---- Scheduled releases (dam releases and tidal windows) ----
   function releasesSection(d: SectionDetail): HTMLElement | null {
+    if (d.dam_schedule) {
+      const sch = d.dam_schedule;
+      return h(
+        'section',
+        { class: 'block releases' },
+        h('div', { class: 'block-head' }, h('h2', null, 'Scheduled releases'), h('a', { href: '/releases' }, 'All dam releases')),
+        sch.releases.length
+          ? h('ul', { class: 'sched-list' }, sch.releases.slice(0, 5).map((r) => damReleaseRow(r)))
+          : h('p', { class: 'muted' }, 'No more releases are scheduled this season.'),
+        h(
+          'p',
+          { class: 'muted' },
+          sch.note ?? `Released from ${sch.dam}.`,
+          sch.includes_compensation ? ' Size is the average flow, including the compensation flow.' : ' Size is the average flow the release adds to the river.',
+        ),
+        h(
+          'p',
+          { class: 'source muted' },
+          'Release schedule: SSE freshet schedule, published by ',
+          h('a', { href: SEPA_FRESHETS_URL, target: '_blank', rel: 'noopener' }, 'SEPA'),
+          '. Times are approximate and releases can be cancelled: check before travelling.',
+        ),
+      );
+    }
+    if (d.tide_ebbs) {
+      const ebbs = d.tide_ebbs.filter((e) => e.daylight).slice(0, 5);
+      return h(
+        'section',
+        { class: 'block releases' },
+        h('div', { class: 'block-head' }, h('h2', null, 'Tides'), h('a', { href: '/falls-of-lora' }, 'Full tide outlook')),
+        ebbs.length
+          ? h('ul', { class: 'sched-list' }, ebbs.map((e) => ebbRow(e)))
+          : h('p', { class: 'muted' }, 'No working daylight ebbs in the next two weeks.'),
+        h('p', { class: 'source muted' }, 'Working ebbs need an Oban tidal range over 3.2 m. Predicted from SEPA’s Oban tide gauge; weather can shift the tide by up to half a metre.'),
+      );
+    }
     if (!d.releases.length) return null;
     const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
     const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());

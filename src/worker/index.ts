@@ -17,6 +17,8 @@ import {
 } from './guard.ts';
 import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRain } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
+import { refreshFreshets } from './freshets.ts';
+import { loraOverview, releasesOverview } from './schedules.ts';
 import { configureSepa } from './sepa-auth.ts';
 import { getWeather } from './weather.ts';
 
@@ -48,6 +50,16 @@ app.get('/api/config', (c) => {
 app.get('/api/sections', async (c) => {
   c.header('cache-control', 'public, max-age=60');
   return c.json(await listSections(c.env.DB));
+});
+
+app.get('/api/releases', async (c) => {
+  c.header('cache-control', 'public, max-age=300');
+  return c.json(await releasesOverview(c.env.DB));
+});
+
+app.get('/api/tides/lora', (c) => {
+  c.header('cache-control', 'public, max-age=900');
+  return c.json(loraOverview(60));
 });
 
 app.get('/api/sections/:slug', async (c) => {
@@ -126,8 +138,16 @@ export default {
     configureSepa(env);
     if (event.cron === '0 3 * * *') {
       ctx.waitUntil(refreshGaugeMetadata(env.DB).then((n) => console.log(`gauge metadata refreshed: ${n}`)));
+      ctx.waitUntil(refreshFreshets(env.DB).then((n) => console.log(`dam releases refreshed: ${n}`), (e) => console.error('dam releases refresh failed', e)));
       return;
     }
+    // First run after deploy (or a wiped table): load dam releases without waiting for 03:00.
+    ctx.waitUntil(
+      (async () => {
+        if (await env.DB.prepare('SELECT 1 FROM freshets LIMIT 1').first()) return;
+        console.log(`dam releases loaded: ${await refreshFreshets(env.DB)}`);
+      })().catch((e) => console.error('dam releases load failed', e)),
+    );
     ctx.waitUntil(pollReadings(env.DB).then((r) => console.log(`poll: ${r.updated} updated, ${r.empty} empty`)));
     // Refresh the rainfall used for level outlooks when it is more than ~an hour old.
     ctx.waitUntil(

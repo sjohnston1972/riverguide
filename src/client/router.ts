@@ -4,6 +4,8 @@ export type Route =
   | { name: 'list'; search: string }
   | { name: 'map'; search: string }
   | { name: 'river'; slug: string; search: string }
+  | { name: 'releases'; search: string }
+  | { name: 'lora'; search: string }
   | { name: 'about'; search: string }
   | { name: 'notfound'; search: string };
 
@@ -11,6 +13,8 @@ export function matchRoute(pathname: string, search = ''): Route {
   const path = pathname.replace(/\/+$/, '') || '/';
   if (path === '/') return { name: 'list', search };
   if (path === '/map') return { name: 'map', search };
+  if (path === '/releases') return { name: 'releases', search };
+  if (path === '/falls-of-lora') return { name: 'lora', search };
   if (path === '/about') return { name: 'about', search };
   const m = /^\/river\/([a-z0-9-]{1,120})$/i.exec(path);
   if (m) return { name: 'river', slug: m[1].toLowerCase(), search };

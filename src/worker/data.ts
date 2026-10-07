@@ -3,6 +3,7 @@
 import { distanceKm } from '../shared/geo.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
 import { isStale, linkRank, paddlerStep, sectionStatus, trendFrom, typicalStatus, ukToday } from '../shared/status.ts';
+import { damSchedule, releasingToday, sectionEbbs } from './schedules.ts';
 import type {
   BandBasis,
   Confidence,
@@ -210,14 +211,13 @@ async function allGauges(db: D1Database): Promise<Map<string, Gauge>> {
 }
 
 export async function listSections(db: D1Database): Promise<SectionSummary[]> {
-  const [sections, links, gauges, bands, releases] = await Promise.all([
+  const [sections, links, gauges, bands, releasing] = await Promise.all([
     db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM sections ORDER BY name`).all<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges ORDER BY rowid').all<LinkRow>(),
     allGauges(db),
     communityBands(db),
-    db.prepare('SELECT slug FROM releases WHERE day = ?').bind(ukToday()).all<{ slug: string }>(),
+    releasingToday(db),
   ]);
-  const releasing = new Set(releases.results.map((r) => r.slug));
   const bySlug = new Map<string, SectionGaugeLink[]>();
   for (const l of links.results) {
     const g = gauges.get(l.station_no);
@@ -246,13 +246,18 @@ export interface DetailWithGuide {
 /** Section detail. `guide` is returned separately so callers decide whether it may leave the server. */
 export async function getSection(db: D1Database, slug: string): Promise<DetailWithGuide | null> {
   const today = ukToday();
-  const [row, links, gauges, bands, releases] = await Promise.all([
+  const [row, links, gauges, bands, releases, dams, releasing] = await Promise.all([
     db.prepare('SELECT * FROM sections WHERE slug = ?').bind(slug).first<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges WHERE slug = ? ORDER BY rowid').bind(slug).all<LinkRow>(),
     allGauges(db),
     communityBands(db, slug),
     db.prepare('SELECT day FROM releases WHERE slug = ? AND day >= ? ORDER BY day LIMIT 12').bind(slug, today).all<{ day: string }>(),
+    damSchedule(db, slug),
+    releasingToday(db),
   ]);
+  const ebbs = sectionEbbs(slug);
+  // SEPA's schedule and the tide predictions replace Where's the Water's dates and note.
+  const scheduled = !!dams || !!ebbs;
   if (!row) return null;
   const linked = links.results
     .flatMap((l) => {
@@ -273,7 +278,7 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
     : [];
 
   const detail: SectionDetail = {
-    ...summarise(row, linked, releases.results[0]?.day === today),
+    ...summarise(row, linked, releasing.has(slug)),
     length_text: row.length_text,
     time_text: row.time_text,
     character: row.character,
@@ -283,8 +288,10 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
     links: linked,
     nearby_gauges: nearby,
     source: row.source ?? 'guidebook',
-    releases: releases.results.map((r) => r.day),
-    release_note: row.release_note,
+    releases: scheduled ? [] : releases.results.map((r) => r.day),
+    release_note: scheduled ? null : row.release_note,
+    dam_schedule: dams,
+    tide_ebbs: ebbs,
   };
   return { detail, guide: parseJson<GuideText>(row.guide_text) };
 }

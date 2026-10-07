@@ -1,6 +1,17 @@
 // Typed fetch helpers for the Worker API, with small in-memory caches.
 
-import type { CommunityReport, CommunityReports, LevelHistory, NewReport, PublicConfig, SectionDetail, SectionSummary, Weather } from '../shared/types.ts';
+import type {
+  CommunityReport,
+  CommunityReports,
+  LevelHistory,
+  LoraOverview,
+  NewReport,
+  PublicConfig,
+  ReleasesOverview,
+  SectionDetail,
+  SectionSummary,
+  Weather,
+} from '../shared/types.ts';
 
 export class ApiError extends Error {
   constructor(
@@ -65,6 +76,8 @@ const detailCache = new Map<string, Cached<SectionDetail>>();
 export const api = {
   config: cached<PublicConfig>(Infinity, () => getJson('/api/config')),
   sections: cached<SectionSummary[]>(60_000, () => getJson('/api/sections')),
+  releases: cached<ReleasesOverview>(5 * 60_000, () => getJson('/api/releases')),
+  lora: cached<LoraOverview>(15 * 60_000, () => getJson('/api/tides/lora')),
 
   section(slug: string, force = false): Promise<SectionDetail> {
     const hit = detailCache.get(slug);
