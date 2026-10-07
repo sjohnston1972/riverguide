@@ -6,6 +6,11 @@
 // the 10th-90th percentiles the likely range. To keep the Worker cheap, this is
 // pre-computed on a grid (8 levels x 6 x 6 rain amounts) and interpolated.
 //
+// Each gauge is also tried with a fourth input, the change in daily peak since
+// the day before (5 nodes), so a river that is draining away is told apart
+// from one sitting at the same level. That version is kept only where it
+// scores better than the three-input one on the same test days.
+//
 // Data: three years of SEPA daily maximum levels and daily rainfall at the
 // gauge (Open-Meteo archive), both cached in data/private/.
 // Testing: the grid is built from all but the last 180 days and scored on those
@@ -25,6 +30,9 @@ const MIN_DAYS = 400;
 const MIN_SKILL = 0.15;
 const K = 25;
 const LEVEL_NODES = 8;
+const DELTA_QUANTILES = [0.03, 0.2, 0.5, 0.8, 0.97];
+/** The trend version must beat the plain one by this much skill to be used. */
+const TREND_MARGIN = 0.01;
 const LEVEL_CACHE = 'data/private/daymax-cache.json';
 const RAIN_CACHE = 'data/private/rain-archive.json';
 
@@ -79,41 +87,63 @@ for (let i = 0; i < needRain.length; i += 10) {
 }
 
 // ---- Analogue model ----
-type Day = { d: number; next: number; p0: number; p1: number };
+type Day = { d: number; next: number; p0: number; p1: number; dd: number };
 const add = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400_000).toISOString().slice(0, 10);
 const pct = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
 const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
 
-function buildGrid(lib: Day[]): Pick<ForecastModel, 'levels' | 'med' | 'p10' | 'p90'> {
+/** Strictly increasing nodes at the given quantiles of the values. */
+function nodesAt(values: number[], qs: number[]): number[] {
+  const v = [...values].sort((a, b) => a - b);
+  const out = qs.map((q) => r4(pct(v, q)));
+  for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1]) out[i] = r4(out[i - 1] + 0.001);
+  return out;
+}
+
+function buildGrid(lib: Day[], withTrend: boolean): Pick<ForecastModel, 'levels' | 'deltas' | 'med' | 'p10' | 'p90'> {
   const ds = lib.map((r) => r.d).sort((a, b) => a - b);
   const spread = Math.max(0.05, pct(ds, 0.95) - pct(ds, 0.05));
-  const lvl = Array.from({ length: LEVEL_NODES }, (_, i) => r4(pct(ds, 0.02 + (0.96 * i) / (LEVEL_NODES - 1))));
-  // Collapse duplicate nodes (very flat gauges).
-  for (let i = 1; i < lvl.length; i++) if (lvl[i] <= lvl[i - 1]) lvl[i] = r4(lvl[i - 1] + 0.001);
-  const n = LEVEL_NODES * RAIN_NODES.length * RAIN_NODES.length;
+  const lvl = nodesAt(ds, Array.from({ length: LEVEL_NODES }, (_, i) => 0.02 + (0.96 * i) / (LEVEL_NODES - 1)));
+  const dds = lib.map((r) => r.dd).sort((a, b) => a - b);
+  const dSpread = Math.max(0.02, pct(dds, 0.95) - pct(dds, 0.05));
+  const deltas = withTrend ? nodesAt(dds, DELTA_QUANTILES) : [0];
+  const nd = deltas.length;
+  const n = LEVEL_NODES * nd * RAIN_NODES.length * RAIN_NODES.length;
   const med = Array(n).fill(0);
   const p10 = Array(n).fill(0);
   const p90 = Array(n).fill(0);
+  const scored = lib.map((t) => ({ t, s: 0 }));
   lvl.forEach((L, li) =>
-    RAIN_NODES.forEach((a, ai) =>
-      RAIN_NODES.forEach((b, bi) => {
-        const near = lib
-          .map((t) => ({ t, s: ((t.d - L) / spread) ** 2 + ((Math.sqrt(t.p1) - Math.sqrt(b)) / 2) ** 2 + ((Math.sqrt(t.p0) - Math.sqrt(a)) / 3) ** 2 }))
-          .sort((x, y) => x.s - y.s)
-          .slice(0, K)
-          .map((x) => x.t.next - x.t.d)
-          .sort((x, y) => x - y);
-        const idx = gridIndex(li, ai, bi);
-        med[idx] = r4(pct(near, 0.5));
-        p10[idx] = r4(pct(near, 0.1));
-        p90[idx] = r4(pct(near, 0.9));
-      }),
+    deltas.forEach((dn, di) =>
+      RAIN_NODES.forEach((a, ai) =>
+        RAIN_NODES.forEach((b, bi) => {
+          for (const x of scored) {
+            const t = x.t;
+            x.s =
+              ((t.d - L) / spread) ** 2 +
+              ((Math.sqrt(t.p1) - Math.sqrt(b)) / 2) ** 2 +
+              ((Math.sqrt(t.p0) - Math.sqrt(a)) / 3) ** 2 +
+              (withTrend ? ((t.dd - dn) / dSpread) ** 2 : 0);
+          }
+          const near = scored
+            .slice()
+            .sort((x, y) => x.s - y.s)
+            .slice(0, K)
+            .map((x) => x.t.next - x.t.d)
+            .sort((x, y) => x - y);
+          const idx = gridIndex(li, ai, bi, di, nd);
+          med[idx] = r4(pct(near, 0.5));
+          p10[idx] = r4(pct(near, 0.1));
+          p90[idx] = r4(pct(near, 0.9));
+        }),
+      ),
     ),
   );
-  return { levels: lvl, med, p10, p90 };
+  return withTrend ? { levels: lvl, deltas, med, p10, p90 } : { levels: lvl, med, p10, p90 };
 }
 
 const models: Record<string, ForecastModel | null> = {};
+const comparison: Array<{ station: string; name: string; plain: number; trend: number }> = [];
 for (const g of gauges) {
   const D = levels[g.station_no];
   const P = rain[g.station_no];
@@ -124,8 +154,9 @@ for (const g of gauges) {
   const rows: Day[] = [];
   for (const day of Object.keys(D).sort()) {
     const nx = add(day, 1);
-    if (D[nx] == null || P[nx] == null || P[day] == null) continue;
-    rows.push({ d: D[day], next: D[nx], p0: P[day], p1: P[nx] });
+    const pv = add(day, -1);
+    if (D[nx] == null || D[pv] == null || P[nx] == null || P[day] == null) continue;
+    rows.push({ d: D[day], next: D[nx], p0: P[day], p1: P[nx], dd: D[day] - D[pv] });
   }
   if (rows.length < MIN_DAYS) {
     models[g.station_no] = null;
@@ -133,24 +164,42 @@ for (const g of gauges) {
   }
   const train = rows.slice(0, -TEST_DAYS);
   const test = rows.slice(-TEST_DAYS);
-  const trial: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: rows.length, ...buildGrid(train) };
-  const predict = (r: Day) => r.d + lookupChange(trial, r.d, r.p0, r.p1)[0];
   const persist = test.reduce((s, r) => s + Math.abs(r.next - r.d), 0);
-  const skill = persist > 0 ? 1 - test.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / persist : 0;
   const wet = test.filter((r) => r.p1 >= 5);
-  const skillWet =
-    wet.length >= 10 ? 1 - wet.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / Math.max(1e-6, wet.reduce((s, r) => s + Math.abs(r.next - r.d), 0)) : null;
-  const usable = skill >= MIN_SKILL;
+  const score = (withTrend: boolean) => {
+    const trial: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: rows.length, ...buildGrid(train, withTrend) };
+    const predict = (r: Day) => r.d + lookupChange(trial, r.d, r.p0, r.p1, r.dd)[0];
+    const skill = persist > 0 ? 1 - test.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / persist : 0;
+    const skillWet =
+      wet.length >= 10 ? 1 - wet.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / Math.max(1e-6, wet.reduce((s, r) => s + Math.abs(r.next - r.d), 0)) : null;
+    return { skill, skillWet };
+  };
+  const plain = score(false);
+  const trend = score(true);
+  const useTrend = trend.skill >= plain.skill + TREND_MARGIN;
+  const best = useTrend ? trend : plain;
+  comparison.push({ station: g.station_no, name: g.name, plain: plain.skill, trend: trend.skill });
+  const usable = best.skill >= MIN_SKILL;
   models[g.station_no] = {
     usable,
-    skill: Math.round(skill * 1000) / 1000,
-    skill_wet: skillWet == null ? null : Math.round(skillWet * 1000) / 1000,
+    skill: Math.round(best.skill * 1000) / 1000,
+    skill_wet: best.skillWet == null ? null : Math.round(best.skillWet * 1000) / 1000,
     days: rows.length,
-    ...(usable ? buildGrid(rows) : {}),
+    ...(usable ? buildGrid(rows, useTrend) : {}),
   };
   process.stdout.write(`\rmodels ${Object.keys(models).length}/${gauges.length}   `);
 }
 
+writeFileSync('data/private/forecast-comparison.json', JSON.stringify(comparison, null, 1));
+{
+  const better = comparison.filter((c) => c.trend >= c.plain + TREND_MARGIN);
+  const worse = comparison.filter((c) => c.trend < c.plain - TREND_MARGIN);
+  const med = (v: number[]) => [...v].sort((a, b) => a - b)[Math.floor((v.length - 1) / 2)];
+  const chosen = comparison.map((c) => (c.trend >= c.plain + TREND_MARGIN ? c.trend : c.plain));
+  console.log(
+    `\ntrend input: better on ${better.length}, worse on ${worse.length}, about the same on ${comparison.length - better.length - worse.length} of ${comparison.length} gauges; median skill ${med(comparison.map((c) => c.plain)).toFixed(3)} -> ${med(chosen).toFixed(3)}`,
+  );
+}
 writeFileSync('data/gauge-forecast.json', JSON.stringify({ built: new Date().toISOString().slice(0, 10), method: 'analogue grid', k: K, test_days: TEST_DAYS, min_skill: MIN_SKILL, models }) + '\n');
 const fitted = Object.values(models).filter(Boolean) as ForecastModel[];
 const usable = fitted.filter((m) => m.usable);
