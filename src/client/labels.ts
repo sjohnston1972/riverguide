@@ -23,11 +23,12 @@ export const TREND_LABEL: Record<Trend, string> = {
   unknown: 'trend unknown',
 };
 
+/** Where a gauge is relative to the section, completing "<gauge name>, …". */
 export const RELATION_LABEL: Record<Relation, string> = {
-  'on-section': 'Gauge on this section',
-  upstream: 'Upstream gauge',
-  downstream: 'Downstream gauge',
-  proxy: 'Proxy gauge on a nearby river',
+  'on-section': 'on this section',
+  upstream: 'upstream of this section',
+  downstream: 'downstream of this section',
+  proxy: 'on a nearby river (used as a guide)',
 };
 
 export const TYPICAL_LABEL: Record<TypicalStatus, string> = {

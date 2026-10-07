@@ -198,7 +198,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     }
 
     function renderPanel(): void {
-      panel.replaceChildren(...gaugeDetail(links[selected], !multi));
+      panel.replaceChildren(...gaugeDetail(links[selected]));
     }
 
     async function draw(): Promise<void> {
@@ -241,7 +241,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   /** One linked gauge: reading, band bar and compact facts. */
-  function gaugeDetail(l: SectionGaugeLink, single: boolean): Node[] {
+  function gaugeDetail(l: SectionGaugeLink): Node[] {
     const g = l.gauge;
     let band = 'None set for this gauge';
     if (l.levels && l.basis === 'paddler')
@@ -253,7 +253,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       g.typical_low != null && g.typical_high != null
         ? `${TYPICAL_LABEL[g.typical_status]} (${formatLevel(g.typical_low)} to ${formatLevel(g.typical_high)})`
         : TYPICAL_LABEL[g.typical_status];
-    const rows: [string, string][] = [['Gauge', single ? `${g.name}. ${RELATION_LABEL[l.relation]}` : RELATION_LABEL[l.relation]], ['Paddling band', band]];
+    const rows: [string, string][] = [['Gauge', `${g.name}, ${RELATION_LABEL[l.relation]}`], ['Paddling band', band]];
     if (l.min_level != null || l.max_level != null) rows.push(['Basis', basisWording(l.basis, l.confidence)]);
     if (g.days_reached_pct != null) rows.push(['How often', `This level is reached on ${daysText(g.days_reached_pct)} of days`]);
     rows.push(['Typical range', typical]);
