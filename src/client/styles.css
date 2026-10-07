@@ -2693,6 +2693,238 @@ button {
   box-shadow: inset 0 0 0 1px var(--loch);
 }
 
+/* ---------- Scheduled water: dam releases and Falls of Lora ---------- */
+.nav-short {
+  display: none;
+}
+
+.sched-page {
+  display: grid;
+  gap: 20px;
+  padding-top: 24px;
+  min-width: 0;
+}
+
+.sched-lede {
+  max-width: 68ch;
+  color: var(--ink-2);
+  margin-top: -8px;
+}
+
+.sched-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.sched-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.sched-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.sched-hero {
+  background: var(--loch-tint);
+  border-color: color-mix(in srgb, var(--loch) 35%, transparent);
+}
+
+.sched-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.sched-card-head .chip {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+.sched-label {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.sched-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.sched-row {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--rule);
+  min-width: 0;
+}
+
+.sched-list > .sched-row:first-child,
+.sched-month + .sched-row {
+  border-top: 0;
+}
+
+.sched-day {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sched-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.sched-meta {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.sched-size {
+  font-weight: 700;
+  color: var(--loch);
+}
+
+.sched-live {
+  grid-column: 2;
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--loch-ink);
+  background: var(--loch);
+}
+
+.sched-row.is-today .sched-day,
+.sched-row.is-running .sched-day {
+  color: var(--loch);
+}
+
+.sched-next .sched-row {
+  padding-top: 2px;
+  font-size: 1.1rem;
+}
+
+.sched-next .sched-meta {
+  font-size: 0.95rem;
+}
+
+.sched-row.is-dark {
+  color: var(--ink-3);
+}
+
+.sched-dark {
+  font-style: italic;
+}
+
+.tide-size {
+  font-weight: 700;
+}
+
+.tide-big {
+  color: var(--st-high);
+}
+
+.tide-working {
+  color: var(--st-runnable);
+}
+
+.sched-month {
+  padding: 14px 0 4px;
+  font: 600 1.05rem/1.2 var(--font-display);
+  color: var(--ink-2);
+}
+
+.sched-list > .sched-month:first-child {
+  padding-top: 0;
+}
+
+.sched-more,
+.sched-note,
+.sched-sections,
+.sched-finished {
+  font-size: 0.9rem;
+}
+
+.sched-sections {
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+.tide-timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px 16px;
+  margin: 6px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--loch) 25%, transparent);
+}
+
+.tide-timeline dt {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+}
+
+.tide-timeline dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.releases .sched-list {
+  max-width: 640px;
+}
+
+@media (max-width: 520px) {
+  .nav-long {
+    display: none;
+  }
+
+  .nav-short {
+    display: inline;
+  }
+
+  .nav-link {
+    padding: 0 7px;
+  }
+
+  .sched-row {
+    grid-template-columns: 5.5em minmax(0, 1fr);
+    gap: 2px 8px;
+  }
+}
+
+/* The footer links to About; on the narrowest phones the header keeps the four main tabs. */
+@media (max-width: 420px) {
+  .nav-about {
+    display: none;
+  }
+}
+
 /* ---------- Wide screens: more room to breathe (phones and tablets are unchanged) ---------- */
 @media (min-width: 1100px) {
   :root {

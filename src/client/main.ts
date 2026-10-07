@@ -5,7 +5,9 @@ import { clear, h, icon } from './dom.ts';
 import { ICONS } from './icons.ts';
 import { mountAbout } from './pages/about.ts';
 import { mountList } from './pages/list.ts';
+import { mountLora } from './pages/lora.ts';
 import { mountNotFound } from './pages/notfound.ts';
+import { mountReleases } from './pages/releases.ts';
 import { mountRiver } from './pages/river.ts';
 import { type Route, startRouter } from './router.ts';
 import { initTheme, themeToggle } from './theme.ts';
@@ -37,7 +39,9 @@ initTheme();
 const navLinks: Record<string, HTMLAnchorElement> = {
   list: h('a', { href: '/', class: 'nav-link' }, 'Rivers'),
   map: h('a', { href: '/map', class: 'nav-link' }, 'Map'),
-  about: h('a', { href: '/about', class: 'nav-link' }, 'About'),
+  releases: h('a', { href: '/releases', class: 'nav-link' }, 'Releases'),
+  lora: h('a', { href: '/falls-of-lora', class: 'nav-link', 'aria-label': 'Falls of Lora' }, h('span', { class: 'nav-long' }, 'Falls of Lora'), h('span', { class: 'nav-short', 'aria-hidden': 'true' }, 'Lora')),
+  about: h('a', { href: '/about', class: 'nav-link nav-about' }, 'About'),
 };
 
 const header = h(
@@ -64,7 +68,7 @@ const footer = h(
     h(
       'p',
       null,
-      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Paddler levels, extra sections and release dates adapted from ',
+      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Dam releases: SSE freshet schedule via SEPA. Paddler levels and extra sections adapted from ',
       h('a', { href: 'https://www.andyjacksonfund.org.uk/wheres-the-water/', target: '_blank', rel: 'noopener' }, "Where's the Water"),
       ' (Scottish Canoe Association), ',
       h('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'),
@@ -113,7 +117,10 @@ api
 
 function render(route: Route, nav: { pop: boolean }): void {
   for (const [name, a] of Object.entries(navLinks)) {
-    const active = name === route.name || (name === 'list' && route.name === 'river');
+    const active =
+      name === route.name ||
+      (name === 'list' && route.name === 'river' && route.slug !== 'falls-of-lora-tidal-rapid') ||
+      (name === 'lora' && route.name === 'river' && route.slug === 'falls-of-lora-tidal-rapid');
     if (active) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   }
@@ -136,6 +143,12 @@ function render(route: Route, nav: { pop: boolean }): void {
       break;
     case 'river':
       page = mountRiver(main, route.slug, ctx);
+      break;
+    case 'releases':
+      page = mountReleases(main, ctx);
+      break;
+    case 'lora':
+      page = mountLora(main, ctx);
       break;
     case 'about':
       page = mountAbout(main, ctx);

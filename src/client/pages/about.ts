@@ -89,11 +89,22 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         'Each gauge was tested on six months of data it had not seen, and only gauges where it clearly beat "tomorrow will be the same as today" get a prediction. Other gauges show just a direction (likely to rise, drop or stay about the same) from the current trend and the rain due. Treat all of it as a rough guide: rain forecasts can be wrong, and rain falling higher up a catchment may not be in the forecast for the gauge.',
       ),
 
-      h('h2', null, 'Scheduled releases'),
+      h('h2', null, 'Dam releases and the Falls of Lora'),
       h(
         'p',
         null,
-        'Some rivers run on hydro dam releases or tides rather than rain. Where release dates are known (for example the Moriston, Garry, Tummel, Lyon, Awe and the Falls of Lora), river pages list the upcoming dates and the river list shows "Release today". Releases can be cancelled, so check with the operator before travelling.',
+        'Some rivers run on hydro dam releases rather than rain. ',
+        h('a', { href: '/releases' }, 'Dam releases'),
+        ' lists every release in SSE’s freshet schedule, which SEPA publishes each year, with its start and end time and its size. Size is the release volume divided by its duration, so it is the average flow the release adds to the river (for the upper Tummel it includes the compensation flow). The schedule is checked daily. Releases can change or be cancelled, so check before travelling.',
+      ),
+      h(
+        'p',
+        null,
+        'The ',
+        h('a', { href: '/falls-of-lora' }, 'Falls of Lora'),
+        ' run on the tide. River Guide predicts the tide at Oban from three years of SEPA’s Oban tide gauge readings (a harmonic tide model), then applies the ebb timings from ',
+        ext('https://www.fallsoflora.info/', 'fallsoflora.info'),
+        '. Ranges are scaled to match published tide tables, so "over 3.2 m" means the same as in a tide table. Tested on 90 days the model had not seen, predicted high and low water times were within 10 minutes half the time and within 30 minutes nine times in ten. Weather can raise or lower the tide by up to half a metre. Not for navigation.',
       ),
 
       h('h2', null, 'Community reports'),
@@ -114,11 +125,12 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
       h(
         'ul',
         { class: 'sources' },
+        h('li', null, h('strong', null, 'Dam releases: '), 'SSE’s freshet schedule, as published by ', ext('https://beta.sepa.scot/topics/water/water-levels/hydropower-scheme-water-releases/', 'SEPA'), '. Tide predictions are fitted to SEPA’s Oban tide gauge.'),
         h('li', null, h('strong', null, 'River levels: '), ext('https://www.sepa.org.uk/environment/water/water-levels/', 'SEPA'), ' river level data, used under the ', ext('https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/', 'Open Government Licence v3.0'), '. Contains SEPA data © Scottish Environment Protection Agency and database right.'),
         h(
           'li',
           null,
-          h('strong', null, 'Paddler levels, extra sections and release dates: '),
+          h('strong', null, 'Paddler levels, extra sections and backup release dates: '),
           WTW(),
           ' (Copyright Scottish Canoe Association; data maintained by Jonathan Riddell and contributors), used under ',
           ext('https://creativecommons.org/licenses/by-sa/4.0/', 'CC BY-SA 4.0'),

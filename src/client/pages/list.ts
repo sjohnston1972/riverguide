@@ -325,7 +325,7 @@ function row(s: SectionSummary): HTMLLIElement {
         { class: 'row-side' },
         h('span', { class: 'row-status' }, statusPill(s.status),
           s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : estimateMark(s.status_basis, s.status_confidence),
-          s.release_today ? h('span', { class: 'release-tag' }, 'Release today') : null,
+          s.release_today ? h('span', { class: 'release-tag' }, s.slug === 'falls-of-lora-tidal-rapid' ? 'Ebb today' : 'Release today') : null,
           tomorrowNote(s),
         ),
         s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),

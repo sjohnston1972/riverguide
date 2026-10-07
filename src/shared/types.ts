@@ -1,5 +1,9 @@
 // API contract shared by the Worker and the browser client.
 
+import type { LoraEbb } from './tides.ts';
+
+export type { LoraEbb };
+
 export type SectionStatus = 'low' | 'runnable' | 'high' | 'unknown';
 export type TypicalStatus = 'below' | 'typical' | 'above' | 'unknown';
 export type Trend = 'rising' | 'falling' | 'steady' | 'unknown';
@@ -143,9 +147,13 @@ export interface SectionDetail extends SectionSummary {
   nearby_gauges: Gauge[];
   /** 'wtw' when the section itself comes from Where's the Water. */
   source: 'guidebook' | 'wtw';
-  /** Upcoming scheduled release days (YYYY-MM-DD, UK), soonest first. */
+  /** Upcoming scheduled release days (YYYY-MM-DD, UK), soonest first (Where's the Water; used where SEPA has no schedule). */
   releases: string[];
   release_note: string | null;
+  /** Hydro dam releases from SEPA's freshet schedule, when the section is below a scheduled dam. */
+  dam_schedule: DamSchedule | null;
+  /** Falls of Lora only: predicted working ebbs for the next fortnight. */
+  tide_ebbs: LoraEbb[] | null;
   /** Only present when the site is configured to show full guide text. */
   guide?: GuideText;
 }
@@ -254,3 +262,39 @@ export type ChatEvent =
   | { type: 'card'; card: ChatCard }
   | { type: 'error'; message: string }
   | { type: 'done' };
+
+
+export interface DamRelease {
+  /** UK local time, "YYYY-MM-DDTHH:MM". */
+  start: string;
+  end: string;
+  hours: number;
+  volume_m3: number;
+  /** Average flow added by the release, m³/s. */
+  cumecs: number;
+}
+
+export interface DamSchedule {
+  key: string;
+  river: string;
+  dam: string;
+  /** Section-specific note, e.g. distance from the dam. */
+  note: string | null;
+  /** The volume includes the river's compensation flow (otherwise it is on top of it). */
+  includes_compensation: boolean;
+  /** Upcoming and running releases, soonest first. */
+  releases: DamRelease[];
+}
+
+export interface ReleasesOverview {
+  dams: Array<DamSchedule & { sections: Array<{ slug: string; name: string; grade_text: string }> }>;
+  source_url: string;
+}
+
+export interface LoraOverview {
+  ebbs: LoraEbb[];
+  /** Tide-table range thresholds, metres. */
+  min_range: number;
+  big_range: number;
+  station: string;
+}
