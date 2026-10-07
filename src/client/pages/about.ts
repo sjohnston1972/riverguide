@@ -119,6 +119,13 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         "Keep notes to river conditions. Notes that several people report as inappropriate are hidden, and reports can be removed by the site's maintainer. Don't post personal information.",
       ),
 
+      h('h2', null, 'Favourites'),
+      h(
+        'p',
+        null,
+        'Tap the star on a river to add it to your favourites, then use the Favourites filter on the river list or map. Favourites are saved in this browser on this device only: they are not sent to River Guide, and they won’t follow you to another phone or computer.',
+      ),
+
       chat,
 
       h('h2', null, 'Data sources and licences'),
