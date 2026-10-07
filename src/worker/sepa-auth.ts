@@ -14,9 +14,26 @@ let cached: { token: string; expires: number } | null = null;
 let failedUntil = 0;
 let configuredKey: string | undefined;
 
+// Tokens last ~24 h, so share one across Worker instances via the edge cache
+// (keyed by a hash of the API key, never the key itself).
+async function cacheKey(key: string): Promise<Request> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
+  const hex = [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return new Request(`https://cache.riverguide/sepa-token/${hex}`);
+}
+
 async function fetchToken(key: string): Promise<string | null> {
   if (cached && Date.now() < cached.expires - REFRESH_MARGIN_MS) return cached.token;
   if (Date.now() < failedUntil) return null;
+  const ck = await cacheKey(key);
+  const hit = await caches.default.match(ck).catch(() => undefined);
+  if (hit) {
+    const c = (await hit.json()) as { token: string; expires: number };
+    if (Date.now() < c.expires - REFRESH_MARGIN_MS) {
+      cached = c;
+      return c.token;
+    }
+  }
   try {
     const res = await fetch(TOKEN_URL, {
       method: 'POST',
@@ -27,6 +44,10 @@ async function fetchToken(key: string): Promise<string | null> {
     const body = (await res.json()) as { access_token?: string; expires_in?: number };
     if (!body.access_token) throw new Error('SEPA token response had no access_token');
     cached = { token: body.access_token, expires: Date.now() + (body.expires_in ?? 3600) * 1000 };
+    const ttl = Math.max(60, Math.floor((cached.expires - Date.now() - REFRESH_MARGIN_MS) / 1000));
+    await caches.default
+      .put(ck, new Response(JSON.stringify(cached), { headers: { 'cache-control': `max-age=${ttl}` } }))
+      .catch(() => undefined);
     return cached.token;
   } catch (err) {
     console.warn('SEPA token unavailable, using keyless access:', (err as Error).message);
