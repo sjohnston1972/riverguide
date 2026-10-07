@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gaugeTrend, isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
+import { dayChange, gaugeTrend, isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
 import { latestAndHourAgo, parseTable } from '../src/shared/sepa.ts';
 
 describe('sectionStatus', () => {
@@ -107,8 +107,7 @@ describe('gaugeTrend', () => {
 });
 
 describe('dayChange', () => {
-  it('is the change over about a day, or null when the readings are not a day apart', async () => {
-    const { dayChange } = await import('../src/worker/outlook.ts');
+  it('is the change over about a day, or null when the readings are not a day apart', () => {
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-06T19:15:00Z')).toBeCloseTo(-0.1, 9);
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-07T07:15:00Z')).toBeNull();
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', null, null)).toBeNull();

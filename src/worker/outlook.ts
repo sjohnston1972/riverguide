@@ -2,7 +2,7 @@
 // rain refresh, stored as JSON on the gauge row so page loads stay cheap.
 
 import { type DailyRain, direction, type ForecastModel, predictLevels } from '../shared/forecast.ts';
-import { gaugeTrend, isStale, ukToday } from '../shared/status.ts';
+import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, Trend } from '../shared/types.ts';
 
 export interface StoredRain extends DailyRain {
@@ -45,13 +45,6 @@ const parse = <T>(v: string | null): T | null => {
     return null;
   }
 };
-
-/** Level change over about a day, when the reading a day ago is 22-26 hours older than the latest. */
-export function dayChange(level: number | null, levelAt: string | null, dayAgo: number | null, dayAgoAt: string | null): number | null {
-  if (level == null || dayAgo == null || !levelAt || !dayAgoAt) return null;
-  const hours = (Date.parse(levelAt) - Date.parse(dayAgoAt)) / 3_600_000;
-  return hours >= 22 && hours <= 26 ? level - dayAgo : null;
-}
 
 export async function updateOutlooks(db: D1Database): Promise<number> {
   const { results } = await db

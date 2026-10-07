@@ -30,6 +30,13 @@ export function gaugeTrend(
   return trendFrom(latest, hourAgo);
 }
 
+/** Level change over about a day, when the reading a day ago is 22-26 hours older than the latest. */
+export function dayChange(level: number | null, levelAt: string | null, dayAgo: number | null, dayAgoAt: string | null): number | null {
+  if (level == null || dayAgo == null || !levelAt || !dayAgoAt) return null;
+  const hours = (Date.parse(levelAt) - Date.parse(dayAgoAt)) / 3_600_000;
+  return hours >= 22 && hours <= 26 ? level - dayAgo : null;
+}
+
 export function trendFrom(latest: number | null, hourAgo: number | null): Trend {
   if (latest == null || hourAgo == null) return 'unknown';
   const d = latest - hourAgo;

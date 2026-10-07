@@ -11,6 +11,11 @@
 // from one sitting at the same level. That version is kept only where it
 // scores better than the three-input one on the same test days.
 //
+// Tried and dropped (2026-10-07): rain today from the nearest SEPA rain gauges
+// (alone or blended with Open-Meteo). Per-gauge skill moved by noise only
+// (better by >0.05 on 14 gauges, worse on 13; median change 0), so the rain
+// input stays Open-Meteo.
+//
 // Data: three years of SEPA daily maximum levels and daily rainfall at the
 // gauge (Open-Meteo archive), both cached in data/private/.
 // Testing: the grid is built from all but the last 180 days and scored on those
