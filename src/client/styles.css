@@ -901,7 +901,10 @@ button {
 
 .row-status {
   display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
+  gap: 4px 6px;
 }
 
 .row-side .lvl {
@@ -1526,19 +1529,6 @@ button {
   border-radius: 2px;
 }
 
-.bb-marker-label {
-  position: absolute;
-  bottom: calc(100% + 2px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--paper);
-  font: 700 0.8rem/1.3 var(--font-display);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
 
 .bb-scale {
   position: relative;
@@ -1590,37 +1580,12 @@ button {
   background: var(--ink-3);
 }
 
-/* Community report dots under the band bar, coloured by verdict. */
-.bb-dots {
-  position: relative;
-  height: 14px;
-  margin-top: 4px;
-}
-
-.bb-dot {
-  position: absolute;
-  top: 2px;
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  border-radius: 50%;
-  border: 1.5px solid var(--surface);
-  box-shadow: 0 0 0 1px var(--rule-strong);
-}
-
+/* Verdict colours for community reports. */
 .v-too_low { background: var(--st-low); }
 .v-scrapy { background: color-mix(in srgb, var(--st-low) 45%, var(--st-runnable)); }
 .v-good { background: var(--st-runnable); }
 .v-pushy { background: color-mix(in srgb, var(--st-high) 45%, var(--st-runnable)); }
 .v-too_high { background: var(--st-high); }
-
-.bb-dot-key {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, var(--st-low) 0 33%, var(--st-runnable) 33% 66%, var(--st-high) 66%);
-}
 
 /* Graph */
 .graph-area {
@@ -2973,7 +2938,7 @@ button {
   .rain-label,
   .reading-time,
   .hero-time,
-  .bb-marker-label,
+  .bb-pill,
   .fact dt,
   .gauge-facts dt,
   .source,
@@ -3048,7 +3013,8 @@ button {
   bottom: 3px;
   border: 2px dashed var(--ink);
   border-radius: 4px;
-  opacity: 0.55;
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  opacity: 0.7;
 }
 
 .bb-fc-marker {
@@ -3077,4 +3043,72 @@ button {
     top: auto;
     bottom: -11px;
   }
+}
+
+/* Narrow screens: let row tags wrap and keep grid/flex children from forcing
+   the page wider than the viewport (min-width: auto would use their content width). */
+.list-layout > *,
+.river-row > *,
+.row-side {
+  min-width: 0;
+}
+
+@media (max-width: 599px) {
+  .row-side {
+    max-width: 58vw;
+  }
+
+  .river-row .tomorrow-tag,
+  .river-row .release-tag {
+    white-space: normal;
+    text-align: right;
+  }
+}
+
+/* ---------- Now / Tomorrow pills on the band bar ---------- */
+.bandbar {
+  padding-top: 30px;
+}
+
+/* With a forecast, two label rows: Tomorrow on top, Now below it. */
+.bandbar.has-forecast {
+  padding-top: 60px;
+}
+
+.bb-pill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font: 700 0.82rem/1.3 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bb-pill.at-start {
+  transform: translateX(-6px);
+}
+
+.bb-pill.at-end {
+  transform: translateX(calc(-100% + 6px));
+}
+
+.bb-pill-now {
+  bottom: calc(100% + 2px);
+  background: var(--ink);
+  color: var(--paper);
+  z-index: 2;
+}
+
+.bb-pill-tomorrow {
+  bottom: calc(100% + 2px);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px dashed var(--ink);
+}
+
+/* The tomorrow marker reaches up to the top label row. */
+.bandbar.has-forecast .bb-fc-marker {
+  top: -36px;
 }
