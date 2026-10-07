@@ -246,7 +246,6 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
     character: row.character,
     put_in: parseJson<PlacePoint>(row.put_in),
     take_out: parseJson<PlacePoint>(row.take_out),
-    ukrgb_url: row.ukrgb_url,
     source_updated: row.source_updated,
     links: linked,
     nearby_gauges: nearby,

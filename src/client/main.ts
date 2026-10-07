@@ -63,9 +63,7 @@ const footer = h(
     h(
       'p',
       null,
-      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Weather: Open-Meteo. Maps © OpenStreetMap contributors. Section details derived from ',
-      h('a', { href: 'https://www.ukriversguidebook.co.uk/', target: '_blank', rel: 'noopener' }, 'UK Rivers Guidebook'),
-      '.',
+      'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Weather: Open-Meteo. Maps © OpenStreetMap contributors.',
     ),
     h('p', null, h('a', { href: '/about' }, 'About River Guide, data sources and licences')),
   ),
