@@ -70,6 +70,7 @@ interface LinkRow {
   confidence: Confidence;
   reason: string;
   levels: string | null;
+  calibration_url: string | null;
 }
 
 /** Gauge columns needed for API objects (not the large forecast model / rain blobs). */
@@ -118,6 +119,7 @@ function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
     basis: l.basis,
     confidence: l.confidence,
     reason: l.reason,
+    calibration_url: l.calibration_url ?? null,
     gauge,
     status: sectionStatus(gauge.level, gauge.stale, l.min_level, l.max_level),
     levels,

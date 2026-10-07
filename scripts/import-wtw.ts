@@ -26,6 +26,7 @@ interface WtwSection {
   get_out_lat: string;
   get_out_long: string;
   gauge_location_code: string;
+  river_zone_url?: string;
   guidebook_link: string;
   scrape_value: string;
   low_value: string;
@@ -82,7 +83,7 @@ export interface WtwImport {
   source: string;
   licence: string;
   /** levels is null where Where's the Water has the gauge but no calibrated levels yet. */
-  bands: Array<{ slug: string; wtw_name: string; station_no: string; levels: Levels | null; match: 'link' | 'nearby' | 'new' }>;
+  bands: Array<{ slug: string; wtw_name: string; station_no: string; levels: Levels | null; match: 'link' | 'nearby' | 'new'; graph_url: string | null }>;
   new_sections: NewSection[];
   releases: Array<{ slug: string; wtw_name: string; dates: string[]; note: string | null }>;
 }
@@ -163,6 +164,17 @@ function newSection(w: WtwSection | WtwScheduled): NewSection | null {
   };
 }
 
+/** Only rivermap.org graph links, normalised (the source has spaces in the fragment). */
+function graphUrl(u: string | undefined): string | null {
+  if (!u) return null;
+  try {
+    const url = new URL(u.trim());
+    return url.protocol === 'https:' && url.hostname === 'graph.rivermap.org' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 const out: WtwImport = {
   source: `https://github.com/${REPO}/tree/${COMMIT}/data`,
   licence: "CC BY-SA 4.0. Adapted from Where's the Water (Scottish Canoe Association).",
@@ -188,6 +200,8 @@ for (const w of sections) {
     continue;
   }
   if (!calibrated) console.log(`  ${w.name}: no calibrated levels yet, gauge link only`);
+  // Where's the Water's calibration graph (rivermap.org) for this river, shown on our river page.
+  const graph_url = calibrated ? graphUrl(w.river_zone_url) : null;
   const m = match(w);
   // An alternative gauge for a section already matched ("(New Gauge)") is dropped; a different
   // section that happens to match the same one of ours becomes a new section instead.
@@ -197,13 +211,13 @@ for (const w of sections) {
     continue;
   }
   if (m && !taken) {
-    out.bands.push({ slug: m.s.slug, wtw_name: w.name, station_no: w.gauge_location_code, levels: calibrated ? levels : null, match: m.how });
+    out.bands.push({ slug: m.s.slug, wtw_name: w.name, station_no: w.gauge_location_code, levels: calibrated ? levels : null, match: m.how, graph_url });
     continue;
   }
   const s = newSection(w);
   if (!s) continue;
   out.new_sections.push(s);
-  out.bands.push({ slug: s.slug, wtw_name: w.name, station_no: w.gauge_location_code, levels: calibrated ? levels : null, match: 'new' });
+  out.bands.push({ slug: s.slug, wtw_name: w.name, station_no: w.gauge_location_code, levels: calibrated ? levels : null, match: 'new', graph_url });
 }
 
 for (const w of scheduled) {
