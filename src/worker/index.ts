@@ -48,7 +48,8 @@ app.get('/api/config', (c) => {
 });
 
 app.get('/api/sections', async (c) => {
-  c.header('cache-control', 'public, max-age=60');
+  // Always revalidated: statuses change with each poll and as soon as a community report recalibrates a band.
+  c.header('cache-control', 'no-cache');
   return c.json(await listSections(c.env.DB));
 });
 
@@ -65,7 +66,7 @@ app.get('/api/tides/lora', (c) => {
 app.get('/api/sections/:slug', async (c) => {
   const found = await getSection(c.env.DB, c.req.param('slug'));
   if (!found) return c.json({ error: 'Not found' }, 404);
-  c.header('cache-control', 'public, max-age=60');
+  c.header('cache-control', 'no-cache');
   const showGuide = flag(c.env.SHOW_FULL_GUIDE_TEXT) && found.guide;
   return c.json(showGuide ? { ...found.detail, guide: found.guide } : found.detail);
 });
