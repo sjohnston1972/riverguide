@@ -8,7 +8,7 @@ import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
-import { clear, h, icon } from '../dom.ts';
+import { clear, h, icon, safeUrl } from '../dom.ts';
 import { favButton, setFavouriteName } from '../favourites.ts';
 import { lastListHref } from '../filters.ts';
 import type { LevelGraph } from '../graph.ts';
@@ -138,7 +138,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     const step = headline?.step ?? null;
     let basis: string | Node | null = null;
-    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), '.');
+    if (d.status_basis === 'paddler') basis = h('span', null, 'Paddler levels from ', wtwLink(), '.', graphLink(headline?.calibration_url ?? null));
     else if (d.status_basis === 'manual') basis = 'Paddling band set manually.';
     else if (d.status_basis === 'community') basis = headline?.reason ?? 'Paddling band set from community reports.';
     else if (d.status_basis === 'estimate') basis = h('span', null, 'These levels are an estimate. ', calibrationLink(), '.');
@@ -298,6 +298,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           ' (',
           ccLink(),
           l.levels ? ').' : '); no paddler levels set for it yet.',
+          graphLink(l.calibration_url),
         ),
       );
     else if (!estimate && l.reason) out.push(h('p', { class: 'reason' }, l.reason));
@@ -360,6 +361,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       panel.focus({ preventScroll: true });
     });
     return a;
+  }
+
+  /** " See the calibration graph." linking to Where's the Water's rivermap.org graph for this gauge. */
+  function graphLink(url: string | null): (string | HTMLElement)[] {
+    const href = safeUrl(url);
+    return href ? [' See the ', h('a', { href, target: '_blank', rel: 'noopener' }, 'calibration graph'), '.'] : [];
   }
 
   function ccLink(): HTMLElement {

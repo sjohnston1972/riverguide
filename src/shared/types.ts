@@ -78,6 +78,8 @@ export interface SectionGaugeLink {
   basis: BandBasis;
   confidence: Confidence;
   reason: string;
+  /** Where's the Water's calibration graph for these paddler levels, when there is one. */
+  calibration_url: string | null;
   gauge: Gauge;
   status: SectionStatus;
   /** Status and paddler step at the predicted level tomorrow (model outlook only). */

@@ -14,7 +14,8 @@
     "very_high": 1.4,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/2577f3bd-ba83-5eef-9232-0f7d4abbd4ab.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Garry%20(Great%20Glen)&zones=,ff0000,Huge|180,ff6060,Very+High|140,ffc004,High|100,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "tweed-berwick",
@@ -28,7 +29,8 @@
     "very_high": 2.5,
     "huge": 3.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/967272ac-c4e7-58e6-a165-56949d3438c1.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tweed%20(Berwick)&zones=,ff0000,Huge|350,ff6060,Very+High|250,ffc004,High|200,ffff33,Medium|170,00ff00,Low|120,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "ness",
@@ -42,7 +44,8 @@
     "very_high": 2,
     "huge": 2.3
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/df4b877e-835d-5a65-bb93-647b36791128.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ness&zones=,ff0000,Huge|230,ff6060,Very+High|200,ffc004,High|160,ffff33,Medium|130,00ff00,Low|90,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "gryfe",
@@ -56,7 +59,8 @@
     "very_high": 0.8,
     "huge": 1
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/0c23a45d-4bc8-5ba9-a8f9-6126376b1b5d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Gryfe&zones=,ff0000,Huge|100,ff6060,Very+High|80,ffc004,High|60,ffff33,Medium|50,00ff00,Low|45,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "river-yarrow-yarrowford-to-generals-brig",
@@ -70,7 +74,8 @@
     "very_high": 1,
     "huge": 1.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/58b14b17-7167-5024-8cb4-065115622e99.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Yarrow&zones=,ff0000,Huge|130,ff6060,Very+High|100,ffc004,High|100,ffff33,Medium|80,00ff00,Low|50,ccffcc,Scrapeable|35,cccccc,Empty"
   },
   {
    "slug": "ayr",
@@ -84,7 +89,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/12e51cb1-26b9-5d28-b8ed-3b675d0b7a1a.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ayr&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|160,ffff33,Medium|130,00ff00,Low|60,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-findhorn-gorge",
@@ -98,7 +104,8 @@
     "very_high": 0.5,
     "huge": 0.8
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/115be799-cd1d-56a5-83e7-897e2930f27e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Findhorn%20(Gorge)&zones=,ff0000,Huge|80,ff6060,Very+High|50,ffc004,High|37,ffff33,Medium|30,00ff00,Low|20,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "brora",
@@ -112,7 +119,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/4f0699ef-94d8-52d4-a3af-c5f7137c7ab7.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Brora&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|160,ffff33,Medium|110,00ff00,Low|90,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-inver",
@@ -126,7 +134,8 @@
     "very_high": 1,
     "huge": 1.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/292b6972-cfe7-5069-8d8a-106423d02e6d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Inver&zones=,ff0000,Huge|130,ff6060,Very+High|100,ffc004,High|90,ffff33,Medium|75,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-meig-upper-section-above-dam",
@@ -140,7 +149,8 @@
     "very_high": 1.3,
     "huge": 1.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/43756f70-67e8-5280-b784-3fa698c82aa5.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Upper%20Meig&zones=,ff0000,Huge|150,ff6060,Very+High|130,ffc004,High|80,ffff33,Medium|70,00ff00,Low|65,ccffcc,Scrapeable|55,cccccc,Empty"
   },
   {
    "slug": "river-allan",
@@ -154,7 +164,8 @@
     "very_high": 1.5,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/5b7abdb9-9713-5fa8-88e5-cc4fc7c7d693.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Allan%20Water&zones=,ff0000,Huge|170,ff6060,Very+High|150,ffc004,High|130,ffff33,Medium|110,00ff00,Low|90,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "river-tay-stanley-to-thistlebrig",
@@ -168,7 +179,8 @@
     "very_high": 2.7,
     "huge": 5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/de9c3636-4628-57c5-a5a8-d401beab7676.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tay%20(Stanley)&zones=,ff0000,Huge|500,ff6060,Very+High|270,ffc004,High|200,ffff33,Medium|100,00ff00,Low|0,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-findhorn-middle-section",
@@ -182,7 +194,8 @@
     "very_high": 1,
     "huge": 1.4
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/115be799-cd1d-56a5-83e7-897e2930f27e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Findhorn%20(Middle)&zones=,ff0000,Huge|140,ff6060,Very+High|100,ffc004,High|80,ffff33,Medium|40,00ff00,Low|30,ccffcc,Scrapeable|20,cccccc,Empty"
   },
   {
    "slug": "water-of-girvan",
@@ -196,7 +209,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/dd611f58-c440-5574-949f-ab359af0a091.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Girvan&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|150,ffff33,Medium|120,00ff00,Low|75,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "river-kelvin-art-galleries-wave",
@@ -210,7 +224,8 @@
     "very_high": 1.4,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/6fa6a496-a6f2-55e2-b4a4-ebe11ba16cf7.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Kelvin&zones=,ff0000,Huge|200,ff6060,Very+High|140,ffc004,High|100,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-findhorn-upper-section",
@@ -224,7 +239,8 @@
     "very_high": 1,
     "huge": 1.4
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/115be799-cd1d-56a5-83e7-897e2930f27e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Findhorn%20(Upper)&zones=,ff0000,Huge|140,ff6060,Very+High|100,ffc004,High|80,ffff33,Medium|35,00ff00,Low|30,ccffcc,Scrapeable|20,cccccc,Empty"
   },
   {
    "slug": "river-lochay",
@@ -238,7 +254,8 @@
     "very_high": 1.6,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/da988716-62ff-56a7-a9d1-9317c3ab38cf.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lochay&zones=,ff0000,Huge|200,ff6060,Very+High|160,ffc004,High|130,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "avon-glasgow",
@@ -252,7 +269,8 @@
     "very_high": 1.5,
     "huge": 1.7
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/f34029f1-3f7b-58b6-9f48-5577f703b47d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Avon%20(Glasgow)&zones=,ff0000,Huge|170,ff6060,Very+High|150,ffc004,High|110,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-falloch-upper",
@@ -266,7 +284,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/0a5ee700-6eb4-598f-bcb6-1e579e19384b.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Falloch%20(Upper)&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|160,ffff33,Medium|130,00ff00,Low|110,ccffcc,Scrapeable|100,cccccc,Empty"
   },
   {
    "slug": "river-spean-the-spean-gorge",
@@ -280,7 +299,8 @@
     "very_high": 3,
     "huge": 4
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/e963f6be-b59d-556b-b422-0776bf1e3787.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Spean%20(Gorge)&zones=,ff0000,Huge|400,ff6060,Very+High|300,ffc004,High|250,ffff33,Medium|160,00ff00,Low|70,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-spey-ballindalloch-to-tandhu-distillery",
@@ -294,7 +314,8 @@
     "very_high": 2,
     "huge": 2.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/11035f80-164c-585a-9063-a86089f19735.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Spey&zones=,ff0000,Huge|270,ff6060,Very+High|200,ffc004,High|140,ffff33,Medium|80,00ff00,Low|40,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-tilt",
@@ -308,7 +329,8 @@
     "very_high": 1.2,
     "huge": 1.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/b8baf626-159b-509c-be77-4f0987dcf33d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tilt%20(Marble%20Lodge)&zones=,ff0000,Huge|150,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|60,00ff00,Low|40,ccffcc,Scrapeable|35,cccccc,Empty"
   },
   {
    "slug": "river-leny-a84-layby-to-lade-inn",
@@ -322,7 +344,8 @@
     "very_high": 1.6,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/f43945f8-2c81-50b4-8140-4685519ed621.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Garbh%20Uisge%20(Leny)&zones=,ff0000,Huge|200,ff6060,Very+High|160,ffc004,High|130,ffff33,Medium|100,00ff00,Low|70,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-falloch-falls-of-falloch-to-loch-lomond",
@@ -336,7 +359,8 @@
     "very_high": 1.3,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/0a5ee700-6eb4-598f-bcb6-1e579e19384b.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Falloch%20(Lower)&zones=,ff0000,Huge|170,ff6060,Very+High|130,ffc004,High|120,ffff33,Medium|100,00ff00,Low|90,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-tay-sca-access-point-to-grandtully",
@@ -350,7 +374,8 @@
     "very_high": 2,
     "huge": 3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/bf4b8b77-7400-56f1-9aaa-59a825b6c40a.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tay%20(Grandtully)&zones=,ff0000,Huge|300,ff6060,Very+High|200,ffc004,High|150,ffff33,Medium|100,00ff00,Low|0,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-oykel",
@@ -364,7 +389,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cbec87ff-1791-5e92-8a4c-680afb5dec78.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Oykel&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|150,ffff33,Medium|90,00ff00,Low|70,ccffcc,Scrapeable|55,cccccc,Empty"
   },
   {
    "slug": "river-findhorn-top-section-to-dulsie-bridge",
@@ -378,7 +404,8 @@
     "very_high": 1.4,
     "huge": 1.6
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/115be799-cd1d-56a5-83e7-897e2930f27e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Findhorn%20(Top)&zones=,ff0000,Huge|160,ff6060,Very+High|140,ffc004,High|100,ffff33,Medium|80,00ff00,Low|35,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "thurso-river",
@@ -392,7 +419,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/52b3c1d0-eade-512b-97fe-e9d934840ea3.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Thurso&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|100,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "tarff",
@@ -406,7 +434,8 @@
     "very_high": 1.4,
     "huge": 1.6
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/998f51e4-355d-509d-b823-d71469a69e94.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tarff&zones=,ff0000,Huge|160,ff6060,Very+High|140,ffc004,High|120,ffff33,Medium|110,00ff00,Low|90,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-esk-langholm-canonbie",
@@ -420,7 +449,8 @@
     "very_high": 1.7,
     "huge": 1.9
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/81e99a0e-ae27-5294-9e3e-4aa6ca4ae7e0.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Border%20Esk&zones=,ff0000,Huge|190,ff6060,Very+High|170,ffc004,High|130,ffff33,Medium|110,00ff00,Low|80,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "river-nith-glen-airlie-picnic-site-to-drumlanrig-bridge",
@@ -434,7 +464,8 @@
     "very_high": 1.5,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/bf952ad2-48fa-5937-a726-24a0eaef16b2.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Nith%20(Drumlanrig)&zones=,ff0000,Huge|180,ff6060,Very+High|150,ffc004,High|120,ffff33,Medium|90,00ff00,Low|45,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-averon",
@@ -448,7 +479,8 @@
     "very_high": 1.6,
     "huge": 1.75
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/a2e07e63-008d-5940-b74d-7535b237446c.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Averon%20of%20Alness&zones=,ff0000,Huge|175,ff6060,Very+High|160,ffc004,High|140,ffff33,Medium|90,00ff00,Low|70,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "snizort",
@@ -462,7 +494,8 @@
     "very_high": 1.1,
     "huge": 1.3
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/265cda83-6132-5b55-9aad-881cc80d1f00.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Snizort&zones=,ff0000,Huge|130,ff6060,Very+High|110,ffc004,High|100,ffff33,Medium|90,00ff00,Low|50,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "river-blackwater-2",
@@ -476,7 +509,8 @@
     "very_high": 1.4,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/254d4d1e-8593-5e71-923d-2ce85378da66.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Blackwater%20(Perthshire)&zones=,ff0000,Huge|170,ff6060,Very+High|140,ffc004,High|120,ffff33,Medium|90,00ff00,Low|85,ccffcc,Scrapeable|75,cccccc,Empty"
   },
   {
    "slug": "river-cree",
@@ -490,7 +524,8 @@
     "very_high": 1.3,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/a8b3ee64-a491-531e-88c0-93790f1270c1.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Cree&zones=,ff0000,Huge|140,ff6060,Very+High|130,ffc004,High|120,ffff33,Medium|100,00ff00,Low|90,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "river-nevis-steall-gorge-to-polldubh-falls",
@@ -504,7 +539,8 @@
     "very_high": 1.3,
     "huge": 1.6
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/7f38fbdd-f58e-5f52-a916-ac599f6f1d48.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Nevis%20(Upper)&zones=,ff0000,Huge|160,ff6060,Very+High|130,ffc004,High|100,ffff33,Medium|85,00ff00,Low|65,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-lochy-tyndrum",
@@ -518,7 +554,8 @@
     "very_high": 1.5,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/4e4ec5cd-14d3-5d68-8a73-3624be9cf531.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lochy%20(nr%20Orchy)&zones=,ff0000,Huge|200,ff6060,Very+High|150,ffc004,High|130,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-clyde-stonebyres-to-crossford",
@@ -532,7 +569,8 @@
     "very_high": 2,
     "huge": 2.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/bc498e0c-5ca0-5ecd-add4-cfdcb1df835b.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Clyde%20(Stonebyres)&zones=,ff0000,Huge|220,ff6060,Very+High|200,ffc004,High|160,ffff33,Medium|80,00ff00,Low|50,ccffcc,Scrapeable|31,cccccc,Empty"
   },
   {
    "slug": "river-luss",
@@ -546,7 +584,8 @@
     "very_high": 1.1,
     "huge": 1.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/52e365be-2c4c-5b80-a754-394ae967d96b.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Luss%20Water&zones=,ff0000,Huge|120,ff6060,Very+High|110,ffc004,High|100,ffff33,Medium|90,00ff00,Low|70,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "helmsdale",
@@ -560,7 +599,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/20160609-e1e4-510a-9541-3cca59e08e57.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Helmsdale&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|150,ffff33,Medium|120,00ff00,Low|100,ccffcc,Scrapeable|90,cccccc,Empty"
   },
   {
    "slug": "river-feshie",
@@ -574,7 +614,8 @@
     "very_high": 1.7,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/6d6665f6-df62-5697-b267-6a83486c61b3.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Feshie&zones=,ff0000,Huge|250,ff6060,Very+High|170,ffc004,High|130,ffff33,Medium|100,00ff00,Low|70,ccffcc,Scrapeable|65,cccccc,Empty"
   },
   {
    "slug": "river-carron-loch-sgamhain-to-loch-dughail",
@@ -588,7 +629,8 @@
     "very_high": 1.5,
     "huge": 1.55
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/2b7661f7-9a0f-5c16-9a10-3e92ccaa9924.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Carron%20(Wester%20Ross)&zones=,ff0000,Huge|155,ff6060,Very+High|150,ffc004,High|140,ffff33,Medium|135,00ff00,Low|130,ccffcc,Scrapeable|120,cccccc,Empty"
   },
   {
    "slug": "river-braan-upper-section-to-rumbling-bridge",
@@ -602,7 +644,8 @@
     "very_high": 1.5,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/ed14eafb-a25c-5040-86ed-3dbb5e4c39ab.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Braan%20(Upper)&zones=,ff0000,Huge|170,ff6060,Very+High|150,ffc004,High|130,ffff33,Medium|110,00ff00,Low|90,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-lochy-ben-nevis",
@@ -616,7 +659,8 @@
     "very_high": 2.4,
     "huge": 3
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/e963f6be-b59d-556b-b422-0776bf1e3787.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lochy%20(Fort%20William)&zones=,ff0000,Huge|300,ff6060,Very+High|240,ffc004,High|140,ffff33,Medium|90,00ff00,Low|60,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "naver",
@@ -630,7 +674,8 @@
     "very_high": 0.8,
     "huge": 1
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/9f7cde74-fc65-5338-aa24-ca399065c108.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Naver&zones=,ff0000,Huge|100,ff6060,Very+High|80,ffc004,High|70,ffff33,Medium|60,00ff00,Low|50,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-teith",
@@ -644,7 +689,8 @@
     "very_high": 2,
     "huge": 3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/f5d10d10-dc46-5a45-8b75-156591bbc960.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Teith&zones=,ff0000,Huge|300,ff6060,Very+High|200,ffc004,High|150,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-orchy-middle-section",
@@ -658,7 +704,8 @@
     "very_high": 1.5,
     "huge": 2
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/8576680c-7945-5fef-9618-81a37dda4d1d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Orchy%20(Middle)&zones=,ff0000,Huge|200,ff6060,Very+High|150,ffc004,High|110,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "water-of-minnoch-palgowan-bridge-to-stroan-bridge",
@@ -672,7 +719,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/6afa1b39-3879-51c0-a0af-cde045c054a5.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Water%20of%20Minnoch%20(Middle)&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|180,ffff33,Medium|150,00ff00,Low|130,ccffcc,Scrapeable|100,cccccc,Empty"
   },
   {
    "slug": "river-carron",
@@ -686,7 +734,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/59ba0665-4f0f-58ba-970d-62f922fc8e95.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Carron%20(Easter%20Ross)&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|140,ffff33,Medium|100,00ff00,Low|85,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-dee-potarch-to-banchory",
@@ -700,7 +749,8 @@
     "very_high": 1.6,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/098534c4-5c8b-4800-a725-08022bb723d1.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dee%20(Grampian)%20(Middle)&zones=,ff0000,Huge|200,ff6060,Very+High|160,ffc004,High|120,ffff33,Medium|90,00ff00,Low|50,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-lyon",
@@ -714,7 +764,8 @@
     "very_high": 1.4,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/e8cc4fd4-f1e8-5364-ac74-cc385ac636ce.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lyon&zones=,ff0000,Huge|180,ff6060,Very+High|140,ffc004,High|100,ffff33,Medium|60,00ff00,Low|50,ccffcc,Scrapeable|20,cccccc,Empty"
   },
   {
    "slug": "river-dochart-falls-of-dochart",
@@ -728,7 +779,8 @@
     "very_high": 1,
     "huge": 1.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/da988716-62ff-56a7-a9d1-9317c3ab38cf.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dochart&zones=,ff0000,Huge|120,ff6060,Very+High|100,ffc004,High|80,ffff33,Medium|60,00ff00,Low|50,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-ericht",
@@ -742,7 +794,8 @@
     "very_high": 1.4,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/254d4d1e-8593-5e71-923d-2ce85378da66.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ericht%20(Blairgowrie)&zones=,ff0000,Huge|180,ff6060,Very+High|140,ffc004,High|120,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "river-braan-rumbling-bridge-to-the-hermitage",
@@ -756,7 +809,8 @@
     "very_high": 1.15,
     "huge": 1.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/ed14eafb-a25c-5040-86ed-3dbb5e4c39ab.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Braan%20(Gorge)&zones=,ff0000,Huge|130,ff6060,Very+High|115,ffc004,High|90,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-muick-falls-of-muick",
@@ -770,7 +824,8 @@
     "very_high": 1.2,
     "huge": 1.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/95b27f16-f75d-51c6-9f9c-7ef5c69599ef.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Muick&zones=,ff0000,Huge|150,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|70,00ff00,Low|50,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-almond-edinburgh",
@@ -784,7 +839,8 @@
     "very_high": 1.2,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/9cf972b2-7ffa-5e46-8559-77fc7295e343.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Almond%20(Lothian)&zones=,ff0000,Huge|140,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|80,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-tay-loch-tay-to-aberfeldy",
@@ -798,7 +854,8 @@
     "very_high": 1.5,
     "huge": 2
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/60cf0430-2017-5245-ad61-6a29718f4418.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tay%20(Kenmore)&zones=,ff0000,Huge|200,ff6060,Very+High|150,ffc004,High|100,ffff33,Medium|70,00ff00,Low|50,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "river-tweed-peel-to-fairnilee-farm",
@@ -812,7 +869,8 @@
     "very_high": 1.613,
     "huge": 1.9
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/aa8bc9ce-97d5-5952-a6f3-471d20b32c3c.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tweed%20(Fairnilee)&zones=,ff0000,Huge|190,ff6060,Very+High|161.3,ffc004,High|94.5,ffff33,Medium|40,00ff00,Low|21,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "south-esk",
@@ -826,7 +884,8 @@
     "very_high": 1.6,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/0b4a34d2-8f32-51c6-a2e5-9c01800c7006.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=South%20Esk%20(Angus)&zones=,ff0000,Huge|180,ff6060,Very+High|160,ffc004,High|140,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "don-lower",
@@ -840,7 +899,8 @@
     "very_high": 2,
     "huge": 3
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/44a2e90b-c9aa-577a-85f0-ebe6686eeac7.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Don%20(Lower)&zones=,ff0000,Huge|300,ff6060,Very+High|200,ffc004,High|170,ffff33,Medium|100,00ff00,Low|40,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "water-of-ruchill",
@@ -854,7 +914,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cd935f55-f089-501f-997f-70e5d4706127.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Water%20of%20Ruchill&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|170,ffff33,Medium|140,00ff00,Low|110,ccffcc,Scrapeable|90,cccccc,Empty"
   },
   {
    "slug": "river-cuileig-upper",
@@ -868,7 +929,8 @@
     "very_high": 1.8,
     "huge": 1.9
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/0101f314-44a8-53e1-bd62-18c96d13c1b9.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Cuileig%20(Upper)&zones=,ff0000,Huge|190,ff6060,Very+High|180,ffc004,High|160,ffff33,Medium|130,00ff00,Low|120,ccffcc,Scrapeable|110,cccccc,Empty"
   },
   {
    "slug": "river-tweed-st-boswells-to-kelso",
@@ -882,7 +944,8 @@
     "very_high": 1.5,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/c35f3df7-7777-5881-b81e-8888cfbf7209.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tweed%20(Makerstoun)&zones=,ff0000,Huge|200,ff6060,Very+High|150,ffc004,High|100,ffff33,Medium|70,00ff00,Low|53,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-einig",
@@ -896,7 +959,8 @@
     "very_high": 1.2,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cbec87ff-1791-5e92-8a4c-680afb5dec78.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Einig&zones=,ff0000,Huge|140,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "corriemulzie-river",
@@ -910,7 +974,8 @@
     "very_high": 1.4,
     "huge": 1.6
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cbec87ff-1791-5e92-8a4c-680afb5dec78.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Corriemulzie&zones=,ff0000,Huge|160,ff6060,Very+High|140,ffc004,High|120,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "doon-lower",
@@ -924,7 +989,8 @@
     "very_high": 1.5,
     "huge": 1.8
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/8fd38e08-ed59-5bef-a6f5-5b7098c3cd83.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Doon%20(Lower)&zones=,ff0000,Huge|180,ff6060,Very+High|150,ffc004,High|120,ffff33,Medium|100,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "river-ettrick-ettrickbridge-to-selkirk",
@@ -938,7 +1004,8 @@
     "very_high": 1.5,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/73c604db-e34a-5c17-bd10-8740b845af41.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ettrick%20(Gorge)&zones=,ff0000,Huge|180,ff6060,Very+High|150,ffc004,High|120,ffff33,Medium|85,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "river-whiteadder",
@@ -952,7 +1019,8 @@
     "very_high": 1.2,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/d7fc31cc-25f7-55e6-8909-6423146feb96.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Whiteadder%20Water&zones=,ff0000,Huge|140,ff6060,Very+High|120,ffc004,High|90,ffff33,Medium|70,00ff00,Low|50,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "river-teviot-martins-bridge-to-riverside-caravan-park",
@@ -966,7 +1034,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/3242d1a7-1c1b-53b1-8f3f-a25c977b1e82.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Teviot&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|150,ffff33,Medium|100,00ff00,Low|70,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-north-esk-scout-camp-to-edzell",
@@ -980,7 +1049,8 @@
     "very_high": 0.7,
     "huge": 0.95
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/c0fca9ba-3d1c-5d6e-9e8b-7899acfb2817.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=North%20Esk%20(Lower)&zones=,ff0000,Huge|95,ff6060,Very+High|70,ffc004,High|50,ffff33,Medium|30,00ff00,Low|24,ccffcc,Scrapeable|14,cccccc,Empty"
   },
   {
    "slug": "river-blackwater",
@@ -994,7 +1064,8 @@
     "very_high": 1.1,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/db8ee40c-3bb2-4c0c-b0a2-ed5043fb0633.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Blackwater%20(Garve)&zones=,ff0000,Huge|140,ff6060,Very+High|110,ffc004,High|90,ffff33,Medium|60,00ff00,Low|40,ccffcc,Scrapeable|10,cccccc,Empty"
   },
   {
    "slug": "scaur-water",
@@ -1008,7 +1079,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/8e56863f-b1ad-4f42-8bc5-722994ced4ce.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Scaur%20Water&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|140,ffff33,Medium|110,00ff00,Low|89,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-ettrick-upper-section",
@@ -1022,7 +1094,8 @@
     "very_high": 1.3,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/f6e01a27-1f69-441c-afaf-d7e04479816f.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ettrick%20(Upper)&zones=,ff0000,Huge|140,ff6060,Very+High|130,ffc004,High|120,ffff33,Medium|90,00ff00,Low|75,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "dee-grampian-garthdee",
@@ -1036,7 +1109,8 @@
     "very_high": 2,
     "huge": 2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/99e98e00-2d64-4220-bb5e-d328f82f406e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dee%20(Grampian)%20(Garthdee)&zones=,ff0000,Huge|200,ff6060,Very+High|200,ffc004,High|200,ffff33,Medium|100,00ff00,Low|77,ccffcc,Scrapeable|0,cccccc,Empty"
   },
   {
    "slug": "river-dye",
@@ -1050,7 +1124,8 @@
     "very_high": 2.9,
     "huge": 3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/772826c6-b5be-45c1-9a6e-69aef7cea0f4.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dye&zones=,ff0000,Huge|300,ff6060,Very+High|290,ffc004,High|280,ffff33,Medium|250,00ff00,Low|220,ccffcc,Scrapeable|180,cccccc,Empty"
   },
   {
    "slug": "avon-spey",
@@ -1064,7 +1139,8 @@
     "very_high": 1.2,
     "huge": 1.3
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/064fde5e-6552-43a7-b9fa-7079c3bf4765.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Avon%20(Spey)&zones=,ff0000,Huge|130,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|85,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "river-dee-above-braemar-to-potarch",
@@ -1078,7 +1154,8 @@
     "very_high": 1.2,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cae40449-807f-4d72-ac4e-b16ecdec51b5.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dee%20(Grampian)%20(Top)&zones=,ff0000,Huge|170,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|80,00ff00,Low|70,ccffcc,Scrapeable|65,cccccc,Empty"
   },
   {
    "slug": "deveron",
@@ -1092,7 +1169,8 @@
     "very_high": 1,
     "huge": 1.2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/1b7c1343-59e3-4077-ba19-228b28f3b72e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Deveron&zones=,ff0000,Huge|120,ff6060,Very+High|100,ffc004,High|80,ffff33,Medium|70,00ff00,Low|50,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "big-water-of-fleet",
@@ -1106,7 +1184,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/2a11705c-4d1f-40a1-aae6-b777cf353148.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Big%20Water%20of%20Fleet&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|180,ffff33,Medium|110,00ff00,Low|100,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "river-ling",
@@ -1120,7 +1199,8 @@
     "very_high": 1.1,
     "huge": 1.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/92f03bda-0dd9-46b3-a2cd-53ffb0c776bd.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Ling&zones=,ff0000,Huge|130,ff6060,Very+High|110,ffc004,High|90,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|47,cccccc,Empty"
   },
   {
    "slug": "gairn",
@@ -1134,7 +1214,8 @@
     "very_high": 1.2,
     "huge": 1.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/0680929c-4a68-4142-bda2-69f14d201133.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Gairn&zones=,ff0000,Huge|150,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|80,00ff00,Low|65,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "guide-to-the-urr-water",
@@ -1148,7 +1229,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/fb9050bb-573e-40f8-8fb1-d90aa9f2fd1e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Urr%20Water&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|160,ffff33,Medium|130,00ff00,Low|100,ccffcc,Scrapeable|80,cccccc,Empty"
   },
   {
    "slug": "kinnel-water",
@@ -1162,7 +1244,8 @@
     "very_high": 1.7,
     "huge": 1.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/1b055cd6-7ad9-4b51-9808-60b73bca7e10.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Kinnel%20Water&zones=,ff0000,Huge|180,ff6060,Very+High|170,ffc004,High|150,ffff33,Medium|130,00ff00,Low|110,ccffcc,Scrapeable|90,cccccc,Empty"
   },
   {
    "slug": "water-of-minnoch-lower",
@@ -1176,7 +1259,8 @@
     "very_high": 2,
     "huge": 2.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/6afa1b39-3879-51c0-a0af-cde045c054a5.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Water%20of%20Minnoch%20(Lower)&zones=,ff0000,Huge|250,ff6060,Very+High|200,ffc004,High|180,ffff33,Medium|150,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "almond-perthshire",
@@ -1190,7 +1274,8 @@
     "very_high": 1.5,
     "huge": 1.7
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/c601a21d-7497-4b97-ad49-d0efaaa16619.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Almond%20(Perthshire)&zones=,ff0000,Huge|170,ff6060,Very+High|150,ffc004,High|80,ffff33,Medium|70,00ff00,Low|40,ccffcc,Scrapeable|38,cccccc,Empty"
   },
   {
    "slug": "river-moriston-upper-section",
@@ -1204,7 +1289,8 @@
     "very_high": 1,
     "huge": 1.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/15bcb229-57da-4f8e-b13d-9fcb380bea4e.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Moriston&zones=,ff0000,Huge|120,ff6060,Very+High|100,ffc004,High|90,ffff33,Medium|80,00ff00,Low|50,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-tummel-pitlochry-to-the-tay",
@@ -1218,7 +1304,8 @@
     "very_high": 1.8,
     "huge": 2.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/008d3303-b3da-43d1-8f96-a39da84b6c72.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Tummel%20(Bottom)&zones=,ff0000,Huge|280,ff6060,Very+High|180,ffc004,High|100,ffff33,Medium|51,00ff00,Low|27.8,ccffcc,Scrapeable|20,cccccc,Empty"
   },
   {
    "slug": "lugar-water",
@@ -1232,7 +1319,8 @@
     "very_high": 1.6,
     "huge": 1.7
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/cd037375-e1dd-49b1-947a-b7dca42c2609.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lugar%20Water&zones=,ff0000,Huge|170,ff6060,Very+High|160,ffc004,High|100,ffff33,Medium|90,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "river-avon-a801-to-linlithgow",
@@ -1246,7 +1334,8 @@
     "very_high": 2,
     "huge": 2.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/c63c591f-0073-4330-9c33-49dff914b2ad.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Avon%20(Lothian)&zones=,ff0000,Huge|230,ff6060,Very+High|200,ffc004,High|150,ffff33,Medium|120,00ff00,Low|70,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-clyde-falls-of-clyde",
@@ -1260,7 +1349,8 @@
     "very_high": 1.3,
     "huge": 1.4
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/cc0c050b-b48f-4910-9631-cd411bf0cc96.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Falls%20of%20Clyde&zones=,ff0000,Huge|140,ff6060,Very+High|130,ffc004,High|100,ffff33,Medium|85,00ff00,Low|80,ccffcc,Scrapeable|70,cccccc,Empty"
   },
   {
    "slug": "garry-perthshire",
@@ -1274,7 +1364,8 @@
     "very_high": 1.6,
     "huge": 1.8
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/0f938091-7b03-4345-968b-dd0e7ed89b53.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Garry%20(Perthshire)&zones=,ff0000,Huge|180,ff6060,Very+High|160,ffc004,High|140,ffff33,Medium|110,00ff00,Low|60,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "west-water",
@@ -1288,7 +1379,8 @@
     "very_high": 1.2,
     "huge": 1.3
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/3583ef69-fa79-4745-9785-2788ddc3fad1.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=West%20Water&zones=,ff0000,Huge|130,ff6060,Very+High|120,ffc004,High|110,ffff33,Medium|100,00ff00,Low|75,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "river-north-esk-penicuik-to-the-sea",
@@ -1302,7 +1394,8 @@
     "very_high": 0.5,
     "huge": 0.6
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/19a52dfd-8272-477f-9b35-2f5580aa1666.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=North%20Esk%20(Lothian)&zones=,ff0000,Huge|60,ff6060,Very+High|50,ffc004,High|46.8,ffff33,Medium|30,00ff00,Low|24.4,ccffcc,Scrapeable|9,cccccc,Empty"
   },
   {
    "slug": "water-of-leith-balerno-to-stockbridge",
@@ -1316,7 +1409,8 @@
     "very_high": 1.5,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/889bb8d1-ebb9-47bf-b00f-5f93880f6670.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Water%20of%20Leith%20(Lower)&zones=,ff0000,Huge|170,ff6060,Very+High|150,ffc004,High|130,ffff33,Medium|100,00ff00,Low|70,ccffcc,Scrapeable|45,cccccc,Empty"
   },
   {
    "slug": "river-divie",
@@ -1330,7 +1424,8 @@
     "very_high": 0.8,
     "huge": 1.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/ff2b0719-cd9a-4ef2-9e8f-7920415cce57.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Divie&zones=,ff0000,Huge|120,ff6060,Very+High|80,ffc004,High|60,ffff33,Medium|40,00ff00,Low|25,ccffcc,Scrapeable|20,cccccc,Empty"
   },
   {
    "slug": "liddel-water",
@@ -1344,7 +1439,8 @@
     "very_high": 1.4,
     "huge": 1.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/3bf226e8-06aa-4862-9dea-520d0379171f.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Liddel%20Water&zones=,ff0000,Huge|150,ff6060,Very+High|140,ffc004,High|130,ffff33,Medium|120,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-annan-johnstonebridge-to-st-mungos-church",
@@ -1358,7 +1454,8 @@
     "very_high": 1.7,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/4d5f3988-4673-451f-a484-dcaa2b5877a9.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Annan&zones=,ff0000,Huge|170,ff6060,Very+High|170,ffc004,High|146,ffff33,Medium|100,00ff00,Low|60,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "don-middle",
@@ -1372,7 +1469,8 @@
     "very_high": 1.2,
     "huge": 1.4
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/2da07e9e-efaa-4e04-a5dc-731a2098fc2f.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Don%20(Middle)&zones=,ff0000,Huge|140,ff6060,Very+High|120,ffc004,High|100,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "dee-grampian-upper",
@@ -1386,21 +1484,24 @@
     "very_high": 1,
     "huge": 1.5
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/c48d829c-049e-5fb2-9ce4-593dc14d5943.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Dee%20(Grampian)%20(Upper)&zones=,ff0000,Huge|150,ff6060,Very+High|100,ffc004,High|80,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|45,cccccc,Empty"
   },
   {
    "slug": "dee-grampian-drumoak",
    "wtw_name": "Dee (Grampian) (Drumoak)",
    "station_no": "234291",
    "levels": null,
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "river-nethan-holmhead-farm-to-crossford",
    "wtw_name": "Nethan",
    "station_no": "133102",
    "levels": null,
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": null
   },
   {
    "slug": "evan-water",
@@ -1414,7 +1515,8 @@
     "very_high": 1.1,
     "huge": 1.2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/95695a5a-b388-3a06-81ec-9809478364bb.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Evan%20Water&zones=,ff0000,Huge|120,ff6060,Very+High|110,ffc004,High|100,ffff33,Medium|80,00ff00,Low|50,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "kirk-burn",
@@ -1428,7 +1530,8 @@
     "very_high": 0.85,
     "huge": 0.9
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/affe30ef-8af2-43f9-aadf-b6b7b2f1bbb4.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Kirk%20Burn&zones=,ff0000,Huge|90,ff6060,Very+High|85,ffc004,High|75,ffff33,Medium|65,00ff00,Low|60,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "north-esk-lower-old",
@@ -1442,7 +1545,8 @@
     "very_high": 0.75,
     "huge": 1.2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/67119d03-3a40-5648-84e8-b576cb9d2362.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=North%20Esk%20(Lower)%20(Old)&zones=,ff0000,Huge|120,ff6060,Very+High|75,ffc004,High|55,ffff33,Medium|50,00ff00,Low|45,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "water-of-leith-upper",
@@ -1456,7 +1560,8 @@
     "very_high": 0.75,
     "huge": 1
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/07abba9b-fedc-4072-a214-023f8c9907e8.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Water%20of%20Leith%20(Upper)&zones=,ff0000,Huge|100,ff6060,Very+High|75,ffc004,High|65,ffff33,Medium|55,00ff00,Low|45,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "river-alladale",
@@ -1470,7 +1575,8 @@
     "very_high": 1.6,
     "huge": 2
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/59ba0665-4f0f-58ba-970d-62f922fc8e95.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Carron%20(Easter%20Ross)%20(Top)&zones=,ff0000,Huge|200,ff6060,Very+High|160,ffc004,High|140,ffff33,Medium|120,00ff00,Low|110,ccffcc,Scrapeable|90,cccccc,Empty"
   },
   {
    "slug": "abhain-deabhag",
@@ -1484,7 +1590,8 @@
     "very_high": 0.8,
     "huge": 1
    },
-   "match": "nearby"
+   "match": "nearby",
+   "graph_url": "https://graph.rivermap.org/calibration/7da02f6b-0b91-4232-8ba1-ee8b61ac8bc2.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Abhainn%20Deabhag&zones=,ff0000,Huge|100,ff6060,Very+High|80,ffc004,High|65,ffff33,Medium|50,00ff00,Low|45,ccffcc,Scrapeable|40,cccccc,Empty"
   },
   {
    "slug": "clyde-elvanfoot-to-wiston",
@@ -1498,14 +1605,16 @@
     "very_high": 1.7,
     "huge": 2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/d7babe29-5f3e-46a8-8559-d3359944d0c2.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Clyde%20(Elvanfoot%20to%20Wiston)&zones=,ff0000,Huge|200,ff6060,Very+High|170,ffc004,High|150,ffff33,Medium|70,00ff00,Low|50,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "earn",
    "wtw_name": "Earn",
    "station_no": "14967",
    "levels": null,
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "clyde-sills-of-clyde",
@@ -1519,7 +1628,8 @@
     "very_high": 1.8,
     "huge": 2
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/413157ff-93ae-40f8-97e4-75183458b48d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Clyde%20(Sills%20of%20Clyde)&zones=,ff0000,Huge|200,ff6060,Very+High|180,ffc004,High|150,ffff33,Medium|110,00ff00,Low|80,ccffcc,Scrapeable|50,cccccc,Empty"
   },
   {
    "slug": "river-etive-triple-falls-to-the-allt-achaorainn",
@@ -1533,14 +1643,16 @@
     "very_high": 0.75,
     "huge": 0.8
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/4b8c6c66-277c-4c43-9255-34c8e5eff5cb.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Etive%20(Middle)&zones=,ff0000,Huge|80,ff6060,Very+High|75,ffc004,High|65,ffff33,Medium|52,00ff00,Low|40,ccffcc,Scrapeable|30,cccccc,Empty"
   },
   {
    "slug": "white-cart-water",
    "wtw_name": "White Cart Water",
    "station_no": "133118",
    "levels": null,
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "white-cart-water-linn-park-fall",
@@ -1554,7 +1666,8 @@
     "very_high": 0.9,
     "huge": 1
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/03c77a24-85e0-4e93-bc8e-729e2823e1f6.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=White%20Cart%20Water%20(Linn%20Park%20Fall)&zones=,ff0000,Huge|100,ff6060,Very+High|90,ffc004,High|80,ffff33,Medium|70,00ff00,Low|60,ccffcc,Scrapeable|47,cccccc,Empty"
   },
   {
    "slug": "river-north-esk-tribs-to-dalbrack-bridge",
@@ -1568,7 +1681,8 @@
     "very_high": 1.4,
     "huge": 1.7
    },
-   "match": "link"
+   "match": "link",
+   "graph_url": "https://graph.rivermap.org/calibration/4d8edf2e-02af-4016-8ab5-817d3b849d56.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=North%20Esk%20(Upper)%20(Invermark%20Gauge)&zones=,ff0000,Huge|170,ff6060,Very+High|140,ffc004,High|110,ffff33,Medium|90,00ff00,Low|70,ccffcc,Scrapeable|60,cccccc,Empty"
   },
   {
    "slug": "north-esk-middle",
@@ -1582,14 +1696,16 @@
     "very_high": 1.4,
     "huge": 1.6
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "garry-perthshire-calvine",
    "wtw_name": "Garry (Perthshire) (Calvine)",
    "station_no": "14960",
    "levels": null,
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "blackwater-garve-upper",
@@ -1603,14 +1719,16 @@
     "very_high": 1.7,
     "huge": 1.7
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/db8ee40c-3bb2-4c0c-b0a2-ed5043fb0633.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Blackwater%20(Garve)%20(Upper)&zones=,ff0000,Huge|170,ff6060,Very+High|170,ffc004,High|150,ffff33,Medium|130,00ff00,Low|120,ccffcc,Scrapeable|110,cccccc,Empty"
   },
   {
    "slug": "gala-water",
    "wtw_name": "Gala Water",
    "station_no": "9683",
    "levels": null,
-   "match": "new"
+   "match": "new",
+   "graph_url": null
   },
   {
    "slug": "lyon-upper",
@@ -1624,7 +1742,8 @@
     "very_high": 1,
     "huge": 1
    },
-   "match": "new"
+   "match": "new",
+   "graph_url": "https://graph.rivermap.org/calibration/75ab0bd4-6ae9-41a7-86dc-31696b11bf3d.H#height=600&from=-7&creditName=Where%27s%20the%20Water&title=Lyon%20(Upper)&zones=,ff0000,Huge|100,ff6060,Very+High|100,ffc004,High|100,ffff33,Medium|100,00ff00,Low|100,ccffcc,Scrapeable|40,cccccc,Empty"
   }
  ],
  "new_sections": [

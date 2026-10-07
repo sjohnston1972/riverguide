@@ -188,9 +188,9 @@ for (const b of wtw.bands) {
     continue;
   }
   out.push(
-    `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels) VALUES ${row([
+    `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels, calibration_url) VALUES ${row([
       b.slug, b.station_no, relation, b.levels.scrape, b.levels.huge, 'paddler', 'high',
-      "Levels set by paddlers on Where's the Water.", b.levels,
+      "Levels set by paddlers on Where's the Water.", b.levels, b.graph_url ?? null,
     ])};`,
   );
   linkCount++;
