@@ -13,6 +13,8 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
   const now = new Date().toISOString();
   const stmts: D1PreparedStatement[] = [];
   let empty = 0;
+  // SEPA's rising/falling flags load alongside the levels (the cron has ~30 s in all).
+  const flags = pollRisingFalling(db).catch((e) => console.error('SEPA rising/falling poll failed', e));
 
   for (let i = 0; i < ids.length; i += BATCH) {
     const series = await fetchSeriesValues(ids.slice(i, i + BATCH), 'PT3H');
@@ -32,18 +34,14 @@ export async function pollReadings(db: D1Database): Promise<{ updated: number; e
     }
   }
   if (stmts.length) await db.batch(stmts);
-  await pollRisingFalling(db).catch((e) => console.error('SEPA rising/falling poll failed', e));
+  await flags;
   await updateOutlooks(db);
   return { updated: stmts.length, empty };
 }
 
-/** Latest SEPA rising/falling flag for every gauge (loads the series ids first if they are missing). */
+/** Latest SEPA rising/falling flag for every gauge. Series ids come from the daily metadata refresh. */
 async function pollRisingFalling(db: D1Database): Promise<void> {
-  let { results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>();
-  if (!results.length) {
-    await refreshRisingFallingIds(db);
-    ({ results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>());
-  }
+  const { results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>();
   const byTs = new Map(results.map((r) => [r.rf_ts_id, r.station_no]));
   const ids = [...byTs.keys()];
   const stmts: D1PreparedStatement[] = [];
