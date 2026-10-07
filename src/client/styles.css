@@ -999,7 +999,8 @@ button {
   margin-top: 4px;
 }
 
-.leaflet-container {
+/* Doubled class: Leaflet's own CSS loads later (lazily) and would otherwise win. */
+.leaflet-container.leaflet-container {
   font: inherit;
   background: var(--surface-2);
 }
@@ -3102,4 +3103,30 @@ button {
 /* The tomorrow marker reaches up to the top label row. */
 .bandbar.has-forecast .bb-fc-marker {
   top: -36px;
+}
+
+/* ---------- Map pins (DOM markers) ---------- */
+.river-pin {
+  --pin: var(--st-unknown);
+  border-radius: 50%;
+  background: var(--pin);
+  border: 2px solid var(--marker-ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 35%, transparent), 0 1px 3px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.river-pin.pin-runnable { --pin: var(--st-runnable); }
+.river-pin.pin-low { --pin: var(--st-low); }
+.river-pin.pin-high { --pin: var(--st-high); }
+.river-pin.pin-unknown { --pin: var(--st-unknown); }
+
+.river-pin.pin-approx {
+  background: color-mix(in srgb, var(--pin) 25%, transparent);
+  border: 2.5px dashed var(--pin);
+  box-shadow: none;
+}
+
+.river-pin:focus-visible {
+  outline: 3px solid var(--loch);
+  outline-offset: 2px;
 }

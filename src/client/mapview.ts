@@ -4,7 +4,7 @@ import type { SectionStatus, SectionSummary } from '../shared/types.ts';
 import { estimateMark, levelWithTrend, statusPill } from './components.ts';
 import { h } from './dom.ts';
 import { gradeLabel, STATUS_LABEL, STEP_LABEL } from './labels.ts';
-import { baseMap, cssColor, L, SCOTLAND_BOUNDS, statusColor } from './maplib.ts';
+import { baseMap, L, SCOTLAND_BOUNDS } from './maplib.ts';
 
 export interface SectionsMap {
   setSections(list: SectionSummary[]): void;
@@ -27,8 +27,9 @@ function popup(s: SectionSummary): HTMLElement {
 }
 
 export function createSectionsMap(el: HTMLElement): SectionsMap {
-  const renderer = L.canvas({ padding: 0.5, tolerance: 8 });
-  const map = baseMap(el, { renderer, preferCanvas: true });
+  // Markers are small DOM elements (divIcons), not a canvas: each one moves with
+  // the map while dragging, so nothing is redrawn (or jumps) when the drag ends.
+  const map = baseMap(el);
   map.fitBounds(SCOTLAND_BOUNDS);
   const layer = L.layerGroup().addTo(map);
   let current: SectionSummary[] = [];
@@ -54,20 +55,18 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
     const ordered = [...current].sort((a, b) => (a.status === 'runnable' ? 1 : 0) - (b.status === 'runnable' ? 1 : 0));
     for (const s of ordered) {
       if (s.lat == null || s.lon == null) continue;
-      const color = statusColor(s.status);
       const approx = s.location_precision === 'approx';
-      const m = L.circleMarker([s.lat, s.lon], {
-        renderer,
-        radius: approx ? 7 : 8,
-        color: approx ? color : cssColor('--marker-ring', '#fff'),
-        weight: approx ? 2.5 : 2,
-        dashArray: approx ? '3 3' : undefined,
-        fillColor: color,
-        fillOpacity: approx ? 0.2 : 0.95,
+      const size = approx ? 16 : 18;
+      const m = L.marker([s.lat, s.lon], {
+        icon: L.divIcon({ className: `river-pin pin-${s.status}${approx ? ' pin-approx' : ''}`, html: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2] }),
+        title: `${s.name}: ${STATUS_LABEL[s.status]}`,
+        alt: `${s.name}: ${STATUS_LABEL[s.status]}`,
+        zIndexOffset: s.status === 'runnable' ? 1000 : 0,
+        riseOnHover: true,
       });
       m.bindPopup(() => popup(s), { maxWidth: 260 });
       // DOM content, never an HTML string: Leaflet sets string tooltips via innerHTML.
-      m.bindTooltip(h('span', null, `${s.name}: ${STATUS_LABEL[s.status]}`), { direction: 'top', offset: [0, -6] });
+      m.bindTooltip(h('span', null, `${s.name}: ${STATUS_LABEL[s.status]}`), { direction: 'top', offset: [0, -10] });
       m.addTo(layer);
       pts.push([s.lat, s.lon]);
     }
@@ -78,9 +77,6 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
     }
   }
 
-  const onTheme = () => draw();
-  document.addEventListener('rg:theme', onTheme);
-
   return {
     setSections(list) {
       current = list;
@@ -90,7 +86,6 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
       map.invalidateSize();
     },
     destroy() {
-      document.removeEventListener('rg:theme', onTheme);
       map.remove();
     },
   };
