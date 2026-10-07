@@ -111,7 +111,7 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
       h(
         'p',
         null,
-        'Reports are anonymous and public. A quick automated check runs the first time you report or vote from a device. "Same for me" adds weight to a report. Reports that more people disagree with than agree with, from 3 or more people, stop counting. Each device can make one report per section per day.',
+        'Reports are anonymous and public. A quick automated check runs the first time you report or vote from a device. Each report asks "Agree with this?": agreeing adds weight to it, and reports that more people disagree with than agree with, from 3 or more people, stop counting. Each device can make one report per section per day.',
       ),
       h(
         'p',

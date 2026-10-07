@@ -178,10 +178,10 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
   function voteButton(r: CommunityReport, vote: 1 | -1): HTMLElement {
     const pressed = r.my_vote === vote;
     const count = vote === 1 ? r.agrees : r.disagrees;
-    const label = vote === 1 ? 'Same for me' : 'Not for me';
+    const label = vote === 1 ? 'Yes' : 'No';
     const b = h(
       'button',
-      { type: 'button', class: 'vote', 'aria-pressed': String(pressed), disabled: r.mine, title: r.mine ? 'Your report' : label },
+      { type: 'button', class: 'vote', 'aria-pressed': String(pressed), disabled: r.mine, title: r.mine ? 'Your report' : vote === 1 ? 'Agree' : 'Disagree', 'aria-label': `${vote === 1 ? 'Agree' : 'Disagree'}${count ? ` (${count})` : ''}` },
       vote === 1 ? '👍' : '👎',
       h('span', { class: 'vote-label' }, label),
       count ? h('span', { class: 'vote-count' }, String(count)) : null,
@@ -246,7 +246,7 @@ export function communityPanel(o: CommunityPanelOptions): HTMLElement {
         h('span', { class: 'report-when muted', title: `Added ${relativeTime(r.created_at)}` }, dateText),
       ),
       r.note ? h('p', { class: 'report-note' }, r.note) : null,
-      h('div', { class: 'report-actions' }, voteButton(r, 1), voteButton(r, -1), extra),
+      h('div', { class: 'report-actions' }, r.mine ? null : h('span', { class: 'vote-prompt' }, 'Agree with this?'), voteButton(r, 1), voteButton(r, -1), extra),
     );
   }
 
