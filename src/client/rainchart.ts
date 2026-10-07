@@ -121,7 +121,7 @@ export function rainChart(hoursIn: WeatherHour[]): HTMLElement {
     const hr = ukHour(d);
     const tick = i > 0 && hr % 6 === 0;
     // Labels close to "Now" would overlap it.
-    const label = i === 0 ? 'Now' : i < 3 ? null : hr === 0 ? dayFmt.format(d) : tick ? String(hr).padStart(2, '0') : null;
+    const label = i === 0 ? 'Now' : i < 5 ? null : hr === 0 ? dayFmt.format(d) : tick ? String(hr).padStart(2, '0') : null;
     const wet = x.rain_mm >= WET_MM;
     return h(
       'div',
