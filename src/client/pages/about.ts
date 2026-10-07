@@ -64,7 +64,7 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, h('strong', null, 'River levels: '), ext('https://www.sepa.org.uk/environment/water/water-levels/', 'SEPA'), ' river level data, used under the ', ext('https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/', 'Open Government Licence v3.0'), '. Contains SEPA data © Scottish Environment Protection Agency and database right.'),
         h('li', null, h('strong', null, 'Weather: '), ext('https://open-meteo.com/', 'Open-Meteo'), ', licensed under ', ext('https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0'), '.'),
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
-        h('li', null, h('strong', null, 'River sections: '), 'section names, grades and level advice are derived from ', ext('https://www.ukriversguidebook.co.uk/', 'UK Rivers Guidebook'), '. The full write-ups, with hazards, access and route details, live there. Please read them, and contribute updates when things change.'),
+        h('li', null, h('strong', null, 'River sections: '), 'section names, grades and level advice are compiled from paddling guidebook information. River Guide does not cover hazards, access or route details: always check a current guidebook and local knowledge before you paddle.'),
       ),
 
       h('h2', null, 'Community reports'),

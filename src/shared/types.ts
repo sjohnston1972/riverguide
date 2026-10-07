@@ -90,7 +90,6 @@ export interface SectionDetail extends SectionSummary {
   character: string | null;
   put_in: PlacePoint | null;
   take_out: PlacePoint | null;
-  ukrgb_url: string;
   source_updated: string | null;
   links: SectionGaugeLink[];
   nearby_gauges: Gauge[];

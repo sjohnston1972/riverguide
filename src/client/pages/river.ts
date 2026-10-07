@@ -6,7 +6,7 @@ import { ApiError, api } from '../api.ts';
 import { bandBar, type ReportDot } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
-import { clear, h, icon, safeUrl } from '../dom.ts';
+import { clear, h, icon } from '../dom.ts';
 import { lastListHref } from '../filters.ts';
 import type { LevelGraph } from '../graph.ts';
 import { ICONS } from '../icons.ts';
@@ -291,7 +291,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   function guideBanner(d: SectionDetail): HTMLElement {
-    const url = safeUrl(d.ukrgb_url);
     const updated = formatDate(d.source_updated);
     return h(
       'aside',
@@ -300,10 +299,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         'p',
         { class: 'guide-notice-main' },
         h('strong', null, 'Before paddling: '),
-        'read the full, current write-up on UK Rivers Guidebook for hazards, access and route details.',
-        updated ? h('span', { class: 'guide-notice-date' }, ` Guide entry last updated ${updated}.`) : null,
+        'check a current guidebook and local knowledge for hazards, access and route details. River Guide does not show them, and trees, landslips and works change without notice.',
+        updated ? h('span', { class: 'guide-notice-date' }, ` Section information last updated ${updated}.`) : null,
       ),
-      url ? h('a', { class: 'btn btn-outline btn-sm', href: url, target: '_blank', rel: 'noopener' }, 'Open on UKRGB', icon(ICONS.external)) : null,
     );
   }
 
@@ -472,7 +470,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       'section',
       { class: 'block guide' },
       h('h2', null, 'Guidebook notes'),
-      h('p', { class: 'muted' }, 'Summarised from UK Rivers Guidebook. Always check the full, current write-up.'),
+      h('p', { class: 'muted' }, 'Summarised from guidebook information. Always check a current guidebook.'),
       present.map(([k, v]) => h('div', { class: 'guide-field' }, h('h3', null, k), h('p', null, v.trim()))),
     );
   }
