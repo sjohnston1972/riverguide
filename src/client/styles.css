@@ -267,7 +267,7 @@ button {
 }
 
 .brand img {
-  border-radius: 8px;
+  display: block;
 }
 
 .brand:hover {
@@ -2587,6 +2587,11 @@ button {
 @media (min-width: 1100px) {
   :root {
     --header-h: 72px;
+  }
+
+  .brand img {
+    width: 40px;
+    height: 40px;
   }
 
   body {

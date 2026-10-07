@@ -46,7 +46,7 @@ const header = h(
   h(
     'div',
     { class: 'wrap header-inner' },
-    h('a', { href: '/', class: 'brand', 'aria-label': 'River Guide home' }, h('img', { src: '/logo-thumb.png', alt: '', width: 32, height: 32 }), h('span', null, 'River Guide')),
+    h('a', { href: '/', class: 'brand', 'aria-label': 'River Guide home' }, h('img', { src: '/icons/logo-64.png', srcset: '/icons/logo-64.png 2x, /icons/logo-128.png 4x', alt: '', width: 32, height: 32 }), h('span', null, 'River Guide')),
     h('nav', { class: 'site-nav', 'aria-label': 'Main' }, Object.values(navLinks)),
     themeToggle(),
   ),
