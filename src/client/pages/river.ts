@@ -5,6 +5,7 @@ import type { CommunityReports, Gauge, GuideText, PlacePoint, SectionDetail, Sec
 import { ApiError, api } from '../api.ts';
 import { bandBar, type ReportDot } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
+import { rainChart } from '../rainchart.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
 import { clear, h, icon } from '../dom.ts';
 import { lastListHref } from '../filters.ts';
@@ -368,30 +369,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function weatherBody(w: Weather): Node[] {
     const stat = (label: string, mm: number) => h('div', { class: 'rain-stat' }, h('span', { class: 'rain-num' }, mm.toFixed(1), h('small', null, ' mm')), h('span', { class: 'rain-label' }, label));
     const hours = w.hours.slice(0, 48);
-    const peak = Math.max(1, ...hours.map((x) => x.rain_mm));
-    const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
-    const hourFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
-    const bars = hours.map((x, i) => {
-      const d = new Date(x.time);
-      const midnight = d.getHours() === 0;
-      return h(
-        'div',
-        { class: `rain-bar${midnight ? ' day-start' : ''}`, title: `${hourFmt.format(d)}: ${x.rain_mm.toFixed(1)} mm` },
-        h('span', { class: 'rain-fill', style: `height:${x.rain_mm > 0 ? Math.max(4, (x.rain_mm / peak) * 100) : 0}%` }),
-        i === 0 ? h('span', { class: 'rain-day' }, 'Now') : midnight && i >= 4 ? h('span', { class: 'rain-day' }, dayFmt.format(d)) : null,
-      );
-    });
     const out: Node[] = [h('div', { class: 'rain-stats' }, stat('Past 24 h', w.rain_past_24h_mm), stat('Next 24 h', w.rain_next_24h_mm), stat('Next 48 h', w.rain_next_48h_mm))];
     if (hours.length) {
       const wind = hours.map((x) => x.wind_kmh);
       const temp = hours.map((x) => x.temp_c);
       out.push(
-        h(
-          'div',
-          { class: 'rain-strip-wrap' },
-          h('p', { class: 'strip-label' }, 'Hourly rain, next 48 hours', h('span', { class: 'muted' }, ` (scale to ${peak.toFixed(1)} mm)`)),
-          h('div', { class: 'rain-strip', role: 'img', 'aria-label': `Hourly rain over the next 48 hours, up to ${peak.toFixed(1)} mm in an hour.` }, bars),
-        ),
+        h('div', { class: 'rain-strip-wrap' }, h('p', { class: 'strip-label' }, 'Rain, next 48 hours'), rainChart(hours)),
         h(
           'p',
           { class: 'wx-line' },
