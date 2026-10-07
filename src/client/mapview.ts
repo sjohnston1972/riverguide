@@ -63,6 +63,9 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
         alt: `${s.name}: ${STATUS_LABEL[s.status]}`,
         zIndexOffset: s.status === 'runnable' ? 1000 : 0,
         riseOnHover: true,
+        // Let presses on a marker reach the map, so a drag can start anywhere
+        // (Leaflet markers swallow them by default); a tap still opens the popup.
+        bubblingMouseEvents: true,
       });
       m.bindPopup(() => popup(s), { maxWidth: 260 });
       // DOM content, never an HTML string: Leaflet sets string tooltips via innerHTML.
