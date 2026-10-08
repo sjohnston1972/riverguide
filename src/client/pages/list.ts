@@ -78,7 +78,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     changed();
   });
 
-  const riseChip = h('button', { type: 'button', class: 'chip rise-chip', 'aria-pressed': 'false' }, h('span', { class: 'rise-arrow', 'aria-hidden': 'true' }, '↗'), 'On the rise');
+  const riseChip = h('button', { type: 'button', class: 'chip rise-chip', 'aria-pressed': 'false' }, h('span', { class: 'rise-arrow', 'aria-hidden': 'true' }, '↑'), 'On the rise');
   riseChip.addEventListener('click', () => {
     filters = { ...filters, rise: !filters.rise };
     changed();

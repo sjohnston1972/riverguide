@@ -9,10 +9,11 @@ export const STATUS_LABEL: Record<SectionStatus, string> = {
   unknown: 'Unknown',
 };
 
+/** Now: straight arrows. Tomorrow (OUTLOOK_ARROW): the diagonal ones. */
 export const TREND_ARROW: Record<Trend, string> = {
-  rising: '▲',
-  falling: '▼',
-  steady: '►',
+  rising: '↑',
+  falling: '↓',
+  steady: '→',
   unknown: '',
 };
 

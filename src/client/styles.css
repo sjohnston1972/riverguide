@@ -653,7 +653,8 @@ button {
 }
 
 .lvl-arrow {
-  font-size: 0.75em;
+  font-size: 0.9em;
+  font-weight: 700;
 }
 
 .trend-rising .lvl-arrow {
