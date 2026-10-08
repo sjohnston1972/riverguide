@@ -41,6 +41,11 @@ const PERIODS: [string, string][] = [
 
 type Place = PlacePoint & { precision?: string };
 
+/** The one-screen desktop layout's media query; keep in step with styles.css (.river-dash). */
+const ONE_SCREEN = window.matchMedia('(min-width: 1280px) and (min-height: 720px)');
+/** Smallest scale the one-screen layout shrinks to; below it the page scrolls instead. */
+const MIN_ZOOM = 0.7;
+
 export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): Page {
   const abort = new AbortController();
   const cleanups: (() => void)[] = [];
@@ -55,7 +60,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     h('div', { class: 'title-row' }, title, star),
   );
   const body = h('div', { class: 'river-body' }, skeletonLines(3, 'skel-block'));
-  container.append(h('article', { class: 'wrap river-page' }, head, body));
+  const article = h('article', { class: 'wrap river-page' }, head, body);
+  container.append(article);
   ctx.setTitle('Loading');
 
   async function load(): Promise<void> {
@@ -103,20 +109,49 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         .then((fresh) => {
           if (destroyed) return;
           const next = nowCard(fresh);
-          now.replaceWith(next);
+          now.card.replaceWith(next.card);
+          if (now.graph && next.graph) now.graph.replaceWith(next.graph);
           now = next;
         })
         .catch(() => undefined);
     };
     const community = communityPanel({ slug, gaugeName: d.gauge_name, siteKey: ctx.config()?.turnstile_site_key ?? null, data: reports, onChange });
-    const main = h('div', { class: 'col-main' }, now, releasesSection(d), community, d.guide ? guideSection(d.guide) : null);
-    const side = h('div', { class: 'col-side' }, weatherSection(d), placesSection(d), nearbySection(d));
+    // Three groups: the river now (status card and level history); reports, releases and notes; weather,
+    // access and nearby gauges. Phones stack them, tablets use two columns, wide desktops fit the page
+    // on one screen with the last two groups as tiles (styles.css, .river-dash).
+    const colNow = h('div', { class: 'col-now' }, now.card, now.graph);
+    const releases = releasesSection(d);
+    const guide = d.guide ? guideSection(d.guide) : null;
+    const weather = weatherSection(d);
+    const places = placesSection(d);
+    const nearby = nearbySection(d);
+    const colMid = h('div', { class: 'col-mid' }, releases, community, guide);
+    const side = h('div', { class: 'col-side' }, weather, places, nearby);
+    // One screen: the dam releases list sits under the level history (the left column has the room);
+    // the other tiles fill two columns in this order, an odd last tile spanning both.
+    const placeTiles = () => {
+      const oneScreen = ONE_SCREEN.matches;
+      if (releases) {
+        if (oneScreen) colNow.append(releases);
+        else colMid.prepend(releases);
+      }
+      const tiles = [weather, places, nearby, community, oneScreen ? null : releases, guide].filter((t): t is HTMLElement => t != null);
+      for (const t of [weather, places, nearby, community, releases, guide]) t?.classList.remove('tile-wide');
+      tiles.forEach((t, i) => (t.style.order = String(i)));
+      if (tiles.length % 2) tiles[tiles.length - 1].classList.add('tile-wide');
+    };
+    placeTiles();
+    ONE_SCREEN.addEventListener('change', placeTiles);
+    cleanups.push(() => ONE_SCREEN.removeEventListener('change', placeTiles));
     clear(body);
-    body.append(h('div', { class: 'river-grid' }, main, side));
+    body.append(h('div', { class: 'river-grid' }, colNow, h('div', { class: 'col-tiles' }, colMid, side)));
+    // Content arrives in stages; fit again as it does (shrinking only, so nothing jumps back and forth).
+    scheduleFit(true);
+    void reports.then(() => scheduleFit(false), () => undefined);
   }
 
-  // ---- Now card: section status, linked gauges (as tabs) and level history ----
-  function nowCard(d: SectionDetail): HTMLElement {
+  // ---- Now card: section status and linked gauges (as tabs); the level history is its own card ----
+  function nowCard(d: SectionDetail): { card: HTMLElement; graph: HTMLElement | null } {
     const askBtn = h(
       'button',
       { type: 'button', class: 'btn btn-primary btn-sm ask-btn', hidden: !ctx.config()?.chat_enabled, 'aria-label': 'Ask about this river' },
@@ -158,7 +193,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const card = h('section', { class: 'now-card' }, top);
     if (!links.length) {
       card.append(h('div', { class: 'now-body' }, h('p', { class: 'muted' }, 'No SEPA gauge is linked to this section. Check the guidebook for level advice.')));
-      return card;
+      return { card, graph: null };
     }
 
     const multi = links.length > 1;
@@ -230,7 +265,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           graphArea.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
           return;
         }
-        graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level });
+        graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level, fill: ONE_SCREEN.matches });
+        scheduleFit(false);
         const vs = hist.points.map((p) => p.v);
         graphArea.setAttribute('role', 'img');
         graphArea.setAttribute(
@@ -244,22 +280,20 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       }
     }
 
-    card.append(
-      h(
-        'div',
-        { class: 'now-body' },
-        multi ? h('div', { class: 'gauge-tabs', role: 'tablist', 'aria-label': 'Linked SEPA gauges' }, tabs) : null,
-        panel,
-        h(
-          'div',
-          { class: 'now-graph' },
-          h('div', { class: 'now-graph-head' }, h('h2', null, 'Level history'), h('div', { class: 'segmented', role: 'group', 'aria-label': 'Period' }, periodBtns)),
-          graphArea,
-        ),
-      ),
+    card.append(h('div', { class: 'now-body' }, multi ? h('div', { class: 'gauge-tabs', role: 'tablist', 'aria-label': 'Linked SEPA gauges' }, tabs) : null, panel));
+    // Follows the selected gauge tab.
+    const graphCard = h(
+      'section',
+      { class: 'now-graph' },
+      h('div', { class: 'now-graph-head' }, h('h2', null, 'Level history'), h('div', { class: 'segmented', role: 'group', 'aria-label': 'Period' }, periodBtns)),
+      graphArea,
     );
+    // Entering or leaving the one-screen layout changes how the graph is sized.
+    const onLayout = () => void draw();
+    ONE_SCREEN.addEventListener('change', onLayout);
+    cleanups.push(() => ONE_SCREEN.removeEventListener('change', onLayout));
     select(0);
-    return card;
+    return { card, graph: graphCard };
   }
 
   /** One linked gauge: reading, band bar and compact facts. */
@@ -460,6 +494,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       try {
         const w = await api.weather(at.lat, at.lon, abort.signal);
         if (!destroyed) box.replaceChildren(...weatherBody(w));
+        scheduleFit(false);
       } catch (e) {
         if (destroyed || (e instanceof DOMException && e.name === 'AbortError')) return;
         box.replaceChildren(errorBox(upstreamMessage(e) ?? "Couldn't load the forecast.", () => void run()));
@@ -551,7 +586,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     return h(
       'section',
-      { class: 'block' },
+      { class: 'block places-block' },
       h('h2', null, 'Put-in and take-out'),
       mapEl,
       list,
@@ -576,7 +611,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const from = d.lat != null && d.lon != null ? { lat: d.lat, lon: d.lon } : null;
     return h(
       'section',
-      { class: 'block' },
+      { class: 'block nearby-block' },
       h('h2', null, 'Other gauges nearby'),
       h('ul', { class: 'nearby' }, d.nearby_gauges.map((g) => nearbyItem(g, from))),
     );
@@ -617,11 +652,50 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     );
   }
 
+  // Wide desktops: the whole page on one screen (styles.css). Only while this page is mounted.
+  document.documentElement.classList.add('river-dash');
+  // If the layout still doesn't fit the window (a short laptop screen), scale the page down until it
+  // does rather than hiding anything. The two list tiles (reports, dam releases) scroll in place instead.
+  let zoom = 1;
+  const overflowing = () => {
+    const de = document.documentElement;
+    if (de.scrollHeight > de.clientHeight + 1) return true;
+    const boxes = [...article.querySelectorAll<HTMLElement>('.col-now, .col-mid > :not(.community, .releases), .col-side > *')];
+    return boxes.some((b) => b.scrollHeight > b.clientHeight + 1);
+  };
+  const fit = (fromFull: boolean) => {
+    if (destroyed) return;
+    if (!ONE_SCREEN.matches) {
+      article.style.zoom = '';
+      zoom = 1;
+      return;
+    }
+    if (fromFull) zoom = 1;
+    for (;;) {
+      article.style.zoom = zoom === 1 ? '' : String(zoom);
+      if (zoom <= MIN_ZOOM || !overflowing()) break;
+      zoom = Math.max(MIN_ZOOM, Math.round((zoom - 0.03) * 100) / 100);
+    }
+  };
+  let fitTimer = 0;
+  const scheduleFit = (fromFull: boolean) => {
+    window.clearTimeout(fitTimer);
+    fitTimer = window.setTimeout(() => fit(fromFull), 120);
+  };
+  const onResize = () => scheduleFit(true);
+  window.addEventListener('resize', onResize);
+  ONE_SCREEN.addEventListener('change', onResize);
+  cleanups.push(() => {
+    window.clearTimeout(fitTimer);
+    window.removeEventListener('resize', onResize);
+    ONE_SCREEN.removeEventListener('change', onResize);
+  });
   void load();
   return {
     destroy() {
       destroyed = true;
       abort.abort();
+      document.documentElement.classList.remove('river-dash');
       for (const c of cleanups) c();
     },
   };
