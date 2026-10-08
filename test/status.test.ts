@@ -37,6 +37,7 @@ describe('typicalStatus / trendFrom / isStale', () => {
     expect(isStale('2026-10-06T10:00:00Z', now)).toBe(false);
     expect(isStale('2026-10-06T08:00:00Z', now)).toBe(true);
     expect(isStale(null, now)).toBe(true);
+    expect(isStale('not a time', now)).toBe(true);
   });
 });
 
