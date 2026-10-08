@@ -7,7 +7,7 @@ import { bandBar } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
-import { errorBox, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
+import { errorBox, levelWithTrend, skeletonLines, statusPill, tomorrowTag } from '../components.ts';
 import { clear, h, icon, safeUrl } from '../dom.ts';
 import { favButton, setFavouriteName } from '../favourites.ts';
 import { lastListHref } from '../filters.ts';
@@ -339,16 +339,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       h('span', { class: 'outlook-arrow', 'aria-hidden': 'true' }, OUTLOOK_ARROW[o.direction]),
       h('span', null, head, ` From the current trend, with ${rainText}. `, h('span', { class: 'outlook-note' }, 'No level prediction for this gauge.')),
     );
-  }
-
-  /** "↗ Medium tomorrow" beside the status when tomorrow's step or status differs from today's. */
-  function tomorrowTag(d: SectionDetail): HTMLElement | null {
-    const o = d.outlook;
-    const changedStep = d.step_tomorrow && d.step_tomorrow !== d.step;
-    const changedStatus = d.status_tomorrow && d.status_tomorrow !== 'unknown' && d.status_tomorrow !== d.status;
-    if (!o || (!changedStep && !changedStatus)) return null;
-    const label = changedStep ? STEP_LABEL[d.step_tomorrow!] : STATUS_LABEL[d.status_tomorrow!];
-    return h('span', { class: `tomorrow-tag outlook-${o}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[o]} ${label} tomorrow`);
   }
 
   /** Jumps to the community panel and opens its report form. */

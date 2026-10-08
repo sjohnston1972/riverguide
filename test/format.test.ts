@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { escapeHtml, formatMessage } from '../src/client/format.ts';
 import { applyFilters, DEFAULT_FILTERS, filtersFromQuery, filtersToQuery } from '../src/client/filters.ts';
-import { normalize, relativeTime } from '../src/client/labels.ts';
+import { normalize, relativeTime, clockTime } from '../src/client/labels.ts';
 import { SseParser } from '../src/client/sse.ts';
 import type { SectionSummary } from '../src/shared/types.ts';
 
@@ -193,5 +193,15 @@ describe('relativeTime', () => {
     expect(relativeTime('2026-10-06T11:48:00Z', now)).toBe('12 min ago');
     expect(relativeTime('2026-10-06T09:00:00Z', now)).toBe('3 h ago');
     expect(relativeTime(null, now)).toBe('no reading');
+  });
+});
+
+describe('clockTime', () => {
+  it('shows UK clock time today and adds the weekday otherwise', () => {
+    const now = Date.parse('2026-10-08T15:00:00Z');
+    expect(clockTime('2026-10-08T13:32:00Z', now)).toBe('14:32'); // BST
+    expect(clockTime('2026-10-06T13:32:00Z', now)).toBe('Tue 14:32');
+    // 23:30Z on the 7th is already the 8th in the UK.
+    expect(clockTime('2026-10-07T23:30:00Z', now)).toBe('00:30');
   });
 });

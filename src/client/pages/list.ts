@@ -2,7 +2,7 @@
 
 import type { SectionSummary } from '../../shared/types.ts';
 import { api } from '../api.ts';
-import { errorBox, estimateMark, levelWithTrend, skeletonLines, statusPill } from '../components.ts';
+import { errorBox, estimateMark, levelWithTrend, skeletonLines, statusPill, tomorrowTag, unknownReason } from '../components.ts';
 import { clear, h, icon } from '../dom.ts';
 import {
   activeFilterCount,
@@ -18,7 +18,7 @@ import {
 } from '../filters.ts';
 import { FAVOURITES_EVENT, favButton, favourites } from '../favourites.ts';
 import { ICONS } from '../icons.ts';
-import { gradeLabel, OUTLOOK_ARROW, STATUS_LABEL, STEP_LABEL } from '../labels.ts';
+import { clockTime, gradeLabel, STEP_LABEL } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 import type { SectionsMap } from '../mapview.ts';
 import { replaceUrl, type Route } from '../router.ts';
@@ -31,6 +31,8 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   let view: View = route.name === 'map' ? 'map' : 'list';
   let sections: SectionSummary[] | null = null;
   let loadError: string | null = null;
+  /** A background refresh failed: the list still shows the last levels, and says so. */
+  let refreshFailed = false;
   let map: SectionsMap | null = null;
   let mapLoading: Promise<void> | null = null;
   let destroyed = false;
@@ -228,11 +230,19 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     const runnable = base.filter((s) => s.status === 'runnable').length;
     headline.textContent = `${runnable} ${runnable === 1 ? 'section' : 'sections'} estimated runnable`;
     const narrowed = base.length !== sections.length;
+    // How old the levels are, from the newest current reading (not the poll schedule).
+    const newest = sections.reduce<string | null>((m, s) => (s.level_at && !s.stale && (!m || s.level_at > m) ? s.level_at : m), null);
+    const levels = refreshFailed
+      ? `Couldn't refresh${newest ? `; showing levels from ${clockTime(newest)}` : ''}.`
+      : newest
+        ? `SEPA levels as of ${clockTime(newest)}.`
+        : 'Levels from SEPA gauges.';
     sub.textContent = sections.length
       ? narrowed
-        ? `Out of ${base.length} matching your search and filters. Levels from SEPA gauges, checked every 15 minutes.`
-        : `Out of ${sections.length} sections across Scotland. Levels from SEPA gauges, checked every 15 minutes.`
+        ? `Out of ${base.length} matching your search and filters. ${levels}`
+        : `Out of ${sections.length} sections across Scotland. ${levels}`
       : 'No river sections are loaded yet.';
+    sub.classList.toggle('headline-sub-warn', refreshFailed);
     resultCount.textContent = shown.length === sections.length ? `${shown.length} sections` : `Showing ${shown.length} of ${sections.length} sections`;
 
     if (view === 'list') renderList(shown);
@@ -309,9 +319,11 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       const data = await api.sections(force);
       if (destroyed) return;
       sections = data;
+      refreshFailed = false;
     } catch (e) {
       if (destroyed) return;
       if (!sections) loadError = e instanceof Error ? e.message : 'Network error.';
+      else refreshFailed = true;
     }
     renderResults();
   }
@@ -364,9 +376,9 @@ function row(s: SectionSummary): HTMLLIElement {
         'span',
         { class: 'row-side' },
         h('span', { class: 'row-status' }, statusPill(s.status),
-          s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : estimateMark(s.status_basis, s.status_confidence),
+          s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : (estimateMark(s.status_basis, s.status_confidence) ?? unknownReason(s)),
           s.release_today ? h('span', { class: 'release-tag' }, s.slug === 'falls-of-lora-tidal-rapid' ? 'Ebb today' : 'Release today') : null,
-          tomorrowNote(s),
+          tomorrowTag(s),
         ),
         s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
       ),
@@ -375,12 +387,3 @@ function row(s: SectionSummary): HTMLLIElement {
   );
 }
 
-/** "↗ Runnable tomorrow" when the predicted status or paddler step differs from now. */
-function tomorrowNote(s: SectionSummary): HTMLElement | null {
-  if (!s.outlook) return null;
-  const changedStatus = s.status_tomorrow && s.status_tomorrow !== 'unknown' && s.status_tomorrow !== s.status;
-  const changedStep = !changedStatus && s.step_tomorrow && s.step_tomorrow !== s.step;
-  if (!changedStatus && !changedStep) return null;
-  const label = changedStatus ? STATUS_LABEL[s.status_tomorrow!] : STEP_LABEL[s.step_tomorrow!];
-  return h('span', { class: `tomorrow-tag outlook-${s.outlook}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[s.outlook]} ${label} tomorrow`);
-}

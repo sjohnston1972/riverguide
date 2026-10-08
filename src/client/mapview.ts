@@ -1,7 +1,7 @@
 // Sections map (lazy-loaded with Leaflet).
 
 import type { SectionStatus, SectionSummary } from '../shared/types.ts';
-import { estimateMark, levelWithTrend, statusPill } from './components.ts';
+import { estimateMark, levelWithTrend, statusPill, tomorrowTag, unknownReason } from './components.ts';
 import { h } from './dom.ts';
 import { gradeLabel, STATUS_LABEL, STEP_LABEL } from './labels.ts';
 import { baseMap, L, SCOTLAND_BOUNDS } from './maplib.ts';
@@ -20,7 +20,14 @@ function popup(s: SectionSummary): HTMLElement {
     { class: 'map-popup' },
     h('a', { class: 'popup-name', href: `/river/${encodeURIComponent(s.slug)}` }, s.name),
     h('p', { class: 'popup-meta' }, `${gradeLabel(s.grade_text)}, ${s.region}`),
-    h('p', { class: 'popup-status' }, statusPill(s.status), s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : estimateMark(s.status_basis, s.status_confidence), s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : null),
+    h(
+      'p',
+      { class: 'popup-status' },
+      statusPill(s.status),
+      s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : (estimateMark(s.status_basis, s.status_confidence) ?? unknownReason(s)),
+      s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : null,
+      tomorrowTag(s),
+    ),
     s.location_precision === 'approx' ? h('p', { class: 'popup-approx' }, 'Approximate location') : null,
     h('a', { class: 'popup-link', href: `/river/${encodeURIComponent(s.slug)}` }, 'Open river page'),
   );
