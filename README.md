@@ -119,14 +119,17 @@ Without `TURNSTILE_SECRET` the chat session step skips verification, which is me
 
 The source is the scraped UKRGB Scotland dataset, which the previous version had already depersonalised: `data/private/scotland_rivers_clean.json`.
 
+In dependency order (`npm run data:all` runs them all; with the enrichment cache in place `data:enrich` costs nothing):
+
 ```sh
 npm run data:gauges      # SEPA → data/gauges.json
 npm run data:durations   # SEPA daily maxima, 3 years → data/gauge-durations.json (re-run yearly)
 npm run data:sections    # source → data/private/sections.raw.json (slugs, grid refs → lat/lon)
-npm run data:wtw         # Where's the Water (CC BY-SA 4.0) → data/wtw/, data/wtw-import.json (paddler levels, 37 extra sections, release dates)
 npm run data:enrich      # Claude Sonnet 5.5 + Nominatim → data/enrichment.json  (~$3.50 for all 232; cached per section, resumable)
                          #   --relink redoes only the gauge links and thresholds (~$2.50)
-npm run data:seed        # → data/private/seed.sql
+npm run data:wtw         # Where's the Water (CC BY-SA 4.0) → data/wtw/, data/wtw-import.json (paddler levels, 37 extra sections, release dates); reads enrichment.json
+npm run data:forecast    # level-outlook models → data/gauge-forecast.json; reads enrichment.json and wtw-import.json
+npm run data:seed        # → data/private/seed.sql; stops on a missing input, an invalid overrides.json or an inverted band
 npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 ```
 
@@ -151,7 +154,7 @@ Add to `data/overrides.json`, rebuild the seed, and apply it (numbers below are 
 }
 ```
 
-Manual links replace that section's estimated links and are shown as "set manually".
+Manual links replace that section's estimated links and are shown as "set manually". A manual link on a gauge that Where's the Water has calibrated keeps its paddler step ladder.
 
 ## Deploy
 

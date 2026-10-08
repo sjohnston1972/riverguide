@@ -14,6 +14,7 @@
 //              npx wrangler d1 execute riverguide --remote --file data/private/seed.sql
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { z } from 'zod';
 import { type DurationCurve, levelForPct } from '../src/shared/duration.ts';
 import { relativeToAbsolute } from '../src/shared/status.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
@@ -51,31 +52,61 @@ interface Enriched {
   source_updated: string | null;
   links: EnrichedLink[];
 }
-interface ManualLink {
-  station_no: string;
-  relation: string;
-  min_level: number | null;
-  max_level: number | null;
-  confidence?: string;
-  reason: string;
-}
-interface Overrides {
-  sections?: Record<string, Partial<Omit<Enriched, 'slug' | 'links'>>>;
+// data/overrides.json is hand-edited, so it is checked strictly: a misspelt key fails the build
+// instead of being silently ignored.
+const ManualLink = z.strictObject({
+  station_no: z.string().regex(/^\d+$/),
+  relation: z.enum(['on-section', 'upstream', 'downstream', 'proxy']),
+  min_level: z.number().nullable(),
+  max_level: z.number().nullable(),
+  confidence: z.enum(['high', 'medium', 'low']).optional(),
+  reason: z.string().min(1),
+});
+const SectionOverride = z.strictObject({
+  name: z.string(),
+  river: z.string(),
+  section_name: z.string().nullable(),
+  region: z.string(),
+  grade_text: z.string(),
+  grade_min: z.number().nullable(),
+  grade_max: z.number().nullable(),
+  length_text: z.string().nullable(),
+  time_text: z.string().nullable(),
+  character: z.string().nullable(),
+  lat: z.number().nullable(),
+  lon: z.number().nullable(),
+  location_precision: z.enum(['grid', 'approx']).nullable(),
+  put_in: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable(),
+  take_out: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable(),
+  ukrgb_url: z.string(),
+  source_updated: z.string().nullable(),
+}).partial();
+const OverridesSchema = z.strictObject({
+  sections: z.record(z.string(), SectionOverride).optional(),
   /** Replaces all estimated links for the section. */
-  links?: Record<string, ManualLink[]>;
-}
+  links: z.record(z.string(), z.array(ManualLink)).optional(),
+});
+type Overrides = z.infer<typeof OverridesSchema>;
 
-const read = <T>(p: string): T => JSON.parse(readFileSync(p, 'utf8')) as T;
+const read = <T>(p: string): T => {
+  if (!existsSync(p)) throw new Error(`build-seed: ${p} is missing. Run the data pipeline first (npm run data:all, or the step that writes it).`);
+  return JSON.parse(readFileSync(p, 'utf8')) as T;
+};
 const gauges = read<SepaStation[]>('data/gauges.json');
 const enriched = read<Enriched[]>('data/enrichment.json');
-const overrides = read<Overrides>('data/overrides.json');
+const parsedOverrides = OverridesSchema.safeParse(read<unknown>('data/overrides.json'));
+if (!parsedOverrides.success) {
+  throw new Error(`build-seed: data/overrides.json is invalid:\n${z.prettifyError(parsedOverrides.error)}`);
+}
+const overrides: Overrides = parsedOverrides.data;
 const raw = new Map(read<RawSection[]>('data/private/sections.raw.json').map((s) => [s.slug, s]));
 const gaugeByNo = new Map(gauges.map((g) => [g.station_no, g]));
 const curves = read<{ curves: Record<string, { curve: DurationCurve } | null> }>('data/gauge-durations.json').curves;
 const curveOf = (stationNo: string) => curves[stationNo]?.curve ?? null;
 const wtw = read<WtwImport>('data/wtw-import.json');
-// Level-outlook models (scripts/fit-forecast.ts); absent for gauges no section uses.
-const forecast = existsSync('data/gauge-forecast.json') ? read<{ models: Record<string, unknown | null> }>('data/gauge-forecast.json').models : {};
+// Level-outlook models (scripts/fit-forecast.ts); absent for gauges no section uses. Required: without
+// it every outlook silently falls back to a trend-only direction.
+const forecast = read<{ models: Record<string, unknown | null> }>('data/gauge-forecast.json').models;
 const forecastOf = (stationNo: string) => forecast[stationNo] ?? null;
 
 function sql(v: unknown): string {
@@ -88,6 +119,18 @@ function sql(v: unknown): string {
 const row = (vals: unknown[]) => `(${vals.map(sql).join(', ')})`;
 
 const out: string[] = ['DELETE FROM section_gauges;', 'DELETE FROM releases;'];
+
+/** Every link written to the seed: thresholds must be numbers (or null) and the band the right way round. */
+const problems: string[] = [];
+function checkLink(slug: string, l: { station_no: string; min_level: number | null; max_level: number | null }): void {
+  const bad = (v: number | null) => v != null && !Number.isFinite(v);
+  if (bad(l.min_level) || bad(l.max_level)) problems.push(`${slug} / ${l.station_no}: threshold is not a number`);
+  else if (l.min_level != null && l.max_level != null && l.min_level >= l.max_level) {
+    problems.push(`${slug} / ${l.station_no}: min_level ${l.min_level} is not below max_level ${l.max_level}`);
+  }
+}
+// Where's the Water's ladder for a section's gauge: kept on a manual link to the same gauge.
+const wtwBand = new Map(wtw.bands.filter((b) => b.levels).map((b) => [`${b.slug}|${b.station_no}`, b]));
 const SECTION_COLS = [
   'slug', 'name', 'river', 'section_name', 'region', 'grade_text', 'grade_min', 'grade_max', 'length_text', 'time_text', 'character',
   'lat', 'lon', 'location_precision', 'put_in', 'take_out', 'ukrgb_url', 'source_updated', 'guide_text', 'source', 'release_note',
@@ -125,8 +168,22 @@ for (const e of enriched) {
   );
 
   const manual = overrides.links?.[e.slug];
-  const links = manual
-    ? manual.map((m) => ({ ...m, basis: 'manual', confidence: m.confidence ?? 'high' }))
+  const links: Array<{
+    station_no: string;
+    relation: string;
+    min_level: number | null;
+    max_level: number | null;
+    basis: string;
+    confidence: string;
+    reason: string;
+    levels?: unknown;
+    calibration_url?: string | null;
+  }> = manual
+    ? manual.map((m) => {
+        // Correcting a threshold shouldn't lose the paddler step ladder for the same gauge.
+        const b = wtwBand.get(`${e.slug}|${m.station_no}`);
+        return { ...m, basis: 'manual', confidence: m.confidence ?? 'high', levels: b?.levels ?? null, calibration_url: b?.graph_url ?? null };
+      })
     : e.links.map((l) => {
         const g = gaugeByNo.get(l.station_no);
         const curve = curveOf(l.station_no);
@@ -148,10 +205,14 @@ for (const e of enriched) {
         };
       });
   for (const l of links) {
-    if (!gaugeByNo.has(l.station_no)) continue;
+    if (!gaugeByNo.has(l.station_no)) {
+      if (l.basis === 'manual') problems.push(`${e.slug}: manual link names unknown gauge ${l.station_no}`);
+      continue;
+    }
+    checkLink(e.slug, l);
     out.push(
-      `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason) VALUES ${row([
-        e.slug, l.station_no, l.relation, l.min_level, l.max_level, l.basis, l.confidence, l.reason,
+      `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels, calibration_url) VALUES ${row([
+        e.slug, l.station_no, l.relation, l.min_level, l.max_level, l.basis, l.confidence, l.reason, l.levels ?? null, l.calibration_url ?? null,
       ])};`,
     );
     linkCount++;
@@ -187,6 +248,7 @@ for (const b of wtw.bands) {
     linkCount++;
     continue;
   }
+  checkLink(b.slug, { station_no: b.station_no, min_level: b.levels.scrape, max_level: b.levels.huge });
   out.push(
     `INSERT OR REPLACE INTO section_gauges (slug, station_no, relation, min_level, max_level, basis, confidence, reason, levels, calibration_url) VALUES ${row([
       b.slug, b.station_no, relation, b.levels.scrape, b.levels.huge, 'paddler', 'high',
@@ -200,6 +262,14 @@ for (const b of wtw.bands) {
 for (const r of wtw.releases) {
   for (const day of r.dates) out.push(`INSERT OR IGNORE INTO releases (slug, day) VALUES ${row([r.slug, day])};`);
 }
+
+for (const slug of Object.keys(overrides.sections ?? {})) {
+  if (!seedSlugs.includes(slug)) problems.push(`overrides.json: section "${slug}" does not exist`);
+}
+for (const slug of Object.keys(overrides.links ?? {})) {
+  if (!enriched.some((e) => e.slug === slug)) problems.push(`overrides.json: links for "${slug}", which is not a guidebook section`);
+}
+if (problems.length) throw new Error(`build-seed: ${problems.length} problem(s), seed not written:\n  ${problems.join('\n  ')}`);
 
 // Remove sections that are no longer in the data (their reports go with them).
 out.push(`DELETE FROM sections WHERE slug NOT IN (${seedSlugs.map(sql).join(', ')});`);

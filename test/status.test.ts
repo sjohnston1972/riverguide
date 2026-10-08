@@ -12,6 +12,14 @@ describe('sectionStatus', () => {
     expect(sectionStatus(0.9, false, 0.5, null)).toBe('runnable');
     expect(sectionStatus(2, false, null, 1.2)).toBe('high');
   });
+  it('is unknown for an inverted band or a non-finite level', () => {
+    expect(sectionStatus(0.8, false, 1.2, 0.5)).toBe('unknown');
+    expect(sectionStatus(Number.NaN, false, 0.5, 1.2)).toBe('unknown');
+  });
+  it('works for gauges that read below zero', () => {
+    expect(sectionStatus(-0.05, false, -0.1, 0.4)).toBe('runnable');
+    expect(sectionStatus(-0.2, false, -0.1, 0.4)).toBe('low');
+  });
   it('is unknown when stale, missing or unbanded', () => {
     expect(sectionStatus(0.8, true, 0.5, 1.2)).toBe('unknown');
     expect(sectionStatus(null, false, 0.5, 1.2)).toBe('unknown');
@@ -48,6 +56,14 @@ describe('linkRank / relativeToAbsolute', () => {
     const estHighProxy = linkRank({ basis: 'guide', confidence: 'high', relation: 'proxy' });
     expect(manualLow).toBeLessThan(estHigh);
     expect(estHigh).toBeLessThan(estHighProxy);
+  });
+  it('ranks by basis first: manual > community > paddler > estimate, whatever the confidence or relation', () => {
+    const worst = { confidence: 'low', relation: 'proxy' } as const;
+    const best = { confidence: 'high', relation: 'on-section' } as const;
+    const order = ['manual', 'community', 'paddler', 'duration'];
+    for (let i = 0; i < order.length - 1; i++) {
+      expect(linkRank({ basis: order[i], ...worst })).toBeLessThan(linkRank({ basis: order[i + 1], ...best }));
+    }
   });
   it('maps typical-range fractions to metres', () => {
     expect(relativeToAbsolute(0.5, 0.2, 1.2)).toBe(0.7);

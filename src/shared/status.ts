@@ -54,7 +54,8 @@ export function typicalStatus(level: number | null, low: number | null, high: nu
 }
 
 export function sectionStatus(level: number | null, stale: boolean, min: number | null, max: number | null): SectionStatus {
-  if (level == null || stale || (min == null && max == null)) return 'unknown';
+  if (level == null || !Number.isFinite(level) || stale || (min == null && max == null)) return 'unknown';
+  if (min != null && max != null && min >= max) return 'unknown'; // an inverted band can't say anything
   if (min != null && level < min) return 'low';
   if (max != null && level > max) return 'high';
   return 'runnable';
@@ -63,10 +64,16 @@ export function sectionStatus(level: number | null, stale: boolean, min: number 
 const CONFIDENCE_RANK: Record<Confidence, number> = { high: 0, medium: 1, low: 2 };
 const RELATION_RANK: Record<Relation, number> = { 'on-section': 0, upstream: 1, downstream: 1, proxy: 2 };
 
-/** Sort key for choosing a section's headline gauge: manual, community, paddler-set, then confidence and proximity of relation. */
+/** Where each band basis ranks: manual > community > paddler (Where's the Water) > estimate. */
+const BASIS_TIER: Record<string, number> = { manual: 0, community: 1, paddler: 2 };
+
+/**
+ * Sort key for choosing a section's headline gauge: basis first (manual, community, paddler-set,
+ * estimate), then confidence, then how close the gauge is. Tiers are 100 apart and confidence and
+ * relation add at most 22, so they only ever order links within a tier.
+ */
 export function linkRank(l: { basis: string; confidence: Confidence; relation: Relation }): number {
-  const basis = l.basis === 'manual' ? 0 : l.basis === 'community' ? 50 : l.basis === 'paddler' ? 70 : 100;
-  return basis + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
+  return (BASIS_TIER[l.basis] ?? 3) * 100 + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
 }
 
 /** Where a level sits on a paddler scale (each threshold is where that step starts). */

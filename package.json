@@ -18,6 +18,7 @@
     "data:enrich": "node --env-file=.env scripts/enrich.ts",
     "data:wtw": "node scripts/import-wtw.ts",
     "data:seed": "node scripts/build-seed.ts",
+    "data:all": "npm run data:gauges && npm run data:durations && npm run data:sections && npm run data:enrich && npm run data:wtw && npm run data:forecast && npm run data:seed",
     "icons": "node scripts/build-icons.ts"
   },
   "dependencies": {
