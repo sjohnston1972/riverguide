@@ -1,7 +1,7 @@
 // Community level reports: submit, vote, flag, and derive community bands.
 
 import type { Context, Hono } from 'hono';
-import { z } from 'zod';
+import { z } from 'zod/mini';
 import { BAND_RULES, type CalibrationPoint, deriveBand, evidenceOf, levelAt, VERDICTS, type Verdict } from '../shared/community.ts';
 import { ukToday } from '../shared/status.ts';
 import type { CommunityReport, CommunityReports } from '../shared/types.ts';
@@ -21,8 +21,8 @@ export const communityEnabled = (env: AppEnv) => flag(env.COMMUNITY_ENABLED) && 
 
 const NewReportBody = z.object({
   verdict: z.enum(VERDICTS),
-  paddled_at: z.string().datetime({ offset: true }),
-  note: z.string().max(1000).optional(),
+  paddled_at: z.iso.datetime({ offset: true }),
+  note: z.optional(z.string().check(z.maxLength(1000))),
 });
 const VoteBody = z.object({ vote: z.union([z.literal(1), z.literal(-1), z.literal(0)]) });
 

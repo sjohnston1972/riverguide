@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import type { PublicConfig } from '../shared/types.ts';
-import { ChatBody, chatStream } from './chat/handler.ts';
 import { getGauge, getSection, listSections } from './data.ts';
 import { type AppEnv, flag } from './env.ts';
 import {
@@ -113,6 +112,8 @@ app.post('/api/chat', async (c) => {
   const { success } = await env.CHAT_LIMITER.limit({ key: ip });
   if (!success) return c.json({ error: 'rate', message: 'Slow down a little — try again in a minute.' }, 429);
 
+  // Loaded on demand: the chat module pulls in the Anthropic SDK (most of the bundle), unused while chat is off.
+  const { ChatBody, chatStream } = await import('./chat/handler.ts');
   const parsed = ChatBody.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success || parsed.data.messages.at(-1)?.role !== 'user') {
     return c.json({ error: 'bad_request', message: 'Invalid chat request.' }, 400);
