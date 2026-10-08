@@ -33,6 +33,13 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   let loadError: string | null = null;
   /** A background refresh failed: the list still shows the last levels, and says so. */
   let refreshFailed = false;
+  /** Row elements by section, reused while filtering; new data (new objects) or a favourites change rebuilds them. */
+  let rows = new WeakMap<SectionSummary, HTMLLIElement>();
+  const rowFor = (s: SectionSummary) => {
+    let li = rows.get(s);
+    if (!li) rows.set(s, (li = row(s)));
+    return li;
+  };
   let map: SectionsMap | null = null;
   let mapLoading: Promise<void> | null = null;
   let destroyed = false;
@@ -281,7 +288,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       );
       return;
     }
-    listBody.append(h('ul', { class: 'river-list' }, shown.map(row)));
+    listBody.append(h('ul', { class: 'river-list' }, shown.map(rowFor)));
   }
 
   async function renderMap(shown: SectionSummary[]): Promise<void> {
@@ -336,6 +343,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   }, REFRESH_MS);
   // Starring in the list (or another tab) changes what the favourites filter shows.
   const onFavourites = () => {
+    rows = new WeakMap(); // stars on reused rows would be out of date
     if (filters.fav) renderResults();
   };
   document.addEventListener(FAVOURITES_EVENT, onFavourites);

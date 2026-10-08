@@ -41,6 +41,9 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
   const layer = L.layerGroup().addTo(map);
   let current: SectionSummary[] = [];
   let lastKey = '';
+  let fitTimer: number | undefined;
+  // One marker per section object, reused as filters change (new data brings new objects).
+  const markers = new WeakMap<SectionSummary, L.Marker>();
 
   const legend = new L.Control({ position: 'bottomleft' });
   legend.onAdd = () => {
@@ -62,6 +65,12 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
     const ordered = [...current].sort((a, b) => (a.status === 'runnable' ? 1 : 0) - (b.status === 'runnable' ? 1 : 0));
     for (const s of ordered) {
       if (s.lat == null || s.lon == null) continue;
+      pts.push([s.lat, s.lon]);
+      const cached = markers.get(s);
+      if (cached) {
+        cached.addTo(layer);
+        continue;
+      }
       const approx = s.location_precision === 'approx';
       const size = approx ? 16 : 18;
       const m = L.marker([s.lat, s.lon], {
@@ -78,12 +87,17 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
       // DOM content, never an HTML string: Leaflet sets string tooltips via innerHTML.
       m.bindTooltip(h('span', null, `${s.name}: ${STATUS_LABEL[s.status]}`), { direction: 'top', offset: [0, -10] });
       m.addTo(layer);
-      pts.push([s.lat, s.lon]);
+      markers.set(s, m);
     }
+    // Refit once the results settle, not on every keystroke while searching.
     const key = current.map((s) => s.slug).join(',');
     if (key !== lastKey) {
+      const first = lastKey === '';
       lastKey = key;
-      if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [24, 24], maxZoom: 11, animate: false });
+      window.clearTimeout(fitTimer);
+      fitTimer = window.setTimeout(() => {
+        if (pts.length) map.fitBounds(L.latLngBounds(pts), { padding: [24, 24], maxZoom: 11, animate: false });
+      }, first ? 0 : 400);
     }
   }
 
@@ -96,6 +110,7 @@ export function createSectionsMap(el: HTMLElement): SectionsMap {
       map.invalidateSize();
     },
     destroy() {
+      window.clearTimeout(fitTimer);
       map.remove();
     },
   };
