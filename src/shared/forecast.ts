@@ -15,9 +15,11 @@ export const RAIN_NODES = [0, 2, 5, 10, 20, 40];
 
 export interface ForecastModel {
   usable: boolean;
-  /** Mean-absolute-error improvement over "tomorrow = today" on the test period (all days, wet days). */
+  /** Mean-absolute-error improvement over "tomorrow = today" on held-out days (cross-validated; all days, wet days). */
   skill: number;
   skill_wet: number | null;
+  /** Skill on the worst of the held-out blocks (cross-validated fits only). */
+  skill_min?: number;
   days: number;
   /** Level nodes (m), ascending. */
   levels?: number[];

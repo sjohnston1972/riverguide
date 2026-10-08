@@ -8,8 +8,8 @@
 //
 // Each gauge is also tried with a fourth input, the change in daily peak since
 // the day before (5 nodes), so a river that is draining away is told apart
-// from one sitting at the same level. That version is kept only where it
-// scores better than the three-input one on the same test days.
+// from one sitting at the same level. That version is used only where it
+// scores better than the three-input one (decided on training days only).
 //
 // Tried and dropped (2026-10-07): rain today from the nearest SEPA rain gauges
 // (alone or blended with Open-Meteo). Per-gauge skill moved by noise only
@@ -18,10 +18,24 @@
 //
 // Data: three years of SEPA daily maximum levels and daily rainfall at the
 // gauge (Open-Meteo archive), both cached in data/private/.
-// Testing: the grid is built from all but the last 180 days and scored on those
-// 180 days against persistence ("tomorrow = today"). Only gauges that beat it
-// by MIN_SKILL get numeric predictions on the site; the deployed grid is then
-// rebuilt from all days.
+// Testing (nested, blocked cross-validation): the three years are cut into 5
+// contiguous blocks and each block is held out in turn, so every season (wet
+// winters as well as dry summers) is tested on days the grid hasn't seen.
+// Inside each fold the plain-vs-trend choice is made by a 2-block
+// cross-validation of that fold's training days only, so the choice never sees
+// the test block. Skill is pooled over all held-out days against persistence
+// ("tomorrow = today"). A gauge gets numeric predictions on the site only if
+// that skill is at least MIN_SKILL, it is no worse than persistence on wet
+// days, and no held-out block is worse than persistence; the deployed grid is then rebuilt from all days, with the input the
+// folds chose most often.
+//
+// 2026-10-08: this replaced a single hold-out of the last 180 days. That block
+// was the dry season, where persistence is hard to beat, so it understated
+// skill (median 0.19 vs 0.27 across all seasons): 56 more gauges qualify, none
+// lost, and the trend input survives honest selection on 21 gauges, not 41.
+//
+// Caveat: the tests use the rain that actually fell. On the site the model is
+// fed a rain forecast, so real skill is lower whenever the forecast is wrong.
 //
 // Usage: npm run data:forecast   (add -- --refresh to re-download levels)
 
@@ -29,7 +43,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { type AnalogueDay, buildAnalogueGrid, type ForecastModel, lookupChange } from '../src/shared/forecast.ts';
 import { fetchSeriesValues, parseTable, type SepaStation, KIWIS } from '../src/shared/sepa.ts';
 
-const TEST_DAYS = 180;
+const FOLDS = 5;
+const INNER_FOLDS = 2;
+/** "Wet" test days: at least this much rain the next day (mm). */
+const WET_MM = 5;
 const MIN_DAYS = 400;
 const MIN_SKILL = 0.15;
 const K = 25;
@@ -95,8 +112,70 @@ const add = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n 
 const GRID = { k: K, levelNodes: LEVEL_NODES, deltaQuantiles: DELTA_QUANTILES };
 const buildGrid = (lib: AnalogueDay[], withTrend: boolean) => buildAnalogueGrid(lib, { ...GRID, withTrend });
 
+// ---- Cross-validation ----
+/** Contiguous blocks, in date order. */
+function blocks<T>(rows: T[], n: number): T[][] {
+  const size = Math.ceil(rows.length / n);
+  return Array.from({ length: n }, (_, i) => rows.slice(i * size, (i + 1) * size)).filter((b) => b.length > 0);
+}
+
+interface Errors {
+  model: number;
+  persist: number;
+  wetModel: number;
+  wetPersist: number;
+  wetDays: number;
+}
+const noErrors = (): Errors => ({ model: 0, persist: 0, wetModel: 0, wetPersist: 0, wetDays: 0 });
+const sumErrors = (a: Errors, b: Errors): Errors => ({
+  model: a.model + b.model,
+  persist: a.persist + b.persist,
+  wetModel: a.wetModel + b.wetModel,
+  wetPersist: a.wetPersist + b.wetPersist,
+  wetDays: a.wetDays + b.wetDays,
+});
+const skillOf = (e: Errors) => (e.persist > 0 ? 1 - e.model / e.persist : 0);
+const wetSkillOf = (e: Errors) => (e.wetDays >= 10 && e.wetPersist > 0 ? 1 - e.wetModel / e.wetPersist : null);
+
+/** Absolute errors of a grid built on `train`, and of persistence, over `test`. */
+function heldOut(train: AnalogueDay[], test: AnalogueDay[], withTrend: boolean): Errors {
+  const m: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: train.length, ...buildGrid(train, withTrend) };
+  const e = noErrors();
+  for (const r of test) {
+    const err = Math.abs(r.next - (r.d + lookupChange(m, r.d, r.p0, r.p1, r.dd)[0]));
+    const per = Math.abs(r.next - r.d);
+    e.model += err;
+    e.persist += per;
+    if (r.p1 >= WET_MM) {
+      e.wetModel += err;
+      e.wetPersist += per;
+      e.wetDays++;
+    }
+  }
+  return e;
+}
+
+/** Whether the change-since-yesterday input helps, judged only on `train` (blocked CV within it). */
+function trendHelps(train: AnalogueDay[]): boolean {
+  const inner = blocks(train, INNER_FOLDS);
+  let plain = noErrors();
+  let trend = noErrors();
+  inner.forEach((test, i) => {
+    const rest = inner.filter((_, j) => j !== i).flat();
+    plain = sumErrors(plain, heldOut(rest, test, false));
+    trend = sumErrors(trend, heldOut(rest, test, true));
+  });
+  return skillOf(trend) >= skillOf(plain) + TREND_MARGIN;
+}
+
+const r3 = (v: number) => Math.round(v * 1000) / 1000;
+// The models being replaced, to report what changed.
+const previous: Record<string, ForecastModel | null> = existsSync('data/gauge-forecast.json')
+  ? (JSON.parse(readFileSync('data/gauge-forecast.json', 'utf8')) as { models: Record<string, ForecastModel | null> }).models
+  : {};
+
 const models: Record<string, ForecastModel | null> = {};
-const comparison: Array<{ station: string; name: string; plain: number; trend: number }> = [];
+const comparison: Array<{ station: string; name: string; skill: number; skill_wet: number | null; skill_min: number; trend_folds: number; usable: boolean; was_usable: boolean | null; was_skill: number | null }> = [];
 for (const g of gauges) {
   const D = levels[g.station_no];
   const P = rain[g.station_no];
@@ -115,46 +194,61 @@ for (const g of gauges) {
     models[g.station_no] = null;
     continue;
   }
-  const train = rows.slice(0, -TEST_DAYS);
-  const test = rows.slice(-TEST_DAYS);
-  const persist = test.reduce((s, r) => s + Math.abs(r.next - r.d), 0);
-  const wet = test.filter((r) => r.p1 >= 5);
-  const score = (withTrend: boolean) => {
-    const trial: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: rows.length, ...buildGrid(train, withTrend) };
-    const predict = (r: AnalogueDay) => r.d + lookupChange(trial, r.d, r.p0, r.p1, r.dd)[0];
-    const skill = persist > 0 ? 1 - test.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / persist : 0;
-    const skillWet =
-      wet.length >= 10 ? 1 - wet.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / Math.max(1e-6, wet.reduce((s, r) => s + Math.abs(r.next - r.d), 0)) : null;
-    return { skill, skillWet };
-  };
-  const plain = score(false);
-  const trend = score(true);
-  const useTrend = trend.skill >= plain.skill + TREND_MARGIN;
-  const best = useTrend ? trend : plain;
-  comparison.push({ station: g.station_no, name: g.name, plain: plain.skill, trend: trend.skill });
-  const usable = best.skill >= MIN_SKILL;
+
+  const folds = blocks(rows, FOLDS);
+  let pooled = noErrors();
+  const foldSkills: number[] = [];
+  let trendFolds = 0;
+  folds.forEach((test, i) => {
+    const train = folds.filter((_, j) => j !== i).flat();
+    const useTrend = trendHelps(train);
+    if (useTrend) trendFolds++;
+    const e = heldOut(train, test, useTrend);
+    foldSkills.push(skillOf(e));
+    pooled = sumErrors(pooled, e);
+  });
+  const skill = skillOf(pooled);
+  const skillWet = wetSkillOf(pooled);
+  // Must beat persistence overall, on wet days, and in every held-out block (no season where it is worse).
+  const usable = skill >= MIN_SKILL && (skillWet == null || skillWet >= 0) && Math.min(...foldSkills) >= 0;
+  const useTrend = trendFolds > folds.length / 2;
   models[g.station_no] = {
     usable,
-    skill: Math.round(best.skill * 1000) / 1000,
-    skill_wet: best.skillWet == null ? null : Math.round(best.skillWet * 1000) / 1000,
+    skill: r3(skill),
+    skill_wet: skillWet == null ? null : r3(skillWet),
+    skill_min: r3(Math.min(...foldSkills)),
     days: rows.length,
     ...(usable ? buildGrid(rows, useTrend) : {}),
   };
+  const was = previous[g.station_no];
+  comparison.push({
+    station: g.station_no,
+    name: g.name,
+    skill: r3(skill),
+    skill_wet: skillWet == null ? null : r3(skillWet),
+    skill_min: r3(Math.min(...foldSkills)),
+    trend_folds: trendFolds,
+    usable,
+    was_usable: was ? was.usable : null,
+    was_skill: was ? was.skill : null,
+  });
   process.stdout.write(`\rmodels ${Object.keys(models).length}/${gauges.length}   `);
 }
 
 writeFileSync('data/private/forecast-comparison.json', JSON.stringify(comparison, null, 1));
 {
-  const better = comparison.filter((c) => c.trend >= c.plain + TREND_MARGIN);
-  const worse = comparison.filter((c) => c.trend < c.plain - TREND_MARGIN);
-  const med = (v: number[]) => [...v].sort((a, b) => a - b)[Math.floor((v.length - 1) / 2)];
-  const chosen = comparison.map((c) => (c.trend >= c.plain + TREND_MARGIN ? c.trend : c.plain));
+  const med = (v: number[]) => [...v].sort((a, b) => a - b)[Math.floor((v.length - 1) / 2)] ?? NaN;
+  const nowUsable = comparison.filter((c) => c.usable);
+  const lost = comparison.filter((c) => c.was_usable && !c.usable);
+  const gained = comparison.filter((c) => c.was_usable === false && c.usable);
   console.log(
-    `\ntrend input: better on ${better.length}, worse on ${worse.length}, about the same on ${comparison.length - better.length - worse.length} of ${comparison.length} gauges; median skill ${med(comparison.map((c) => c.plain)).toFixed(3)} -> ${med(chosen).toFixed(3)}`,
+    `\ncross-validated: ${nowUsable.length} usable (was ${comparison.filter((c) => c.was_usable).length}); ` +
+      `${lost.length} no longer usable, ${gained.length} newly usable; trend input chosen on ${comparison.filter((c) => c.trend_folds > FOLDS / 2).length}; ` +
+      `median skill ${med(comparison.map((c) => c.skill)).toFixed(3)} (old single hold-out ${med(comparison.map((c) => c.was_skill ?? NaN).filter(Number.isFinite)).toFixed(3)})`,
   );
 }
 // One model per line, so a refit shows which gauges changed instead of one 1.5 MB line.
-const meta = JSON.stringify({ built: new Date().toISOString().slice(0, 10), method: 'analogue grid', k: K, test_days: TEST_DAYS, min_skill: MIN_SKILL });
+const meta = JSON.stringify({ built: new Date().toISOString().slice(0, 10), method: 'analogue grid', k: K, validation: `nested blocked CV, ${FOLDS} folds`, min_skill: MIN_SKILL });
 const modelLines = Object.entries(models).map(([no, m]) => `${JSON.stringify(no)}:${JSON.stringify(m)}`);
 writeFileSync('data/gauge-forecast.json', `${meta.slice(0, -1)},"models":{\n${modelLines.join(',\n')}\n}}\n`);
 const fitted = Object.values(models).filter(Boolean) as ForecastModel[];
