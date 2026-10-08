@@ -1,8 +1,8 @@
-// Level outlooks: computed for every gauge with a model after each poll and
-// rain refresh, stored as JSON on the gauge row so page loads stay cheap.
+// Level outlooks: computed for every gauge with a model on each poll (poll.ts)
+// and stored as JSON on the gauge row so page loads stay cheap.
 
 import { type DailyRain, direction, type ForecastModel, predictLevels } from '../shared/forecast.ts';
-import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
+import { ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, Trend } from '../shared/types.ts';
 
 export interface StoredRain extends DailyRain {
@@ -35,47 +35,4 @@ export function computeOutlook(
   const dir: GaugeOutlook['direction'] =
     wet >= 15 || (trend === 'rising' && wet >= 5) ? 'rise' : trend === 'falling' && wet < 5 ? 'fall' : wet < 2 && trend !== 'rising' ? 'fall' : 'steady';
   return { basis: 'trend', direction: dir, tomorrow: null, day_after: null, ...base };
-}
-
-const parse = <T>(v: string | null): T | null => {
-  if (!v) return null;
-  try {
-    return JSON.parse(v) as T;
-  } catch {
-    return null;
-  }
-};
-
-export async function updateOutlooks(db: D1Database): Promise<number> {
-  const { results } = await db
-    .prepare('SELECT station_no, level, level_at, level_hour_ago, level_day_ago, level_day_ago_at, trend_sepa, trend_sepa_at, forecast_model, rain FROM gauges WHERE forecast_model IS NOT NULL')
-    .all<{
-      station_no: string;
-      level: number | null;
-      level_at: string | null;
-      level_hour_ago: number | null;
-      level_day_ago: number | null;
-      level_day_ago_at: string | null;
-      trend_sepa: number | null;
-      trend_sepa_at: string | null;
-      forecast_model: string;
-      rain: string | null;
-    }>();
-  const now = Date.now();
-  const stmts = results.map((r) => {
-    const o =
-      r.level == null || isStale(r.level_at, now)
-        ? null
-        : computeOutlook(
-            r.level,
-            gaugeTrend(r.level, r.level_hour_ago, r.level_at, r.trend_sepa, r.trend_sepa_at),
-            parse<ForecastModel>(r.forecast_model),
-            parse<StoredRain>(r.rain),
-            now,
-            dayChange(r.level, r.level_at, r.level_day_ago, r.level_day_ago_at),
-          );
-    return db.prepare('UPDATE gauges SET outlook = ? WHERE station_no = ?').bind(o ? JSON.stringify(o) : null, r.station_no);
-  });
-  if (stmts.length) await db.batch(stmts);
-  return stmts.length;
 }
