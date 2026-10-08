@@ -325,6 +325,11 @@ button {
   display: block;
 }
 
+/* The logo never gives way; on a very narrow screen with large text the nav scrolls sideways instead. */
+.brand {
+  flex-shrink: 0;
+}
+
 /* Light-background logo by default; the dark-background version follows the theme. */
 .brand .brand-dark {
   display: none;
@@ -355,10 +360,18 @@ button {
 .site-nav {
   display: flex;
   gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-link {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   min-height: 44px;
   padding: 0 10px;
@@ -416,7 +429,7 @@ button {
   margin-top: 8px;
 }
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
   .brand span {
     display: none;
   }
@@ -951,7 +964,8 @@ button {
 
 .row-name {
   font: 600 1.15rem/1.2 var(--font-display);
-  overflow-wrap: anywhere;
+  /* Break inside a word only when it can't fit on a line at all ('anywhere' let the grid squeeze the name column). */
+  overflow-wrap: break-word;
 }
 
 .row-meta {
@@ -3075,6 +3089,15 @@ button {
   .nav-about {
     display: none;
   }
+
+  .nav-link {
+    padding: 0 4px;
+    font-size: 0.95rem;
+  }
+
+  .header-inner {
+    gap: 4px;
+  }
 }
 
 /* Filter chips (Releases by river, Falls of Lora by date). Wrap on wide screens, scroll sideways on phones. */
@@ -3548,15 +3571,27 @@ button {
   min-width: 0;
 }
 
+/* Phones: name and meta get the full width; status, step and level go on a line beneath,
+   with the level at the right edge so the levels still read as a column. */
 @media (max-width: 599px) {
-  .row-side {
-    max-width: 58vw;
+  .river-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
   }
 
-  .river-row .tomorrow-tag,
-  .river-row .release-tag {
-    white-space: normal;
-    text-align: right;
+  .row-side {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+  }
+
+  .row-status {
+    justify-content: flex-start;
+  }
+
+  .row-side .lvl {
+    margin-left: auto;
   }
 }
 

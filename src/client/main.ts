@@ -149,6 +149,9 @@ function render(route: Route, nav: { pop: boolean }): void {
       (name === 'lora' && route.name === 'river' && route.slug === 'falls-of-lora-tidal-rapid');
     if (active) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
+    // On a narrow screen with large text the nav can scroll sideways: keep the current page's link in view.
+    const nav = a.parentElement;
+    if (active && nav && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, a.offsetLeft + a.offsetWidth - nav.clientWidth);
   }
   document.dispatchEvent(new CustomEvent('rg:navigate'));
 
