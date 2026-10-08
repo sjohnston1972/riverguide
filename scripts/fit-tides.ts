@@ -7,6 +7,7 @@
 //
 // Raw readings are cached in data/private/oban-tide/ (one file per year).
 
+import { KIWIS } from '../src/shared/sepa.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basis, CONSTITUENTS, predict, type TideModel, turningPoints } from '../src/shared/tides.ts';
 
@@ -14,12 +15,12 @@ const TS_ID = '60216010'; // Oban Tidal, 15minute TideLVL
 const HW_TS = '60223010'; // HighWater
 const LW_TS = '60230010'; // LowWater
 const CACHE = 'data/private/oban-tide';
-const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0&request=getTimeseriesValues&format=json';
+const VALUES = `${KIWIS}&request=getTimeseriesValues&format=json`;
 
 type Obs = Array<[number, number]>;
 
 async function fetchSeries(ts: string, from: string, to: string): Promise<Obs> {
-  const res = await fetch(`${KIWIS}&ts_id=${ts}&from=${from}&to=${to}`);
+  const res = await fetch(`${VALUES}&ts_id=${ts}&from=${from}&to=${to}`);
   if (!res.ok) throw new Error(`SEPA ${res.status}`);
   const j = (await res.json()) as Array<{ data: Array<[string, number | null]> }>;
   return j[0].data.filter((d): d is [string, number] => d[1] != null).map(([t, v]) => [Date.parse(t), v]);

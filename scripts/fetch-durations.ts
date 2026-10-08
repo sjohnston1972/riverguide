@@ -4,9 +4,8 @@
 
 import { writeFileSync } from 'node:fs';
 import { buildCurve, type DurationCurve } from '../src/shared/duration.ts';
-import { fetchSeriesValues, parseTable } from '../src/shared/sepa.ts';
+import { fetchSeriesValues, parseTable, KIWIS } from '../src/shared/sepa.ts';
 
-const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0';
 const PERIOD = 'P3Y';
 const BATCH = 25;
 

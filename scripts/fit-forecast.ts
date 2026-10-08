@@ -27,9 +27,8 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { type ForecastModel, gridIndex, lookupChange, RAIN_NODES } from '../src/shared/forecast.ts';
-import { fetchSeriesValues, parseTable, type SepaStation } from '../src/shared/sepa.ts';
+import { fetchSeriesValues, parseTable, type SepaStation, KIWIS } from '../src/shared/sepa.ts';
 
-const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0';
 const TEST_DAYS = 180;
 const MIN_DAYS = 400;
 const MIN_SKILL = 0.15;

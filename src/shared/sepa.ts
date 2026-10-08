@@ -3,7 +3,8 @@
 
 import { UpstreamError } from './upstream.ts';
 
-const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0';
+/** SEPA's KiWIS query endpoint (also used by the data scripts). */
+export const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0';
 
 export interface SepaStation {
   station_no: string;

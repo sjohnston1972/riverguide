@@ -38,10 +38,13 @@ export class TurnstileWidget {
   private id: string | null = null;
   private pending: { resolve: (t: string) => void; reject: (e: Error) => void } | null = null;
 
-  constructor(
-    private readonly el: HTMLElement,
-    private readonly siteKey: string,
-  ) {}
+  private readonly el: HTMLElement;
+  private readonly siteKey: string;
+
+  constructor(el: HTMLElement, siteKey: string) {
+    this.el = el;
+    this.siteKey = siteKey;
+  }
 
   async token(): Promise<string> {
     const ts = await load();

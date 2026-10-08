@@ -14,12 +14,12 @@ import type {
 } from '../shared/types.ts';
 
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-    readonly code?: string,
-  ) {
+  readonly status: number;
+  readonly code?: string;
+  constructor(status: number, message: string, code?: string) {
     super(message);
+    this.status = status;
+    this.code = code;
   }
 }
 
