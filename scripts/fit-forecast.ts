@@ -26,7 +26,7 @@
 // Usage: npm run data:forecast   (add -- --refresh to re-download levels)
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { type ForecastModel, gridIndex, lookupChange, RAIN_NODES } from '../src/shared/forecast.ts';
+import { type AnalogueDay, buildAnalogueGrid, type ForecastModel, lookupChange } from '../src/shared/forecast.ts';
 import { fetchSeriesValues, parseTable, type SepaStation, KIWIS } from '../src/shared/sepa.ts';
 
 const TEST_DAYS = 180;
@@ -90,61 +90,10 @@ for (let i = 0; i < needRain.length; i += 10) {
   process.stdout.write(`\rrain ${Math.min(i + 10, needRain.length)}/${needRain.length}   `);
 }
 
-// ---- Analogue model ----
-type Day = { d: number; next: number; p0: number; p1: number; dd: number };
+// ---- Analogue model (grid building and scoring live in src/shared/forecast.ts) ----
 const add = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400_000).toISOString().slice(0, 10);
-const pct = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
-const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
-
-/** Strictly increasing nodes at the given quantiles of the values. */
-function nodesAt(values: number[], qs: number[]): number[] {
-  const v = [...values].sort((a, b) => a - b);
-  const out = qs.map((q) => r4(pct(v, q)));
-  for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1]) out[i] = r4(out[i - 1] + 0.001);
-  return out;
-}
-
-function buildGrid(lib: Day[], withTrend: boolean): Pick<ForecastModel, 'levels' | 'deltas' | 'med' | 'p10' | 'p90'> {
-  const ds = lib.map((r) => r.d).sort((a, b) => a - b);
-  const spread = Math.max(0.05, pct(ds, 0.95) - pct(ds, 0.05));
-  const lvl = nodesAt(ds, Array.from({ length: LEVEL_NODES }, (_, i) => 0.02 + (0.96 * i) / (LEVEL_NODES - 1)));
-  const dds = lib.map((r) => r.dd).sort((a, b) => a - b);
-  const dSpread = Math.max(0.02, pct(dds, 0.95) - pct(dds, 0.05));
-  const deltas = withTrend ? nodesAt(dds, DELTA_QUANTILES) : [0];
-  const nd = deltas.length;
-  const n = LEVEL_NODES * nd * RAIN_NODES.length * RAIN_NODES.length;
-  const med = Array(n).fill(0);
-  const p10 = Array(n).fill(0);
-  const p90 = Array(n).fill(0);
-  const scored = lib.map((t) => ({ t, s: 0 }));
-  lvl.forEach((L, li) =>
-    deltas.forEach((dn, di) =>
-      RAIN_NODES.forEach((a, ai) =>
-        RAIN_NODES.forEach((b, bi) => {
-          for (const x of scored) {
-            const t = x.t;
-            x.s =
-              ((t.d - L) / spread) ** 2 +
-              ((Math.sqrt(t.p1) - Math.sqrt(b)) / 2) ** 2 +
-              ((Math.sqrt(t.p0) - Math.sqrt(a)) / 3) ** 2 +
-              (withTrend ? ((t.dd - dn) / dSpread) ** 2 : 0);
-          }
-          const near = scored
-            .slice()
-            .sort((x, y) => x.s - y.s)
-            .slice(0, K)
-            .map((x) => x.t.next - x.t.d)
-            .sort((x, y) => x - y);
-          const idx = gridIndex(li, ai, bi, di, nd);
-          med[idx] = r4(pct(near, 0.5));
-          p10[idx] = r4(pct(near, 0.1));
-          p90[idx] = r4(pct(near, 0.9));
-        }),
-      ),
-    ),
-  );
-  return withTrend ? { levels: lvl, deltas, med, p10, p90 } : { levels: lvl, med, p10, p90 };
-}
+const GRID = { k: K, levelNodes: LEVEL_NODES, deltaQuantiles: DELTA_QUANTILES };
+const buildGrid = (lib: AnalogueDay[], withTrend: boolean) => buildAnalogueGrid(lib, { ...GRID, withTrend });
 
 const models: Record<string, ForecastModel | null> = {};
 const comparison: Array<{ station: string; name: string; plain: number; trend: number }> = [];
@@ -155,7 +104,7 @@ for (const g of gauges) {
     models[g.station_no] = null;
     continue;
   }
-  const rows: Day[] = [];
+  const rows: AnalogueDay[] = [];
   for (const day of Object.keys(D).sort()) {
     const nx = add(day, 1);
     const pv = add(day, -1);
@@ -172,7 +121,7 @@ for (const g of gauges) {
   const wet = test.filter((r) => r.p1 >= 5);
   const score = (withTrend: boolean) => {
     const trial: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: rows.length, ...buildGrid(train, withTrend) };
-    const predict = (r: Day) => r.d + lookupChange(trial, r.d, r.p0, r.p1, r.dd)[0];
+    const predict = (r: AnalogueDay) => r.d + lookupChange(trial, r.d, r.p0, r.p1, r.dd)[0];
     const skill = persist > 0 ? 1 - test.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / persist : 0;
     const skillWet =
       wet.length >= 10 ? 1 - wet.reduce((s, r) => s + Math.abs(r.next - predict(r)), 0) / Math.max(1e-6, wet.reduce((s, r) => s + Math.abs(r.next - r.d), 0)) : null;

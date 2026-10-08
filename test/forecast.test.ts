@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { direction, type ForecastModel, gridIndex, lookupChange, predictLevels, RAIN_NODES } from '../src/shared/forecast.ts';
+import { type AnalogueDay, buildAnalogueGrid, direction, type ForecastModel, gridIndex, lookupChange, nodesAt, predictLevels, RAIN_NODES } from '../src/shared/forecast.ts';
 
 // Synthetic gauge: level nodes 0.2..1.6 m; next-day change = 0.05 per mm of rain tomorrow (capped by the grid),
 // minus a recession of 10% of the level; range ±0.1 m.
@@ -106,5 +106,46 @@ describe('trend-aware models', () => {
 
   it('plain models ignore the trend', () => {
     expect(lookupChange(model, 1.0, 0, 0, -0.2)[0]).toBeCloseTo(lookupChange(model, 1.0, 0, 0, 0)[0], 9);
+  });
+});
+
+describe('nodesAt', () => {
+  it('places nodes at quantiles and keeps them strictly increasing', () => {
+    expect(nodesAt([0.1, 0.2, 0.3, 0.4, 0.5], [0, 0.5, 1])).toEqual([0.1, 0.3, 0.5]);
+    const flat = nodesAt([0.2, 0.2, 0.2, 0.2], [0.1, 0.5, 0.9]);
+    expect(flat[1]).toBeGreaterThan(flat[0]);
+    expect(flat[2]).toBeGreaterThan(flat[1]);
+  });
+});
+
+describe('buildAnalogueGrid', () => {
+  // Synthetic gauge: recedes 10% a day, rises 1 cm per mm of rain tomorrow.
+  let seed = 1;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const lib: AnalogueDay[] = Array.from({ length: 600 }, () => {
+    const d = 0.2 + rand() * 1.4;
+    const p0 = rand() < 0.5 ? 0 : rand() * 30;
+    const p1 = rand() < 0.5 ? 0 : rand() * 30;
+    return { d, p0, p1, dd: (rand() - 0.5) * 0.2, next: d * 0.9 + 0.01 * p1 };
+  });
+  const opts = { k: 25, levelNodes: 8, deltaQuantiles: [0.03, 0.2, 0.5, 0.8, 0.97], withTrend: false };
+
+  it('learns recession when dry and a rise with rain, with p10 <= median <= p90', () => {
+    const g = buildAnalogueGrid(lib, opts);
+    const m: ForecastModel = { usable: true, skill: 0, skill_wet: null, days: lib.length, ...g };
+    expect(g.levels).toHaveLength(8);
+    expect(lookupChange(m, 1.2, 0, 0)[0]).toBeLessThan(-0.05);
+    expect(lookupChange(m, 1.2, 0, 20)[0]).toBeGreaterThan(lookupChange(m, 1.2, 0, 0)[0] + 0.1);
+    g.med!.forEach((v, i) => {
+      expect(g.p10![i]).toBeLessThanOrEqual(v);
+      expect(g.p90![i]).toBeGreaterThanOrEqual(v);
+    });
+  });
+
+  it('adds the change-since-yesterday dimension only when asked', () => {
+    expect(buildAnalogueGrid(lib, opts).deltas).toBeUndefined();
+    const t = buildAnalogueGrid(lib, { ...opts, withTrend: true });
+    expect(t.deltas).toHaveLength(5);
+    expect(t.med).toHaveLength(8 * 5 * RAIN_NODES.length * RAIN_NODES.length);
   });
 });
