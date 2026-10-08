@@ -9,6 +9,8 @@ export interface GraphOptions {
   min?: number | null;
   max?: number | null;
   height?: number;
+  /** Size the plot to the container's height (which must be set by the layout), following it as it changes. */
+  fill?: boolean;
 }
 
 export interface LevelGraph {
@@ -52,6 +54,13 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
   const min = opts.min ?? null;
   const max = opts.max ?? null;
   let plot: uPlot | null = null;
+  /** Plot height: fixed, or what the container leaves after everything else uPlot draws (the legend). */
+  const plotHeight = () => {
+    if (!opts.fill) return opts.height ?? 220;
+    const p = plot as uPlot | null;
+    const extra = p ? Math.max(0, p.root.scrollHeight - p.height) : 32;
+    return Math.max(110, el.clientHeight - extra - 6);
+  };
 
   function build(): void {
     plot?.destroy();
@@ -100,7 +109,7 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
 
     const options: uPlot.Options = {
       width: Math.max(260, el.clientWidth),
-      height: opts.height ?? 220,
+      height: plotHeight(),
       padding: [14, 10, 0, 0],
       cursor: { drag: { x: false, y: false, setScale: false }, points: { size: 8 } },
       legend: { show: true, live: true },
@@ -176,9 +185,13 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
   }
 
   build();
+  const built = plot as uPlot | null; // assigned by build()
+  if (opts.fill && built) built.setSize({ width: built.width, height: plotHeight() }); // the legend exists now
   const ro = new ResizeObserver(() => {
+    if (!plot) return;
     const w = Math.max(260, el.clientWidth);
-    if (plot && Math.abs(plot.width - w) > 2) plot.setSize({ width: w, height: plot.height });
+    const hgt = opts.fill ? plotHeight() : plot.height;
+    if (Math.abs(plot.width - w) > 2 || Math.abs(plot.height - hgt) > 2) plot.setSize({ width: w, height: hgt });
   });
   ro.observe(el);
   const onTheme = () => build();

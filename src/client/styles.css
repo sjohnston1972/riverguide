@@ -1179,12 +1179,18 @@ button {
   gap: 20px;
 }
 
-.col-main,
+.col-now,
+.col-mid,
 .col-side {
   display: grid;
   gap: 20px;
   align-content: start;
   min-width: 0;
+}
+
+/* Wraps the reports and side columns; only the one-screen layout gives it a box. */
+.col-tiles {
+  display: contents;
 }
 
 .status-hero {
@@ -1370,8 +1376,11 @@ button {
 .now-graph {
   display: grid;
   gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule);
+  padding: 14px 16px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  min-width: 0;
 }
 
 .now-graph-head {
@@ -1386,7 +1395,7 @@ button {
   font-size: 1.05rem;
 }
 
-.now-card .graph-area {
+.now-graph .graph-area {
   min-height: 200px;
   padding: 0;
   border: 0;
@@ -1414,7 +1423,8 @@ button {
   }
 
   .river-grid,
-  .col-main,
+  .col-now,
+  .col-mid,
   .col-side {
     gap: 16px;
   }
@@ -2347,8 +2357,19 @@ button {
 
   .river-grid {
     grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 32px;
+    grid-template-rows: auto 1fr;
+    gap: 20px 32px;
     align-items: start;
+  }
+
+  .col-now,
+  .col-mid {
+    grid-column: 1;
+  }
+
+  .col-side {
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 
   .status-hero {
@@ -3246,10 +3267,11 @@ button {
 
   .river-grid {
     grid-template-columns: minmax(0, 1fr) 400px;
-    gap: 56px;
+    gap: 36px 56px;
   }
 
-  .col-main,
+  .col-now,
+  .col-mid,
   .col-side {
     gap: 36px;
   }
@@ -3618,4 +3640,347 @@ button {
 .river-pin:focus-visible {
   outline: 3px solid var(--loch);
   outline-offset: 2px;
+}
+
+/* ---------- Wide desktops: the river page on one screen ----------
+   Layout C: the river now (status card, then the level history filling the height) on the left;
+   weather, access, nearby gauges and reports as a 2x2 grid of tiles on the right; releases and
+   guidebook notes, when a section has them, as a full-width row under the tiles. A tile whose
+   content is longer than its share (a long reports list) scrolls inside the tile; the page itself
+   doesn't scroll. The media query is mirrored in pages/river.ts (ONE_SCREEN). */
+@media (min-width: 1280px) and (min-height: 720px) {
+  /* Scaling to fit (pages/river.ts) measures right after it sets zoom, so zoom must never transition
+     (the reduced-motion rule otherwise gives every property a 0.01 ms transition). */
+  .river-dash .river-page {
+    transition: none !important;
+  }
+
+  /* Header and footer span the full width, like the page. */
+  .river-dash .site-header .wrap,
+  .river-dash .site-footer .wrap {
+    max-width: none;
+    padding-inline: 24px;
+  }
+
+  .river-dash #root {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .river-dash .site-main {
+    flex: 1 1 0;
+    min-height: 0;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-dash .river-page {
+    max-width: none;
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-inline: 24px;
+  }
+
+  /* Back link, title, star and region on one line. */
+  .river-dash .river-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 0;
+    padding: 2px 0 8px;
+  }
+
+  .river-dash .river-head .back-link {
+    min-height: 32px;
+  }
+
+  .river-dash .river-title {
+    font-size: 1.65rem;
+  }
+
+  .river-dash .river-sub,
+  .river-dash .river-source {
+    margin: 0;
+  }
+
+  .river-dash .river-body {
+    flex: 1 1 0;
+    min-height: 0;
+    padding-bottom: 12px;
+  }
+
+  .river-dash .river-grid {
+    height: 100%;
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 2fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  /* Right: the tiles in two columns, in the order river.ts sets; rows share the height. */
+  .river-dash .col-tiles {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .river-dash .col-mid,
+  .river-dash .col-side {
+    display: contents;
+  }
+
+  .river-dash .tile-wide {
+    grid-column: 1 / -1;
+  }
+
+  /* Left: the river now. The status card takes what it needs; the level history fills the rest. */
+  .river-dash .col-now {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    /* Last resort, when even the smallest scale doesn't fit: this column scrolls, not the page. */
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .river-dash .col-now > .now-card {
+    flex: none;
+  }
+
+  .river-dash .col-now > .now-graph {
+    flex: 1 1 0;
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px 12px;
+  }
+
+  .river-dash .now-graph .graph-area {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  /* Dam releases or tides, under the level history: a short list that scrolls in place. */
+  .river-dash .col-now > .releases {
+    flex: 0 1 auto;
+    max-height: 34%;
+    min-height: 120px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    scrollbar-width: thin;
+  }
+
+  /* Tighter status card. */
+  .river-dash .now-card > .status-hero {
+    --hero-py: 12px;
+    --hero-px: 16px;
+    gap: 8px 14px;
+  }
+
+  /* Pills, then the basis note on the same line when it fits. */
+  .river-dash .hero-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  .river-dash .hero-details {
+    padding-block: 8px;
+    margin-top: 0;
+  }
+
+  .river-dash .now-body {
+    gap: 10px;
+    padding: 12px 16px 14px;
+  }
+
+  /* The reading beside the outlook; everything else full width. */
+  .river-dash .gauge-panel {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: start;
+  }
+
+  .river-dash .gauge-panel > * {
+    grid-column: 1 / -1;
+  }
+
+  .river-dash .gauge-panel > .hero-reading {
+    grid-column: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 11em;
+  }
+
+  .river-dash .gauge-panel > .outlook {
+    grid-column: 2;
+  }
+
+  .river-dash .bandbar {
+    padding-top: 24px;
+  }
+
+  .river-dash .bandbar.has-forecast {
+    padding-top: 50px;
+  }
+
+  .river-dash .hero-reading .lvl {
+    font-size: 2.4rem;
+  }
+
+  .river-dash .outlook {
+    padding: 8px 10px;
+    font-size: 0.88rem;
+  }
+
+  .river-dash .bandbar-wrap {
+    gap: 10px;
+  }
+
+  .river-dash .bb-scale {
+    margin-top: 8px;
+    height: 18px;
+    font-size: 0.78rem;
+  }
+
+  .river-dash .bb-key {
+    font-size: 0.8rem;
+  }
+
+  .river-dash .step-ladder {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .river-dash .step-chip {
+    padding: 6px 7px 5px;
+    border-top-width: 4px;
+  }
+
+  /* Room under the chips for the "Tomorrow" tag, which hangs off the bottom edge. */
+  .river-dash .step-ladder:has(.step-chip-next) .step-chip {
+    padding-bottom: 13px;
+  }
+
+  .river-dash .step-ladder:has(.step-chip-next) {
+    margin-bottom: 6px;
+  }
+
+  .river-dash .step-chip-name {
+    font-size: 0.85rem;
+  }
+
+  .river-dash .step-chip-range {
+    font-size: 0.76rem;
+  }
+
+  /* Gauge facts two to a row. */
+  .river-dash .gauge-facts {
+    grid-template-columns: max-content minmax(0, 1fr) max-content minmax(0, 1fr);
+    gap: 2px 12px;
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .river-dash .now-card .reason {
+    font-size: 0.84rem;
+  }
+
+  /* Right: the tiles. */
+  .river-dash .col-mid > *,
+  .river-dash .col-side > * {
+    min-height: 0;
+    min-width: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    scrollbar-width: thin;
+  }
+
+
+  .river-dash .col-mid h2,
+  .river-dash .col-side h2 {
+    font-size: 1.05rem;
+  }
+
+  .river-dash .rain-stats {
+    flex: none;
+  }
+
+  .river-dash .rc-plot {
+    height: 64px;
+    margin-bottom: 18px;
+  }
+
+  .river-dash .rain-chart {
+    gap: 6px;
+  }
+
+  .river-dash .weather .source,
+  .river-dash .weather .wx-line {
+    font-size: 0.8rem;
+  }
+
+  .river-dash .rc-summary {
+    font-size: 0.85rem;
+  }
+
+  /* The map takes the tile's spare height. */
+  .river-dash .places-block .mini-map {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 110px;
+  }
+
+  .river-dash .places,
+  .river-dash .places-block .precision {
+    flex: none;
+  }
+
+  .river-dash .nearby {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .river-dash .nearby-item {
+    padding: 7px 0;
+  }
+
+  /* One compact footer: the credits stay, run together as one paragraph. */
+  .river-dash .site-footer {
+    padding: 5px 0 6px;
+    font-size: 0.7rem;
+    line-height: 1.35;
+  }
+
+  .river-dash .site-footer p {
+    display: inline;
+  }
+
+  .river-dash .site-footer p + p {
+    margin: 0 0 0 0.6em;
+  }
 }
