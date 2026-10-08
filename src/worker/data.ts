@@ -1,6 +1,7 @@
 // D1 access: rows -> API objects, with statuses computed from the latest readings.
 
 import { distanceKm } from '../shared/geo.ts';
+import { parseJson } from '../shared/json.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
 import { gaugeTrend, isStale, linkRank, paddlerStep, sectionStatus, typicalStatus, ukToday } from '../shared/status.ts';
 import { damSchedule, releasingToday, sectionEbbs } from './schedules.ts';
@@ -233,14 +234,6 @@ export async function listSections(db: D1Database): Promise<SectionSummary[]> {
   return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? [], releasing.has(s.slug)));
 }
 
-function parseJson<T>(v: string | null): T | null {
-  if (!v) return null;
-  try {
-    return JSON.parse(v) as T;
-  } catch {
-    return null;
-  }
-}
 
 export interface DetailWithGuide {
   detail: SectionDetail;

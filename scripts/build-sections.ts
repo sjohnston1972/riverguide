@@ -3,6 +3,7 @@
 // grouped for the enrichment step. Output contains guide text, so it stays
 // in data/private/ (gitignored).
 
+import { inScotland } from '../src/shared/geo.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { findGridRefs, gridRefToLatLon } from '../src/shared/osgrid.ts';
 
@@ -70,7 +71,7 @@ const out: RawSection[] = rows.map((r) => {
   const allText = [r.where_is_it, r.put_in_take_outs, r.general_description, r.other_notes, r.access_hassles].join('\n');
   const refs = [...new Set(findGridRefs(allText))]
     .map((ref) => ({ ref, ...gridRefToLatLon(ref)! }))
-    .filter((g) => g.lat != null && g.lat > 54.6 && g.lat < 60.9);
+    .filter((g) => g.lat != null && inScotland(g));
 
   const updated = Date.parse(r.last_updated);
   return {

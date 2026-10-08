@@ -8,6 +8,7 @@
 //                           new sections and release dates (also CC BY-SA 4.0)
 // Review data/wtw-import.json, then run `npm run data:seed`.
 
+import type { PaddlerLevels } from '../src/shared/types.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { distanceKm } from '../src/shared/geo.ts';
 import type { SepaStation } from '../src/shared/sepa.ts';
@@ -58,14 +59,7 @@ interface OurSection {
   ukrgb_url: string;
 }
 
-export interface Levels {
-  scrape: number;
-  low: number;
-  medium: number;
-  high: number;
-  very_high: number;
-  huge: number;
-}
+export type Levels = PaddlerLevels;
 export interface NewSection {
   slug: string;
   name: string;

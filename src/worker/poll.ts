@@ -1,6 +1,7 @@
 // Scheduled jobs: latest readings for every gauge (15 min) and gauge metadata (daily).
 
 import type { ForecastModel } from '../shared/forecast.ts';
+import { parseJson } from '../shared/json.ts';
 import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, fetchSeriesWindow, latestAndHourAgo } from '../shared/sepa.ts';
 import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, LevelHistory } from '../shared/types.ts';
@@ -45,14 +46,7 @@ type Written = Pick<
   'level' | 'level_at' | 'level_hour_ago' | 'level_day_ago' | 'level_day_ago_at' | 'trend_sepa' | 'trend_sepa_at' | 'rain' | 'outlook'
 >;
 
-const parse = <T>(v: string | null): T | null => {
-  if (!v) return null;
-  try {
-    return JSON.parse(v) as T;
-  } catch {
-    return null;
-  }
-};
+const parse = parseJson;
 
 /** True when a gauge's stored rain is missing, from an earlier UK day, or due a refresh. */
 export function rainIsDue(rain: string | null, now: Date): boolean {
