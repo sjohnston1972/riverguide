@@ -30,6 +30,9 @@ import {
 } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 
+/** The API's plain message when SEPA or Open-Meteo is down ("SEPA isn't responding just now..."). */
+const upstreamMessage = (e: unknown): string | null => (e instanceof ApiError && e.code === 'upstream' ? e.message : null);
+
 const PERIODS: [string, string][] = [
   ['P2D', '2 days'],
   ['P7D', '7 days'],
@@ -231,7 +234,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level });
       } catch (e) {
         if (destroyed || my !== seq || (e instanceof DOMException && e.name === 'AbortError')) return;
-        graphArea.replaceChildren(errorBox("Couldn't load the level history.", () => void draw()));
+        graphArea.replaceChildren(errorBox(upstreamMessage(e) ?? "Couldn't load the level history.", () => void draw()));
       }
     }
 
@@ -470,7 +473,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         if (!destroyed) box.replaceChildren(...weatherBody(w));
       } catch (e) {
         if (destroyed || (e instanceof DOMException && e.name === 'AbortError')) return;
-        box.replaceChildren(errorBox("Couldn't load the forecast.", () => void run()));
+        box.replaceChildren(errorBox(upstreamMessage(e) ?? "Couldn't load the forecast.", () => void run()));
       }
     };
     void run();
