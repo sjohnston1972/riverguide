@@ -60,7 +60,7 @@ Precedence: **manual > community > paddler (Where's the Water) > estimate**.
 
 On each river page, under "Paddled it?", anyone can say how a section was: **too low · scrapy · good · pushy · too high**, plus a day, a time of day and an optional note. The Worker records the headline gauge's level at that time from SEPA history. Other people can respond with 👍 "Same for me" (adds weight) or 👎 "Not for me".
 
-- **Community band.** Once a section has at least 5 reports from 3 people (distinct hashed IPs) on 2 different days, `src/shared/community.ts` sets the lower threshold where reports change from too low to runnable, and the upper threshold where they change from runnable to too high. A side with no evidence keeps the estimate. One-sided evidence can only move a threshold in the direction it supports. The band is stored in `community_bands` and overrides estimates, but never manual bands (precedence: manual > community > estimate). It shows as "community" in the list.
+- **Community band.** Once a section has at least 5 reports from 3 people (distinct hashed IPs) on 2 different days, `src/shared/community.ts` sets the lower threshold where reports change from too low to runnable, and the upper threshold where they change from runnable to too high. A side with no evidence keeps the estimate. One-sided evidence can only move a threshold in the direction it supports. The band is stored in `community_bands` and overrides paddler levels and estimates, but never manual bands (see the precedence above). It shows as "community" in the list.
 - **Disputed reports** stop counting when 3 or more people disagree and disagreements outnumber agreements.
 - **Abuse controls.**
   - One Turnstile check per device, which issues a signed 1-year `rg_dev` cookie.

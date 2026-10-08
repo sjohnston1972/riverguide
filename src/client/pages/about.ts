@@ -42,7 +42,7 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, statusPill('high'), ' Above the level where it becomes too high, for its usual grade or at all.'),
         h('li', null, statusPill('unknown'), ' No band for this gauge, no gauge, or the reading is more than three hours old.'),
       ),
-      h('p', null, 'Rising, falling and steady compare the latest reading with the one an hour earlier. River pages also show how often the current level is reached, from three years of SEPA readings.'),
+      h('p', null, 'Rising, falling and steady are SEPA’s own indicator for the gauge, or, when that isn’t current, the change since an hour earlier. River pages also show how often the current level is reached, from three years of SEPA readings.'),
 
       h('h2', null, 'Where the paddling bands come from'),
       h('p', null, 'Every river page says where its band came from. When a section has more than one, the first in this list wins:'),

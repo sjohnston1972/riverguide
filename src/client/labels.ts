@@ -91,12 +91,6 @@ export function clockTime(iso: string, now = Date.now()): string {
   return day(d) === day(new Date(now)) ? time : `${d.toLocaleDateString('en-GB', { ...tz, weekday: 'short' })} ${time}`;
 }
 
-export function formatDate(s: string | null): string | null {
-  if (!s) return null;
-  const t = Date.parse(s.length === 10 ? `${s}T12:00:00Z` : s);
-  if (Number.isNaN(t)) return s;
-  return new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-}
 
 /** Lower-case, accents and punctuation removed, for forgiving search. */
 export function normalize(s: string): string {
