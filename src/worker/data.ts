@@ -162,7 +162,7 @@ async function communityBands(db: D1Database, slug?: string): Promise<Map<string
   return new Map(results.map((b) => [`${b.slug}|${b.station_no}`, b]));
 }
 
-function headline(links: SectionGaugeLink[]): {
+export function headline(links: SectionGaugeLink[]): {
   status: SectionSummary['status'];
   status_basis: StatusBasis;
   link: SectionGaugeLink | null;
