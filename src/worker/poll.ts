@@ -78,7 +78,6 @@ export async function refreshRisingFallingIds(db: D1Database): Promise<number> {
   const ids = await fetchRisingFallingIds();
   const stmts = [...ids].map(([station, ts]) => db.prepare('UPDATE gauges SET rf_ts_id = ? WHERE station_no = ?').bind(ts, station));
   if (stmts.length) await db.batch(stmts);
-  await refreshRisingFallingIds(db).catch((e) => console.error('SEPA rising/falling ids failed', e));
   return stmts.length;
 }
 

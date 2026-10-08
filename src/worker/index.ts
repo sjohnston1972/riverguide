@@ -15,7 +15,7 @@ import {
   verifySession,
   verifyTurnstile,
 } from './guard.ts';
-import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRain } from './poll.ts';
+import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRain, refreshRisingFallingIds } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { refreshFreshets } from './freshets.ts';
 import { loraOverview, releasesOverview } from './schedules.ts';
@@ -138,7 +138,13 @@ export default {
   async scheduled(event, env, ctx) {
     configureSepa(env);
     if (event.cron === '0 3 * * *') {
-      ctx.waitUntil(refreshGaugeMetadata(env.DB).then((n) => console.log(`gauge metadata refreshed: ${n}`)));
+      // Metadata first, so gauges new to SEPA also get their rising/falling series id.
+      ctx.waitUntil(
+        (async () => {
+          console.log(`gauge metadata refreshed: ${await refreshGaugeMetadata(env.DB)}`);
+          console.log(`SEPA rising/falling ids refreshed: ${await refreshRisingFallingIds(env.DB)}`);
+        })().catch((e) => console.error('gauge metadata refresh failed', e)),
+      );
       ctx.waitUntil(refreshFreshets(env.DB).then((n) => console.log(`dam releases refreshed: ${n}`), (e) => console.error('dam releases refresh failed', e)));
       return;
     }
