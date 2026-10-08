@@ -13,6 +13,8 @@ const RAIN_BATCH = 50; // locations per Open-Meteo request
 const RAIN_REFRESH_MS = 55 * 60_000;
 /** An unchanged outlook is still rewritten this often, so its timestamp stays within the age the API accepts. */
 const OUTLOOK_REWRITE_MS = 60 * 60_000;
+/** A gauge's level a day ago is refetched once it is this much older than exactly 24 h before now. */
+const DAY_AGO_REFRESH_MS = 60 * 60_000;
 
 /** The gauge columns one poll reads and may rewrite. */
 export interface GaugePollRow {
@@ -148,10 +150,14 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
   const dayAgoAt = now.getTime() - 24 * 3_600_000;
   const dayFrom = new Date(dayAgoAt - 30 * 60_000).toISOString();
   const dayTo = new Date(dayAgoAt).toISOString();
+  // The level a day ago only moves the outlook a little, and dayChange accepts 22-26 h: refetch it
+  // about hourly per gauge rather than every poll, to spare SEPA credits.
+  const dayAgoDue = rows.filter((r) => !r.level_day_ago_at || dayAgoAt - Date.parse(r.level_day_ago_at) > DAY_AGO_REFRESH_MS).map((r) => r.ts_id);
 
   const [levelRes, dayRes, flagRes, rainRes] = await Promise.all([
-    inBatches('SEPA levels', [...byTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT3H')),
-    inBatches('SEPA level a day ago', [...byTs.keys()], BATCH, (ids) => fetchSeriesWindow(ids, dayFrom, dayTo)),
+    // Two hours is enough to find the latest reading (SEPA lags up to ~45 min) and the one an hour before it.
+    inBatches('SEPA levels', [...byTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT2H')),
+    inBatches('SEPA level a day ago', dayAgoDue, BATCH, (ids) => fetchSeriesWindow(ids, dayFrom, dayTo)),
     inBatches('SEPA rising/falling', [...byRfTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT1H')),
     rainDue.length ? inBatches('Open-Meteo rain', rainDue, RAIN_BATCH, (gauges) => fetchRain(gauges, now)) : Promise.resolve(null),
   ]);

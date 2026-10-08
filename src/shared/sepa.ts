@@ -31,7 +31,10 @@ export function setSepaAuth(provider: AuthProvider): void {
 }
 
 async function getJson(params: string, fetcher: typeof fetch): Promise<unknown> {
-  const res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json', ...(await authHeaders()) } });
+  const auth = await authHeaders();
+  let res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json', ...auth } });
+  // 429 with the API key: its daily credits are used up. The public keyless access has its own allowance.
+  if (res.status === 429 && Object.keys(auth).length) res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json' } });
   if (!res.ok) throw new UpstreamError('SEPA', `SEPA ${res.status} for ${params.split('&')[0]}`);
   const body = (await res.json()) as unknown;
   if (body && typeof body === 'object' && !Array.isArray(body) && (body as { type?: string }).type === 'error') {
