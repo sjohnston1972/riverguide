@@ -42,12 +42,20 @@ export function clear(el: Element): void {
   while (el.firstChild) el.removeChild(el.firstChild);
 }
 
-/** Inline SVG icon from a trusted constant in icons.ts (never API data). */
+const parsedIcons = new Map<string, HTMLTemplateElement>();
+
+/** Inline SVG icon from a trusted constant in icons.ts (never API data). Each icon is parsed once, then cloned. */
 export function icon(svg: string, cls = 'icon'): HTMLSpanElement {
+  let t = parsedIcons.get(svg);
+  if (!t) {
+    t = document.createElement('template');
+    t.innerHTML = svg;
+    parsedIcons.set(svg, t);
+  }
   const s = document.createElement('span');
   s.className = cls;
   s.setAttribute('aria-hidden', 'true');
-  s.innerHTML = svg;
+  s.append(t.content.cloneNode(true));
   return s;
 }
 
