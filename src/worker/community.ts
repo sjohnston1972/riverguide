@@ -13,10 +13,14 @@ import { levelHistory } from './poll.ts';
 
 const MAX_REPORTS_PER_IP_PER_DAY = 10;
 const LIST_LIMIT = 50;
-/** A report with this many "not for me" votes, outnumbering agreements, stops counting. */
+/** A report with "not for me" from this many people, outnumbering agreements, stops counting. */
 const DISPUTED_AT = 3;
-/** Notes flagged this many times are hidden. */
+/** Notes flagged by this many people are hidden. */
 const NOTE_HIDDEN_AT = 3;
+/** "Same for me" votes add at most this much weight to one report. */
+const MAX_AGREE_WEIGHT = 3;
+/** One person per hashed IP; votes and flags from before ip_hash was recorded count per device. */
+const VOTER = 'COALESCE(v.ip_hash, v.device)';
 
 export const communityEnabled = (env: AppEnv) => flag(env.COMMUNITY_ENABLED) && Boolean(env.SESSION_SECRET);
 
@@ -54,7 +58,8 @@ async function calibrationPoints(db: D1Database, slug: string, stationNo: string
   const { results } = await db
     .prepare(
       `SELECT r.level, r.verdict, r.ip_hash, r.paddled_at,
-              COALESCE(SUM(v.vote = 1), 0) AS agrees, COALESCE(SUM(v.vote = -1), 0) AS disagrees
+              COUNT(DISTINCT CASE WHEN v.vote = 1 AND ${VOTER} != r.ip_hash THEN ${VOTER} END) AS agrees,
+              COUNT(DISTINCT CASE WHEN v.vote = -1 AND ${VOTER} != r.ip_hash THEN ${VOTER} END) AS disagrees
        FROM reports r LEFT JOIN report_votes v ON v.report_id = r.id
        WHERE r.slug = ? AND r.station_no = ? AND r.hidden = 0 AND r.level IS NOT NULL
        GROUP BY r.id`,
@@ -63,7 +68,7 @@ async function calibrationPoints(db: D1Database, slug: string, stationNo: string
     .all<PointRow>();
   return results
     .filter((r) => !(r.disagrees >= DISPUTED_AT && r.disagrees > r.agrees))
-    .map((r) => ({ level: r.level, verdict: r.verdict, weight: 1 + r.agrees, person: r.ip_hash, day: ukDay(r.paddled_at) }));
+    .map((r) => ({ level: r.level, verdict: r.verdict, weight: 1 + Math.min(r.agrees, MAX_AGREE_WEIGHT), person: r.ip_hash, day: ukDay(r.paddled_at) }));
 }
 
 /** Recompute (or remove) the community band for each gauge a section has reports against. */
@@ -291,12 +296,13 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     const row = await c.env.DB.prepare('SELECT slug, device FROM reports WHERE id = ? AND hidden = 0').bind(id).first<{ slug: string; device: string }>();
     if (!row) return c.json({ error: 'Not found' }, 404);
     if (row.device === device) return c.json({ error: 'own', message: "You can't vote on your own report." }, 400);
+    const voter = await ipHash(c.env.SESSION_SECRET!, clientIp(c));
     await (parsed.data.vote === 0
       ? c.env.DB.prepare('DELETE FROM report_votes WHERE report_id = ? AND device = ?').bind(id, device)
       : c.env.DB.prepare(
-          `INSERT INTO report_votes (report_id, device, vote, created_at) VALUES (?, ?, ?, ?)
-           ON CONFLICT(report_id, device) DO UPDATE SET vote = excluded.vote, created_at = excluded.created_at`,
-        ).bind(id, device, parsed.data.vote, new Date().toISOString())
+          `INSERT INTO report_votes (report_id, device, vote, created_at, ip_hash) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(report_id, device) DO UPDATE SET vote = excluded.vote, created_at = excluded.created_at, ip_hash = excluded.ip_hash`,
+        ).bind(id, device, parsed.data.vote, new Date().toISOString(), voter)
     ).run();
     await recomputeBands(c.env.DB, row.slug);
     const report = (await listReports(c.env.DB, row.slug, device)).find((r) => r.id === id);
@@ -311,11 +317,13 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     const limited = await overLimit(c);
     if (limited) return limited;
     const id = c.req.param('id');
-    await c.env.DB.prepare('INSERT OR IGNORE INTO report_flags (report_id, device, created_at) SELECT id, ?, ? FROM reports WHERE id = ?')
-      .bind(device, new Date().toISOString(), id)
+    const flagger = await ipHash(c.env.SESSION_SECRET!, clientIp(c));
+    await c.env.DB.prepare('INSERT OR IGNORE INTO report_flags (report_id, device, created_at, ip_hash) SELECT id, ?, ?, ? FROM reports WHERE id = ?')
+      .bind(device, new Date().toISOString(), flagger, id)
       .run();
     await c.env.DB.prepare(
-      `UPDATE reports SET note_hidden = 1 WHERE id = ? AND (SELECT count(*) FROM report_flags WHERE report_id = ?) >= ${NOTE_HIDDEN_AT}`,
+      `UPDATE reports SET note_hidden = 1 WHERE id = ?
+         AND (SELECT count(DISTINCT COALESCE(ip_hash, device)) FROM report_flags WHERE report_id = ?) >= ${NOTE_HIDDEN_AT}`,
     )
       .bind(id, id)
       .run();

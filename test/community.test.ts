@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type CalibrationPoint, deriveBand, levelAt, splitLevel, type Verdict } from '../src/shared/community.ts';
+import { type CalibrationPoint, deriveBand, levelAt, secondPersonLevel, splitLevel, type Verdict } from '../src/shared/community.ts';
 
 let n = 0;
 const p = (level: number, verdict: Verdict, opts: Partial<CalibrationPoint> = {}): CalibrationPoint => ({
@@ -43,9 +43,9 @@ describe('deriveBand', () => {
     expect(b).toMatchObject({ reports: 5, confidence: 'medium' });
   });
 
-  it('only lowers the estimate when everyone found it runnable', () => {
+  it('only lowers the estimate when everyone found it runnable, and only as far as two people agree', () => {
     const pts = [p(0.6, 'good'), p(0.7, 'good'), p(0.9, 'good'), p(1.0, 'pushy'), p(1.1, 'good')];
-    expect(deriveBand(pts, est)!.min_level).toBe(0.6);
+    expect(deriveBand(pts, est)!.min_level).toBe(0.7); // 0.6 is one person's report
     const higher = [1.0, 1.1, 1.2, 1.3, 1.4].map((l) => p(l, 'good'));
     expect(deriveBand(higher, est)!.min_level).toBe(0.8); // no evidence it is too low below 1.0
   });
@@ -53,6 +53,22 @@ describe('deriveBand', () => {
   it('sets the upper threshold from too-high reports', () => {
     const pts = [p(1.0, 'good'), p(1.2, 'pushy'), p(1.3, 'pushy'), p(1.5, 'too_high'), p(1.7, 'too_high')];
     expect(deriveBand(pts, est)!.max_level).toBe(1.4);
+  });
+
+  it("doesn't let one person's report move a one-sided threshold", () => {
+    // A single "too low" at 2.0 m (wrong day, say) with no runnable reports to split against.
+    const stray = [p(2.0, 'too_low', { person: 'x' }), p(1.7, 'too_high', { person: 'a' }), p(1.8, 'too_high', { person: 'b' }), p(1.9, 'too_high', { person: 'c' }), p(1.75, 'too_high', { person: 'a' })];
+    const b = deriveBand(stray, est)!;
+    expect(b.min_level).toBe(0.8); // estimate kept
+    expect(b.max_level).toBe(1.6); // too-high reports above the estimate can't raise it
+    // Two people saying "too low" at 0.9 m does raise it.
+    const two = [p(0.9, 'too_low', { person: 'x' }), p(0.95, 'too_low', { person: 'y' }), p(1.7, 'too_high', { person: 'a' }), p(1.8, 'too_high', { person: 'b' }), p(1.9, 'too_high', { person: 'c' })];
+    expect(deriveBand(two, est)!.min_level).toBe(0.91);
+  });
+
+  it('stores no band when there is no threshold at all', () => {
+    const allGood = [0.9, 1.0, 1.1, 1.2, 1.3].map((l) => p(l, 'good'));
+    expect(deriveBand(allGood, { min: null, max: null })).toBeNull();
   });
 
   it('gives up when reports contradict each other', () => {
@@ -69,5 +85,14 @@ describe('levelAt', () => {
   it('picks the nearest reading within the window', () => {
     expect(levelAt(pts, Date.parse('2026-10-06T10:40:00Z'))).toBe(0.9);
     expect(levelAt(pts, Date.parse('2026-10-06T16:00:00Z'))).toBeNull();
+  });
+});
+
+describe('secondPersonLevel', () => {
+  it('walks in from the extreme to the second distinct person', () => {
+    const pts = [p(0.5, 'good', { person: 'a' }), p(0.55, 'good', { person: 'a' }), p(0.7, 'good', { person: 'b' }), p(0.9, 'good', { person: 'c' })];
+    expect(secondPersonLevel(pts, 'lowest')).toBe(0.7);
+    expect(secondPersonLevel(pts, 'highest')).toBe(0.7);
+    expect(secondPersonLevel(pts.slice(0, 2), 'lowest')).toBeNull();
   });
 });
