@@ -123,3 +123,81 @@ export function direction(current: number, p: LevelPrediction): Direction {
   if (d < -threshold || p.hi < current) return 'fall';
   return 'steady';
 }
+
+// ---- Building a model (scripts/fit-forecast.ts) ----
+
+/** One past day at a gauge: daily peak level, the next day's peak, rain that day and the next, change since the day before. */
+export interface AnalogueDay {
+  d: number;
+  next: number;
+  p0: number;
+  p1: number;
+  dd: number;
+}
+
+export interface GridOptions {
+  /** Number of most similar past days per grid cell. */
+  k: number;
+  levelNodes: number;
+  deltaQuantiles: number[];
+  withTrend: boolean;
+}
+
+const r4 = (v: number) => Math.round(v * 1e4) / 1e4;
+/** Nearest-rank quantile of an ascending array. */
+const pct = (sorted: number[], q: number) => sorted[Math.min(sorted.length - 1, Math.max(0, Math.round(q * (sorted.length - 1))))];
+
+/** Strictly increasing nodes at the given quantiles of the values. */
+export function nodesAt(values: number[], qs: number[]): number[] {
+  const v = [...values].sort((a, b) => a - b);
+  const out = qs.map((q) => r4(pct(v, q)));
+  for (let i = 1; i < out.length; i++) if (out[i] <= out[i - 1]) out[i] = r4(out[i - 1] + 0.001);
+  return out;
+}
+
+/**
+ * The analogue grid: for each node (level, rain today, rain tomorrow, and optionally the change
+ * since yesterday), the median and 10th/90th percentile next-day change over the `k` most
+ * similar days in `lib`.
+ */
+export function buildAnalogueGrid(lib: AnalogueDay[], o: GridOptions): Pick<ForecastModel, 'levels' | 'deltas' | 'med' | 'p10' | 'p90'> {
+  const ds = lib.map((r) => r.d).sort((a, b) => a - b);
+  const spread = Math.max(0.05, pct(ds, 0.95) - pct(ds, 0.05));
+  const lvl = nodesAt(ds, Array.from({ length: o.levelNodes }, (_, i) => 0.02 + (0.96 * i) / (o.levelNodes - 1)));
+  const dds = lib.map((r) => r.dd).sort((a, b) => a - b);
+  const dSpread = Math.max(0.02, pct(dds, 0.95) - pct(dds, 0.05));
+  const deltas = o.withTrend ? nodesAt(dds, o.deltaQuantiles) : [0];
+  const nd = deltas.length;
+  const n = o.levelNodes * nd * NR * NR;
+  const med = Array(n).fill(0);
+  const p10 = Array(n).fill(0);
+  const p90 = Array(n).fill(0);
+  const scored = lib.map((t) => ({ t, s: 0 }));
+  lvl.forEach((L, li) =>
+    deltas.forEach((dn, di) =>
+      RAIN_NODES.forEach((a, ai) =>
+        RAIN_NODES.forEach((b, bi) => {
+          for (const x of scored) {
+            const t = x.t;
+            x.s =
+              ((t.d - L) / spread) ** 2 +
+              ((Math.sqrt(t.p1) - Math.sqrt(b)) / 2) ** 2 +
+              ((Math.sqrt(t.p0) - Math.sqrt(a)) / 3) ** 2 +
+              (o.withTrend ? ((t.dd - dn) / dSpread) ** 2 : 0);
+          }
+          const near = scored
+            .slice()
+            .sort((x, y) => x.s - y.s)
+            .slice(0, o.k)
+            .map((x) => x.t.next - x.t.d)
+            .sort((x, y) => x - y);
+          const idx = gridIndex(li, ai, bi, di, nd);
+          med[idx] = r4(pct(near, 0.5));
+          p10[idx] = r4(pct(near, 0.1));
+          p90[idx] = r4(pct(near, 0.9));
+        }),
+      ),
+    ),
+  );
+  return o.withTrend ? { levels: lvl, deltas, med, p10, p90 } : { levels: lvl, med, p10, p90 };
+}
