@@ -1,6 +1,7 @@
 // Open-Meteo forecast (CC BY 4.0) with the past day's rain, cached 30 minutes per ~1 km cell.
 
 import type { Weather } from '../shared/types.ts';
+import { UpstreamError } from '../shared/upstream.ts';
 
 interface OpenMeteo {
   hourly: { time: string[]; temperature_2m: number[]; precipitation: number[]; wind_speed_10m: number[] };
@@ -46,7 +47,7 @@ export async function getWeather(latIn: number, lonIn: number, ctx: ExecutionCon
   let res = await cache.match(key);
   if (!res) {
     const upstream = await fetch(url);
-    if (!upstream.ok) throw new Error(`Open-Meteo ${upstream.status}`);
+    if (!upstream.ok) throw new UpstreamError('Open-Meteo', `Open-Meteo ${upstream.status}`);
     res = new Response(upstream.body, upstream);
     res.headers.set('cache-control', `public, max-age=${TTL_SECONDS}`);
     ctx.waitUntil(cache.put(key, res.clone()));

@@ -1,6 +1,8 @@
 // SEPA KiWIS client. Uses bulk queries so the whole level network
 // (~400 gauges) costs a handful of requests rather than several per gauge.
 
+import { UpstreamError } from './upstream.ts';
+
 const KIWIS = 'https://timeseries.sepa.org.uk/KiWIS/KiWIS?service=kisters&type=queryServices&datasource=0';
 
 export interface SepaStation {
@@ -29,10 +31,10 @@ export function setSepaAuth(provider: AuthProvider): void {
 
 async function getJson(params: string, fetcher: typeof fetch): Promise<unknown> {
   const res = await fetcher(`${KIWIS}&${params}`, { headers: { accept: 'application/json', ...(await authHeaders()) } });
-  if (!res.ok) throw new Error(`SEPA ${res.status} for ${params.split('&')[0]}`);
+  if (!res.ok) throw new UpstreamError('SEPA', `SEPA ${res.status} for ${params.split('&')[0]}`);
   const body = (await res.json()) as unknown;
   if (body && typeof body === 'object' && !Array.isArray(body) && (body as { type?: string }).type === 'error') {
-    throw new Error(`SEPA error: ${(body as { message?: string }).message ?? 'unknown'}`);
+    throw new UpstreamError('SEPA', `SEPA error: ${(body as { message?: string }).message ?? 'unknown'}`);
   }
   return body;
 }

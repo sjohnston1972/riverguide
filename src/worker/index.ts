@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
+import { STALE_AFTER_MS } from '../shared/status.ts';
 import type { PublicConfig } from '../shared/types.ts';
+import { UpstreamError } from '../shared/upstream.ts';
 import { getGauge, getSection, listSections } from './data.ts';
 import { cachedJson, purgeSections, sectionKey, sectionsKey } from './edgecache.ts';
 import { type AppEnv, flag } from './env.ts';
@@ -34,7 +36,24 @@ app.use('*', async (c, next) => {
 
 app.onError((err, c) => {
   console.error(err);
+  if (err instanceof UpstreamError) {
+    return c.json({ error: 'upstream', message: `${err.source} isn't responding just now. Try again in a few minutes.` }, 502);
+  }
   return c.json({ error: 'Internal error' }, 500);
+});
+
+/** Newest reading older than this means the poll has stopped (SEPA itself usually lags 15-45 minutes). */
+const HEALTH_MAX_AGE_MIN = 90;
+
+// For an uptime monitor: 503 when the 15-minute poll has stopped bringing in new readings.
+app.get('/api/health', async (c) => {
+  const r = await c.env.DB.prepare('SELECT max(level_at) AS latest, sum(level_at >= ?) AS fresh, count(*) AS gauges FROM gauges')
+    .bind(new Date(Date.now() - STALE_AFTER_MS).toISOString())
+    .first<{ latest: string | null; fresh: number | null; gauges: number }>();
+  const age = r?.latest ? Math.round((Date.now() - Date.parse(r.latest)) / 60_000) : null;
+  const ok = age != null && age <= HEALTH_MAX_AGE_MIN;
+  c.header('cache-control', 'no-store');
+  return c.json({ ok, latest_level_at: r?.latest ?? null, age_minutes: age, gauges_fresh: r?.fresh ?? 0, gauges: r?.gauges ?? 0 }, ok ? 200 : 503);
 });
 
 app.get('/api/config', (c) => {

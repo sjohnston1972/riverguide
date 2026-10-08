@@ -244,7 +244,14 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     let level: number | null = null;
     if (station) {
       const g = await getGauge(env.DB, station);
-      if (g) level = levelAt((await levelHistory(g.station_no, g.ts_id, 'P7D', c.executionCtx as ExecutionContext)).points, when);
+      // If SEPA is down the report is still kept, just without a level (so it doesn't count towards a band).
+      if (g) {
+        try {
+          level = levelAt((await levelHistory(g.station_no, g.ts_id, 'P7D', c.executionCtx as ExecutionContext)).points, when);
+        } catch (e) {
+          console.error('report level lookup failed', e);
+        }
+      }
     }
 
     const id = crypto.randomUUID();
