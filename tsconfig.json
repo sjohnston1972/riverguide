@@ -26,6 +26,6 @@
     "test"
   ],
   "exclude": [
-    "test/worker.test.ts"
+    "test/worker*.test.ts"
   ]
 }

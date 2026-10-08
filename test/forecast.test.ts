@@ -49,10 +49,20 @@ describe('predictLevels', () => {
     expect(wet.tomorrow.level).toBeCloseTo(0.6 + 0.2 - 0.06, 3);
   });
 
-  it('never predicts below zero', () => {
+  it('never predicts below the lower of the current level and the lowest modelled level', () => {
     const o = predictLevels(model, 0, { yesterday: 0, today: 0, tomorrow: 0, dayAfter: 0 });
     expect(o.tomorrow.level).toBeGreaterThanOrEqual(0);
     expect(o.tomorrow.lo).toBe(0);
+  });
+
+  it('handles gauges that read below 0 m at base flow without inventing a rise', () => {
+    // Same gauge with its datum 0.3 m higher: base flow reads about -0.1 m.
+    const shifted: ForecastModel = { ...model, levels: levels.map((l) => Math.round((l - 0.3) * 10) / 10) };
+    const dry = { yesterday: 0, today: 0, tomorrow: 0, dayAfter: 0 };
+    const o = predictLevels(shifted, -0.05, dry);
+    expect(o.tomorrow.level).toBeLessThan(-0.05);
+    expect(o.tomorrow.lo).toBeGreaterThanOrEqual(-0.1);
+    expect(direction(-0.05, o.tomorrow)).not.toBe('rise');
   });
 });
 
