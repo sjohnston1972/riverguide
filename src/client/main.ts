@@ -196,3 +196,8 @@ function render(route: Route, nav: { pop: boolean }): void {
 }
 
 startRouter(render);
+
+// Offline support (public/sw.js): the app and the last levels seen still open with no signal.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js').catch(() => undefined));
+}

@@ -36,9 +36,16 @@ export async function errorFrom(res: Response): Promise<ApiError> {
   return new ApiError(res.status, message, code);
 }
 
+/** URLs whose last response came from the service worker's saved copy (no or very slow connection). */
+const offlineUrls = new Set<string>();
+/** True when the latest section list is the copy saved on this phone, not a fresh one. */
+export const sectionsOffline = () => offlineUrls.has('/api/sections');
+
 async function getJson<T>(url: string, signal?: AbortSignal, cache: RequestCache = 'default'): Promise<T> {
   const res = await fetch(url, { signal, cache, headers: { accept: 'application/json' } });
   if (!res.ok) throw await errorFrom(res);
+  if (res.headers.get('x-rg-offline')) offlineUrls.add(url);
+  else offlineUrls.delete(url);
   return (await res.json()) as T;
 }
 

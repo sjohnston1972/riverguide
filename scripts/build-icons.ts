@@ -60,3 +60,7 @@ for (const [mark, suffix] of [
   await square(mark, 16, `favicon-16${suffix}.png`);
 }
 await square(trimmed, 180, 'apple-touch-icon.png', '#ffffff', 0.08); // iOS fills transparency with black
+// Home-screen icons for the web manifest; the maskable one keeps the logo inside Android's safe zone.
+await square(trimmed, 192, 'icon-192.png', '#ffffff', 0.08);
+await square(trimmed, 512, 'icon-512.png', '#ffffff', 0.08);
+await square(trimmed, 512, 'icon-512-maskable.png', '#ffffff', 0.2);
