@@ -3984,3 +3984,394 @@ button {
     margin: 0 0 0 0.6em;
   }
 }
+
+/* ---------- Gauge board (phones): the scale stood upright like a river staff gauge ---------- */
+.gauge-board {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.gb-body {
+  flex: 1 1 auto;
+  min-height: 260px;
+  display: grid;
+  grid-template-columns: 84px 58px minmax(0, 1fr);
+  column-gap: 10px;
+}
+
+.gb-marks,
+.gb-post,
+.gb-labels {
+  position: relative;
+}
+
+.gb-tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+  font: 600 0.78rem/1 var(--font-display);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Now 0.72 m", pointing at the water line. */
+.gb-now {
+  position: absolute;
+  right: 2px;
+  z-index: 1;
+  transform: translateY(50%);
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font: 700 0.85rem/1 var(--font-display);
+  white-space: nowrap;
+}
+
+.gb-now::after {
+  content: '';
+  position: absolute;
+  right: -11px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: var(--ink);
+}
+
+.gb-staff {
+  position: absolute;
+  inset: 0 0 0 10px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+
+.gb-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: var(--step, var(--surface-2));
+}
+
+.gb-low {
+  background: repeating-linear-gradient(135deg, var(--st-low-tint) 0 6px, color-mix(in srgb, var(--st-low) 30%, var(--st-low-tint)) 6px 8px);
+}
+
+.gb-run {
+  background: color-mix(in srgb, var(--st-runnable) 55%, var(--surface));
+}
+
+.gb-high {
+  background: color-mix(in srgb, var(--st-high) 45%, var(--surface));
+}
+
+/* The water, up to the current level. */
+.gb-water {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--loch) 42%, transparent);
+  border-top: 3px solid var(--loch);
+}
+
+.gb-tomorrow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--ink);
+}
+
+/* The gauge's typical range, as a bar beside the board. */
+.gb-typical {
+  position: absolute;
+  left: 0;
+  width: 5px;
+  border-radius: 3px;
+  background: var(--ink-3);
+}
+
+.gb-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font: 600 0.92rem/1.1 var(--font-display);
+}
+
+.gb-range {
+  color: var(--ink-3);
+  font: 500 0.8rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gb-label.is-now .gb-name {
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.gb-label.is-tomorrow .gb-name {
+  padding: 2px 6px;
+  border-radius: 4px;
+  outline: 1px dashed var(--ink);
+}
+
+.gb-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.gb-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gb-key-typical {
+  width: 5px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--ink-3);
+}
+
+.gb-key-tomorrow {
+  width: 18px;
+  border-top: 2px dashed var(--ink);
+}
+
+/* ---------- Phones: the river page on one screen, swiped sideways ----------
+   The name, details and status pills stay put; below them the Scale, Level, Weather, Access and
+   Reports panels sit side by side and snap as you swipe; the tab bar names them and follows along.
+   A panel taller than the screen scrolls inside itself. Breakpoint mirrored in pages/river.ts (PHONE). */
+@media (max-width: 599px) {
+  .river-phone #root {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .river-phone .site-main {
+    flex: 1 1 0;
+    min-height: 0;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-phone .site-footer {
+    display: none;
+  }
+
+  .river-phone .river-page {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-phone .river-head {
+    padding: 2px 0 6px;
+    gap: 2px;
+  }
+
+  .river-phone .river-head .back-link {
+    min-height: 30px;
+    font-size: 0.9rem;
+  }
+
+  .river-phone .river-title {
+    font-size: 1.4rem;
+  }
+
+  .river-phone .river-sub {
+    font-size: 0.85rem;
+  }
+
+  .river-phone .river-body {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .river-phone .phone-pills > .pill,
+  .river-phone .phone-pills > .step-tag,
+  .river-phone .phone-pills > .tomorrow-tag {
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 999px;
+    font: 600 0.92rem/1 var(--font-display);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .river-phone .phone-pills > .pill {
+    font-weight: 700;
+    border-color: transparent;
+  }
+
+  .river-phone .phone-pills > .tomorrow-tag {
+    border-style: dashed;
+    border-color: var(--rule-strong);
+    background: transparent;
+  }
+
+  .river-phone .phone-pills .pill-dot,
+  .river-phone .phone-pills > .step-tag::before {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* The panels: side by side, snapping, each as wide as the screen's content. */
+  .river-phone .swipe {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .river-phone .swipe::-webkit-scrollbar {
+    display: none;
+  }
+
+  .river-phone .panel {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 12px;
+  }
+
+  /* Cards keep their full height; the panel scrolls instead of squashing them. */
+  .river-phone .panel > * {
+    flex: none;
+  }
+
+  .river-phone .panel-scale {
+    overflow-y: hidden;
+  }
+
+  .river-phone .panel-scale .gauge-board {
+    flex: 1 1 0;
+  }
+
+  .river-phone .panel-reports .panel-credits {
+    margin-top: auto;
+  }
+
+  .phone-reading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 10px;
+    row-gap: 2px;
+    margin: 0;
+  }
+
+  .phone-reading .lvl {
+    font-size: 2.4rem;
+  }
+
+  .phone-reading-at {
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
+  .phone-reading .hero-time,
+  .phone-reading-next {
+    flex-basis: 100%;
+    font-size: 0.85rem;
+    color: var(--ink-3);
+  }
+
+  .phone-reading-next {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+
+  /* In the Level panel the pills and details are already at the top of the screen, and the
+     headline gauge's scale is the gauge board on the first panel. */
+  .river-phone .panel .now-card .hero-pills,
+  .river-phone .panel .now-card .hero-details,
+  .river-phone .panel .is-headline {
+    display: none;
+  }
+
+  .river-phone .panel .now-card > .status-hero {
+    padding: 10px 14px;
+  }
+
+  /* Tabs along the bottom, in thumb reach. */
+  .river-phone .panel-tabs {
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0 -16px;
+    padding: 4px 4px calc(6px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .panel-tab {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 6px 0 2px;
+    border: 0;
+    background: none;
+    color: var(--ink-3);
+    font: 600 0.75rem/1 var(--font-display);
+    cursor: pointer;
+  }
+
+  .panel-tab[aria-selected='true'] {
+    color: var(--loch);
+  }
+
+  .panel-tab:focus-visible {
+    outline: 2px solid var(--loch);
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+
+  .panel-credits {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.75rem;
+    color: var(--ink-3);
+  }
+
+  .panel-credits p + p {
+    margin-top: 6px;
+  }
+}

@@ -8,6 +8,7 @@ import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill, tomorrowTag } from '../components.ts';
+import { gaugeBoard } from '../gaugeboard.ts';
 import { clear, h, icon, safeUrl } from '../dom.ts';
 import { favButton, setFavouriteName } from '../favourites.ts';
 import { lastListHref } from '../filters.ts';
@@ -40,6 +41,16 @@ const PERIODS: [string, string][] = [
 ];
 
 type Place = PlacePoint & { precision?: string };
+
+/** Phones: one screen led by the gauge board, the rest on swipeable panels (styles.css, .river-phone). */
+const PHONE = window.matchMedia('(max-width: 599px)');
+const PANELS = [
+  ['scale', 'Scale', ICONS.gauge],
+  ['level', 'Level', ICONS.trend],
+  ['weather', 'Weather', ICONS.rain],
+  ['access', 'Access', ICONS.map],
+  ['reports', 'Reports', ICONS.people],
+] as const;
 
 /** The one-screen desktop layout's media query; keep in step with styles.css (.river-dash). */
 const ONE_SCREEN = window.matchMedia('(min-width: 1280px) and (min-height: 720px)');
@@ -85,11 +96,15 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     }
   }
 
+  let shown: SectionDetail | null = null;
   function render(d: SectionDetail): void {
+    shown = d;
     ctx.setTitle(d.name);
     title.textContent = d.name;
     setFavouriteName(star, d.name);
-    const sub = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
+    const region = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
+    // On phones the status band's details move up here, next to the name.
+    const sub = PHONE.matches ? [region, ...sectionDetails(d).map(([k, v]) => (k === 'Grade' ? `Grade ${v}` : v))].join(' · ') : region;
     head.querySelector('.river-sub')?.remove();
     head.querySelector('.river-source')?.remove();
     head.append(
@@ -116,6 +131,10 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         .catch(() => undefined);
     };
     const community = communityPanel({ slug, gaugeName: d.gauge_name, siteKey: ctx.config()?.turnstile_site_key ?? null, data: reports, onChange });
+    if (PHONE.matches) {
+      renderPhone(d, now, community);
+      return;
+    }
     // Three groups: the river now (status card and level history); reports, releases and notes; weather,
     // access and nearby gauges. Phones stack them, tablets use two columns, wide desktops fit the page
     // on one screen with the last two groups as tiles (styles.css, .river-dash).
@@ -296,6 +315,74 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return { card, graph: graphCard };
   }
 
+  // ---- Phones: one screen, the gauge board first, everything else on panels you swipe to ----
+  function renderPhone(d: SectionDetail, now: { card: HTMLElement; graph: HTMLElement | null }, community: HTMLElement): void {
+    const headline = d.links.find((l) => l.station_no === d.station_no) ?? null;
+    const g = headline?.gauge ?? null;
+    const t = g && !g.stale ? (g.outlook?.tomorrow ?? null) : null;
+    const tomorrowWord = d.status_tomorrow && d.status_tomorrow !== 'unknown' && d.status_tomorrow !== d.status
+      ? STATUS_LABEL[d.status_tomorrow]
+      : d.step_tomorrow && d.step_tomorrow !== d.step ? STEP_LABEL[d.step_tomorrow] : null;
+    const reading = g
+      ? h(
+          'div',
+          { class: 'phone-reading' },
+          g.level != null ? levelWithTrend(g.level, g.trend, g.stale) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
+          h('span', { class: 'phone-reading-at' }, g.trend !== 'unknown' && g.level != null ? `${TREND_LABEL[g.trend]} at ${g.name}` : `at ${g.name}`),
+          h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
+          t ? h('span', { class: 'phone-reading-next' }, `Tomorrow about ${formatLevel(t.level)}${tomorrowWord ? `, ${tomorrowWord}` : ''}`) : null,
+        )
+      : null;
+    const board = headline ? gaugeBoard(headline) : null;
+    const scaleBody = board
+      ? [reading, board]
+      : [reading, h('p', { class: 'muted' }, d.links.length ? 'No paddling band or typical range for this gauge yet.' : 'No SEPA gauge is linked to this section. Check the guidebook for level advice.')];
+
+    // The site credits close the last panel (the footer is hidden on this layout).
+    const footerText = document.querySelector('.site-footer .wrap')?.cloneNode(true) as HTMLElement | undefined;
+    if (footerText) footerText.className = 'panel-credits';
+
+    const content: Record<(typeof PANELS)[number][0], Array<Node | null>> = {
+      scale: scaleBody,
+      level: [now.card, now.graph, releasesSection(d)],
+      weather: [weatherSection(d) ?? h('p', { class: 'muted' }, 'No location for a forecast.')],
+      access: [placesSection(d), nearbySection(d), d.guide ? guideSection(d.guide) : null],
+      reports: [community, footerText ?? null],
+    };
+    const panels = PANELS.map(([key, label], i) =>
+      h('section', { class: `panel panel-${key}`, id: `panel-${key}`, role: 'tabpanel', 'aria-label': label, 'aria-labelledby': `tab-${key}`, tabindex: i === 0 ? '0' : '-1' }, content[key]),
+    );
+    const swipe = h('div', { class: 'swipe' }, panels);
+    const tabs = PANELS.map(([key, label, svgIcon], i) =>
+      h('button', { type: 'button', role: 'tab', class: 'panel-tab', id: `tab-${key}`, 'aria-controls': `panel-${key}`, 'aria-selected': String(i === 0) }, icon(svgIcon), h('span', null, label)),
+    );
+    const go = (i: number, smooth = true) => swipe.scrollTo({ left: i * swipe.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+    const mark = (i: number) => {
+      tabs.forEach((b, j) => b.setAttribute('aria-selected', String(j === i)));
+      panels.forEach((p, j) => (p.tabIndex = j === i ? 0 : -1));
+    };
+    tabs.forEach((b, i) => {
+      b.addEventListener('click', () => go(i));
+      b.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const next = (i + step + tabs.length) % tabs.length;
+        go(next);
+        tabs[next].focus();
+      });
+    });
+    let frame = 0;
+    swipe.addEventListener('scroll', () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => mark(Math.round(swipe.scrollLeft / Math.max(1, swipe.clientWidth))));
+    }, { passive: true });
+
+    const pills = h('div', { class: 'hero-pills phone-pills' }, statusPill(d.status), d.step ? h('span', { class: `step-tag s-${d.step}` }, STEP_LABEL[d.step]) : null, tomorrowTag(d));
+    clear(body);
+    body.append(pills, swipe, h('nav', { class: 'panel-tabs', role: 'tablist', 'aria-label': 'River details' }, tabs));
+  }
+
   /** One linked gauge: reading, band bar and compact facts. */
   /** `citedGauge`: the gauge whose Where's the Water levels the status header already cites. */
   function gaugeDetail(l: SectionGaugeLink, citedGauge: string | null = null): Node[] {
@@ -328,7 +415,11 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const ol = outlookLine(l);
     if (ol) out.push(ol);
     const bar = bandBar(l);
-    if (bar) out.push(bar);
+    if (bar) {
+      // On phones the headline gauge's scale is the gauge board on the first panel.
+      if (l.station_no === shown?.station_no) bar.classList.add('is-headline');
+      out.push(bar);
+    }
     out.push(h('dl', { class: 'gauge-facts' }, rows.map(([k, v]) => [h('dt', null, k), h('dd', null, v)])));
     if (l.basis === 'paddler') {
       // The header already cites the headline gauge's levels; only other gauges need their own line.
@@ -466,8 +557,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return `${pct < 10 ? pct.toFixed(1).replace(/\.0$/, '') : Math.round(pct)}%`;
   }
 
-  /** Grade, length and character along the bottom edge of the status band. */
-  function detailsStrip(d: SectionDetail): HTMLElement | null {
+  /** Grade, length and character, whichever the section has. */
+  function sectionDetails(d: SectionDetail): [string, string][] {
     // Consistent spacing: "1(2)" -> "1 (2)", like "3/4 (5)".
     const grade = d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade\s*/i, '').replace(/\s*\(/g, ' (').trim() : '';
     const items: [string, string | null][] = [
@@ -475,7 +566,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       ['Length', d.length_text],
       ['Character', characterLabel(d.character)],
     ];
-    const present = items.filter(([, v]) => v);
+    return items.filter((i): i is [string, string] => !!i[1]);
+  }
+
+  /** Grade, length and character along the bottom edge of the status band. */
+  function detailsStrip(d: SectionDetail): HTMLElement | null {
+    const present = sectionDetails(d);
     if (!present.length) return null;
     return h(
       'dl',
@@ -653,7 +749,13 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   // Wide desktops: the whole page on one screen (styles.css). Only while this page is mounted.
-  document.documentElement.classList.add('river-dash');
+  document.documentElement.classList.add('river-dash', 'river-phone');
+  // Crossing the phone breakpoint (rotating, resizing) swaps between the swipe and column layouts.
+  const onPhoneChange = () => {
+    if (shown && !destroyed) render(shown);
+  };
+  PHONE.addEventListener('change', onPhoneChange);
+  cleanups.push(() => PHONE.removeEventListener('change', onPhoneChange));
   // If the layout still doesn't fit the window (a short laptop screen), scale the page down until it
   // does rather than hiding anything. The two list tiles (reports, dam releases) scroll in place instead.
   let zoom = 1;
@@ -695,7 +797,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     destroy() {
       destroyed = true;
       abort.abort();
-      document.documentElement.classList.remove('river-dash');
+      document.documentElement.classList.remove('river-dash', 'river-phone');
       for (const c of cleanups) c();
     },
   };

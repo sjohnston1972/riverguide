@@ -17,5 +17,9 @@ export const ICONS = {
   stop: svg('<rect x="7" y="7" width="10" height="10" rx="1.5"/>'),
   star: svg('<path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.15 1 5.85L12 16.95 6.75 19.7l1-5.85L3.5 9.7l5.9-.9z"/>'),
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
+  gauge: svg('<path d="M9 3v18M9 6h4M9 10h6M9 14h4M9 18h6"/>'),
+  trend: svg('<path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/>'),
+  rain: svg('<path d="M7 15a4 4 0 1 1 1-7.9A5 5 0 0 1 17 9a3.5 3.5 0 0 1 0 7H7z"/><path d="M9 19l-1 2M13 19l-1 2M17 19l-1 2"/>'),
+  people: svg('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M21 20c0-2.2-1.4-4-3.6-4.7"/>'),
   wave: svg('<path d="M2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>'),
 };
