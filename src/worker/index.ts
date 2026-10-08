@@ -15,7 +15,7 @@ import {
   verifySession,
   verifyTurnstile,
 } from './guard.ts';
-import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRain, refreshRisingFallingIds } from './poll.ts';
+import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRisingFallingIds } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { refreshFreshets } from './freshets.ts';
 import { loraOverview, releasesOverview } from './schedules.ts';
@@ -155,14 +155,17 @@ export default {
         console.log(`dam releases loaded: ${await refreshFreshets(env.DB)}`);
       })().catch((e) => console.error('dam releases load failed', e)),
     );
-    ctx.waitUntil(pollReadings(env.DB).then((r) => console.log(`poll: ${r.updated} updated, ${r.empty} empty`)));
-    // Refresh the rainfall used for level outlooks when it is more than ~an hour old.
+    // Levels, trends and (hourly, or after UK midnight) rain, then outlooks, in one pass.
     ctx.waitUntil(
-      (async () => {
-        const last = await env.DB.prepare("SELECT max(json_extract(rain, '$.at')) AS at FROM gauges WHERE forecast_model IS NOT NULL").first<{ at: string | null }>();
-        if (last?.at && Date.now() - Date.parse(last.at) < 55 * 60_000) return;
-        console.log(`rain outlook: ${await refreshRain(env.DB)} gauges`);
-      })().catch((e) => console.error('rain outlook failed', e)),
+      pollReadings(env.DB).then(
+        (r) =>
+          console.log(
+            `poll: ${r.levels} levels, ${r.empty} empty, ${r.written} rows written` +
+              (r.rain == null ? '' : `, rain for ${r.rain}`) +
+              (r.failedBatches ? `, ${r.failedBatches} batches FAILED` : ''),
+          ),
+        (e) => console.error('poll failed', e),
+      ),
     );
   },
 } satisfies ExportedHandler<AppEnv>;

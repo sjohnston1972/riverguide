@@ -1,77 +1,210 @@
 // Scheduled jobs: latest readings for every gauge (15 min) and gauge metadata (daily).
 
+import type { ForecastModel } from '../shared/forecast.ts';
 import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, fetchSeriesWindow, latestAndHourAgo } from '../shared/sepa.ts';
-import type { LevelHistory } from '../shared/types.ts';
-import { updateOutlooks } from './outlook.ts';
+import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
+import type { GaugeOutlook, LevelHistory } from '../shared/types.ts';
+import { computeOutlook, type StoredRain } from './outlook.ts';
 
 const BATCH = 150; // ts_ids per KiWIS request; keeps URLs well under limits
+const RAIN_BATCH = 50; // locations per Open-Meteo request
+/** Rain older than this is refetched (it is also refetched as soon as the UK day changes). */
+const RAIN_REFRESH_MS = 55 * 60_000;
+/** An unchanged outlook is still rewritten this often, so its timestamp stays within the age the API accepts. */
+const OUTLOOK_REWRITE_MS = 60 * 60_000;
 
-export async function pollReadings(db: D1Database): Promise<{ updated: number; empty: number }> {
-  const { results } = await db.prepare('SELECT station_no, ts_id FROM gauges').all<{ station_no: string; ts_id: string }>();
-  const byTs = new Map(results.map((r) => [r.ts_id, r.station_no]));
-  const ids = [...byTs.keys()];
-  const now = new Date().toISOString();
-  const stmts: D1PreparedStatement[] = [];
+/** The gauge columns one poll reads and may rewrite. */
+export interface GaugePollRow {
+  station_no: string;
+  ts_id: string;
+  rf_ts_id: string | null;
+  lat: number;
+  lon: number;
+  level: number | null;
+  level_at: string | null;
+  level_hour_ago: number | null;
+  level_day_ago: number | null;
+  level_day_ago_at: string | null;
+  trend_sepa: number | null;
+  trend_sepa_at: string | null;
+  forecast_model: string | null;
+  rain: string | null;
+  outlook: string | null;
+}
+
+/** What one poll fetched, by station. A station missing from a map keeps its stored value. */
+export interface PollFetched {
+  levels: Map<string, { level: number; at: string; hourAgo: number | null }>;
+  dayAgo: Map<string, { level: number; at: string }>;
+  flags: Map<string, { flag: number; at: string }>;
+  rain: Map<string, StoredRain>;
+}
+
+type Written = Pick<
+  GaugePollRow,
+  'level' | 'level_at' | 'level_hour_ago' | 'level_day_ago' | 'level_day_ago_at' | 'trend_sepa' | 'trend_sepa_at' | 'rain' | 'outlook'
+>;
+
+const parse = <T>(v: string | null): T | null => {
+  if (!v) return null;
+  try {
+    return JSON.parse(v) as T;
+  } catch {
+    return null;
+  }
+};
+
+/** True when a gauge's stored rain is missing, from an earlier UK day, or due a refresh. */
+export function rainIsDue(rain: string | null, now: Date): boolean {
+  const r = parse<StoredRain>(rain);
+  return !r || r.day !== ukToday(now) || now.getTime() - Date.parse(r.at) >= RAIN_REFRESH_MS;
+}
+
+/** Same outlook apart from when it was computed. */
+function sameOutlook(a: GaugeOutlook | null, b: GaugeOutlook | null): boolean {
+  if (!a || !b) return a === b;
+  return JSON.stringify({ ...a, at: '' }) === JSON.stringify({ ...b, at: '' });
+}
+
+/**
+ * A gauge's columns after merging in what this poll fetched and recomputing its
+ * outlook, or null when nothing would change (so the row is not rewritten).
+ */
+export function nextGaugeState(row: GaugePollRow, fetched: PollFetched, now: Date): Written | null {
+  const lv = fetched.levels.get(row.station_no);
+  const da = fetched.dayAgo.get(row.station_no);
+  const fl = fetched.flags.get(row.station_no);
+  const rn = fetched.rain.get(row.station_no);
+  const next: Written = {
+    level: lv ? lv.level : row.level,
+    level_at: lv ? lv.at : row.level_at,
+    level_hour_ago: lv ? lv.hourAgo : row.level_hour_ago,
+    level_day_ago: da ? da.level : row.level_day_ago,
+    level_day_ago_at: da ? da.at : row.level_day_ago_at,
+    trend_sepa: fl ? fl.flag : row.trend_sepa,
+    trend_sepa_at: fl ? fl.at : row.trend_sepa_at,
+    rain: rn ? JSON.stringify(rn) : row.rain,
+    outlook: row.outlook,
+  };
+
+  if (row.forecast_model) {
+    const t = now.getTime();
+    const o =
+      next.level == null || isStale(next.level_at, t)
+        ? null
+        : computeOutlook(
+            next.level,
+            gaugeTrend(next.level, next.level_hour_ago, next.level_at, next.trend_sepa, next.trend_sepa_at),
+            parse<ForecastModel>(row.forecast_model),
+            parse<StoredRain>(next.rain),
+            t,
+            dayChange(next.level, next.level_at, next.level_day_ago, next.level_day_ago_at),
+          );
+    const old = parse<GaugeOutlook>(row.outlook);
+    const keep = sameOutlook(old, o) && (!old || t - Date.parse(old.at) < OUTLOOK_REWRITE_MS);
+    if (!keep) next.outlook = o ? JSON.stringify(o) : null;
+  }
+
+  const changed = (Object.keys(next) as Array<keyof Written>).some((k) => next[k] !== row[k]);
+  return changed ? next : null;
+}
+
+/**
+ * Runs `fetchBatch` over `items` in batches. A failed batch is logged and skipped,
+ * so one SEPA error doesn't throw away what the other batches fetched.
+ */
+async function inBatches<I, T>(label: string, items: I[], size: number, fetchBatch: (items: I[]) => Promise<T[]>): Promise<{ results: T[]; failed: number }> {
+  const results: T[] = [];
+  let failed = 0;
+  for (let i = 0; i < items.length; i += size) {
+    try {
+      results.push(...(await fetchBatch(items.slice(i, i + size))));
+    } catch (e) {
+      failed++;
+      console.error(`${label}: batch ${i / size + 1} failed`, e);
+    }
+  }
+  return { results, failed };
+}
+
+export interface PollSummary {
+  levels: number;
+  empty: number;
+  written: number;
+  failedBatches: number;
+  rain: number | null;
+}
+
+/**
+ * The 15-minute job: latest levels, levels a day ago, SEPA's rising/falling flags and
+ * (hourly, or when the UK day changes) rain, fetched together; outlooks recomputed;
+ * then one UPDATE per gauge whose values actually changed.
+ */
+export async function pollReadings(db: D1Database, now = new Date()): Promise<PollSummary> {
+  const { results: rows } = await db
+    .prepare(
+      `SELECT station_no, ts_id, rf_ts_id, lat, lon, level, level_at, level_hour_ago, level_day_ago, level_day_ago_at,
+              trend_sepa, trend_sepa_at, forecast_model, rain, outlook FROM gauges`,
+    )
+    .all<GaugePollRow>();
+
+  const byTs = new Map(rows.map((r) => [r.ts_id, r.station_no]));
+  const byRfTs = new Map(rows.filter((r) => r.rf_ts_id).map((r) => [r.rf_ts_id!, r.station_no]));
+  const rainDue = rows.filter((r) => r.forecast_model && rainIsDue(r.rain, now));
+  const dayAgoAt = now.getTime() - 24 * 3_600_000;
+  const dayFrom = new Date(dayAgoAt - 30 * 60_000).toISOString();
+  const dayTo = new Date(dayAgoAt).toISOString();
+
+  const [levelRes, dayRes, flagRes, rainRes] = await Promise.all([
+    inBatches('SEPA levels', [...byTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT3H')),
+    inBatches('SEPA level a day ago', [...byTs.keys()], BATCH, (ids) => fetchSeriesWindow(ids, dayFrom, dayTo)),
+    inBatches('SEPA rising/falling', [...byRfTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT1H')),
+    rainDue.length ? inBatches('Open-Meteo rain', rainDue, RAIN_BATCH, (gauges) => fetchRain(gauges, now)) : Promise.resolve(null),
+  ]);
+
+  const fetched: PollFetched = { levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map() };
   let empty = 0;
-  // SEPA's rising/falling flags load alongside the levels (the cron has ~30 s in all).
-  const flags = pollRisingFalling(db).catch((e) => console.error('SEPA rising/falling poll failed', e));
-  const dayAgo = pollDayAgo(db, byTs, ids).catch((e) => console.error('SEPA level a day ago failed', e));
-
-  for (let i = 0; i < ids.length; i += BATCH) {
-    const series = await fetchSeriesValues(ids.slice(i, i + BATCH), 'PT3H');
-    for (const s of series) {
-      const { latest, hourAgo } = latestAndHourAgo(s.points);
-      const station = byTs.get(s.ts_id);
-      if (!station) continue;
-      if (!latest) {
-        empty++;
-        continue;
-      }
-      stmts.push(
-        db
-          .prepare('UPDATE gauges SET level = ?, level_at = ?, level_hour_ago = ?, updated_at = ? WHERE station_no = ?')
-          .bind(latest[1], latest[0], hourAgo, now, station),
-      );
-    }
+  for (const s of levelRes.results) {
+    const station = byTs.get(s.ts_id);
+    if (!station) continue;
+    const { latest, hourAgo } = latestAndHourAgo(s.points);
+    if (!latest) empty++;
+    else fetched.levels.set(station, { level: latest[1], at: latest[0], hourAgo });
   }
-  if (stmts.length) await db.batch(stmts);
-  await Promise.all([flags, dayAgo]);
-  await updateOutlooks(db);
-  return { updated: stmts.length, empty };
-}
+  for (const s of dayRes.results) {
+    const last = s.points[s.points.length - 1];
+    const station = byTs.get(s.ts_id);
+    if (last && station) fetched.dayAgo.set(station, { level: last[1], at: last[0] });
+  }
+  for (const s of flagRes.results) {
+    const last = s.points[s.points.length - 1];
+    const station = byRfTs.get(s.ts_id);
+    if (last && station) fetched.flags.set(station, { flag: Math.sign(last[1]), at: last[0] });
+  }
+  for (const [station, rain] of rainRes?.results ?? []) fetched.rain.set(station, rain);
 
-/** Each gauge's level 24 hours ago (the latest reading in the half hour before then): the outlook's trend input. */
-async function pollDayAgo(db: D1Database, byTs: Map<string, string>, ids: string[]): Promise<void> {
-  const at = Date.now() - 24 * 3_600_000;
-  const from = new Date(at - 30 * 60_000).toISOString();
-  const to = new Date(at).toISOString();
   const stmts: D1PreparedStatement[] = [];
-  for (let i = 0; i < ids.length; i += BATCH) {
-    for (const s of await fetchSeriesWindow(ids.slice(i, i + BATCH), from, to)) {
-      const last = s.points[s.points.length - 1];
-      const station = byTs.get(s.ts_id);
-      if (!last || !station) continue;
-      stmts.push(db.prepare('UPDATE gauges SET level_day_ago = ?, level_day_ago_at = ? WHERE station_no = ?').bind(last[1], last[0], station));
-    }
+  for (const row of rows) {
+    const n = nextGaugeState(row, fetched, now);
+    if (!n) continue;
+    stmts.push(
+      db
+        .prepare(
+          `UPDATE gauges SET level = ?, level_at = ?, level_hour_ago = ?, level_day_ago = ?, level_day_ago_at = ?,
+                  trend_sepa = ?, trend_sepa_at = ?, rain = ?, outlook = ? WHERE station_no = ?`,
+        )
+        .bind(n.level, n.level_at, n.level_hour_ago, n.level_day_ago, n.level_day_ago_at, n.trend_sepa, n.trend_sepa_at, n.rain, n.outlook, row.station_no),
+    );
   }
   if (stmts.length) await db.batch(stmts);
-}
 
-/** Latest SEPA rising/falling flag for every gauge. Series ids come from the daily metadata refresh. */
-async function pollRisingFalling(db: D1Database): Promise<void> {
-  const { results } = await db.prepare('SELECT station_no, rf_ts_id FROM gauges WHERE rf_ts_id IS NOT NULL').all<{ station_no: string; rf_ts_id: string }>();
-  const byTs = new Map(results.map((r) => [r.rf_ts_id, r.station_no]));
-  const ids = [...byTs.keys()];
-  const stmts: D1PreparedStatement[] = [];
-  for (let i = 0; i < ids.length; i += BATCH) {
-    for (const s of await fetchSeriesValues(ids.slice(i, i + BATCH), 'PT1H')) {
-      const last = s.points[s.points.length - 1];
-      const station = byTs.get(s.ts_id);
-      if (!last || !station) continue;
-      stmts.push(db.prepare('UPDATE gauges SET trend_sepa = ?, trend_sepa_at = ? WHERE station_no = ?').bind(Math.sign(last[1]), last[0], station));
-    }
-  }
-  if (stmts.length) await db.batch(stmts);
+  return {
+    levels: fetched.levels.size,
+    empty,
+    written: stmts.length,
+    failedBatches: levelRes.failed + dayRes.failed + flagRes.failed + (rainRes?.failed ?? 0),
+    rain: rainRes ? fetched.rain.size : null,
+  };
 }
 
 export async function refreshRisingFallingIds(db: D1Database): Promise<number> {
@@ -120,34 +253,24 @@ export async function levelHistory(stationNo: string, tsId: string, period: Hist
 }
 
 /**
- * Daily rainfall around now (yesterday, today, tomorrow, the day after) for
- * every gauge with a forecast model, from Open-Meteo in batched multi-location
- * requests. Feeds the level outlook; run hourly.
+ * Daily rainfall around now (yesterday, today, tomorrow, the day after) for up to
+ * 50 gauges, from one Open-Meteo multi-location request. Feeds the level outlook.
  */
-export async function refreshRain(db: D1Database): Promise<number> {
-  const { results } = await db
-    .prepare('SELECT station_no, lat, lon FROM gauges WHERE forecast_model IS NOT NULL')
-    .all<{ station_no: string; lat: number; lon: number }>();
-  const at = new Date().toISOString();
-  const stmts: D1PreparedStatement[] = [];
-  for (let i = 0; i < results.length; i += 50) {
-    const batch = results.slice(i, i + 50);
-    const url =
-      `https://api.open-meteo.com/v1/forecast?latitude=${batch.map((g) => g.lat.toFixed(3)).join(',')}` +
-      `&longitude=${batch.map((g) => g.lon.toFixed(3)).join(',')}&daily=precipitation_sum&past_days=1&forecast_days=3&timezone=Europe%2FLondon`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
-    const body = (await res.json()) as unknown;
-    const locs = (Array.isArray(body) ? body : [body]) as Array<{ daily?: { time: string[]; precipitation_sum: Array<number | null> } }>;
-    locs.forEach((loc, j) => {
-      const d = loc.daily;
-      if (!d || d.time.length < 4) return;
-      const p = d.precipitation_sum.map((v) => v ?? 0);
-      const rain = { day: d.time[1], yesterday: p[0], today: p[1], tomorrow: p[2], dayAfter: p[3], at };
-      stmts.push(db.prepare('UPDATE gauges SET rain = ? WHERE station_no = ?').bind(JSON.stringify(rain), batch[j].station_no));
-    });
-  }
-  if (stmts.length) await db.batch(stmts);
-  await updateOutlooks(db);
-  return stmts.length;
+async function fetchRain(gauges: Array<{ station_no: string; lat: number; lon: number }>, now: Date): Promise<Array<[string, StoredRain]>> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${gauges.map((g) => g.lat.toFixed(3)).join(',')}` +
+    `&longitude=${gauges.map((g) => g.lon.toFixed(3)).join(',')}&daily=precipitation_sum&past_days=1&forecast_days=3&timezone=Europe%2FLondon`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
+  const body = (await res.json()) as unknown;
+  const locs = (Array.isArray(body) ? body : [body]) as Array<{ daily?: { time: string[]; precipitation_sum: Array<number | null> } }>;
+  const at = now.toISOString();
+  const out: Array<[string, StoredRain]> = [];
+  locs.forEach((loc, j) => {
+    const d = loc.daily;
+    if (!d || d.time.length < 4 || !gauges[j]) return;
+    const p = d.precipitation_sum.map((v) => v ?? 0);
+    out.push([gauges[j].station_no, { day: d.time[1], yesterday: p[0], today: p[1], tomorrow: p[2], dayAfter: p[3], at }]);
+  });
+  return out;
 }
