@@ -7,7 +7,8 @@ const TREND_THRESHOLD_M = 0.01;
 
 export function isStale(levelAt: string | null, now = Date.now()): boolean {
   if (!levelAt) return true;
-  return now - Date.parse(levelAt) > STALE_AFTER_MS;
+  const t = Date.parse(levelAt);
+  return !(now - t <= STALE_AFTER_MS); // an unparseable time (NaN) counts as stale
 }
 
 /** How long SEPA's rising/falling flag counts as current, relative to the level reading. */
