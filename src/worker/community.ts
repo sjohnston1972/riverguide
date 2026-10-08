@@ -5,7 +5,8 @@ import { z } from 'zod/mini';
 import { BAND_RULES, type CalibrationPoint, deriveBand, evidenceOf, levelAt, VERDICTS, type Verdict } from '../shared/community.ts';
 import { ukToday } from '../shared/status.ts';
 import type { CommunityReport, CommunityReports } from '../shared/types.ts';
-import { getGauge, getSection } from './data.ts';
+import { getGauge, headlineStation } from './data.ts';
+import { purgeSections } from './edgecache.ts';
 import { type AppEnv, flag } from './env.ts';
 import { DEVICE_COOKIE, deviceCookie, ipHash, readCookie, signDevice, today, verifyDevice, verifyTurnstile } from './guard.ts';
 import { levelHistory } from './poll.ts';
@@ -92,6 +93,8 @@ export async function recomputeBands(db: D1Database, slug: string): Promise<void
     );
   }
   if (stmts.length) await db.batch(stmts);
+  // A band change moves statuses on the list and this section's page.
+  if (stmts.length) await purgeSections(slug);
 }
 
 interface ReportRow {
@@ -162,10 +165,10 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
 
   app.get('/api/sections/:slug/reports', async (c) => {
     const slug = c.req.param('slug');
-    const found = await getSection(c.env.DB, slug);
+    const found = await headlineStation(c.env.DB, slug);
     if (!found) return c.json({ error: 'Not found' }, 404);
     const device = await deviceOf(c.env, c.req.header('cookie'));
-    const station = found.detail.station_no;
+    const station = found.station_no;
     const [reports, band, points] = await Promise.all([
       listReports(c.env.DB, slug, device),
       station
@@ -212,7 +215,7 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     if (!parsed.success) return c.json({ error: 'bad_request', message: 'Please choose how it was and when you paddled.' }, 400);
 
     const slug = c.req.param('slug');
-    const found = await getSection(env.DB, slug);
+    const found = await headlineStation(env.DB, slug);
     if (!found) return c.json({ error: 'Not found' }, 404);
 
     const when = Date.parse(parsed.data.paddled_at);
@@ -237,7 +240,7 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     }
 
     // Record the headline gauge's level at the time paddled.
-    const station = found.detail.station_no;
+    const station = found.station_no;
     let level: number | null = null;
     if (station) {
       const g = await getGauge(env.DB, station);

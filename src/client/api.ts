@@ -58,9 +58,10 @@ interface Cached<T> {
   p: Promise<T>;
 }
 
-function cached<T>(ttlMs: number, load: () => Promise<T>): (force?: boolean) => Promise<T> {
+/** A memoised loader; `.invalidate()` makes the next call fetch again without fetching now. */
+function cached<T>(ttlMs: number, load: () => Promise<T>): ((force?: boolean) => Promise<T>) & { invalidate(): void } {
   let c: Cached<T> | null = null;
-  return (force = false) => {
+  const get = (force = false) => {
     if (!force && c && Date.now() - c.at < ttlMs) return c.p;
     const p = load();
     c = { at: Date.now(), p };
@@ -69,13 +70,15 @@ function cached<T>(ttlMs: number, load: () => Promise<T>): (force?: boolean) => 
     });
     return p;
   };
+  return Object.assign(get, { invalidate: () => void (c = null) });
 }
 
 const detailCache = new Map<string, Cached<SectionDetail>>();
 
 export const api = {
   config: cached<PublicConfig>(Infinity, () => getJson('/api/config')),
-  sections: cached<SectionSummary[]>(60_000, () => getJson('/api/sections')),
+  // The list page refreshes itself every few minutes; anything that changes a status invalidates this.
+  sections: cached<SectionSummary[]>(5 * 60_000, () => getJson('/api/sections')),
   releases: cached<ReleasesOverview>(5 * 60_000, () => getJson('/api/releases')),
   lora: cached<LoraOverview>(15 * 60_000, () => getJson('/api/tides/lora')),
 
