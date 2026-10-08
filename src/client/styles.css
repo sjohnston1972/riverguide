@@ -172,7 +172,6 @@ body {
   background: var(--paper);
   color: var(--ink);
   font: 400 1rem/1.55 var(--font-body);
-  overflow-x: hidden;
 }
 
 #root {
@@ -3189,7 +3188,7 @@ button {
   grid-template-columns: minmax(0, 720px);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 639px) {
   .filter-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
