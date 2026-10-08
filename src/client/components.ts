@@ -63,6 +63,3 @@ export function skeletonLines(n: number, cls = 'skel-row'): HTMLDivElement {
   return h('div', { class: 'skel-wrap', 'aria-hidden': 'true' }, Array.from({ length: n }, () => h('div', { class: `skel ${cls}` })));
 }
 
-export function loadingText(text: string): HTMLParagraphElement {
-  return h('p', { class: 'muted loading', role: 'status' }, text);
-}

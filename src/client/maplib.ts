@@ -36,6 +36,3 @@ export function cssColor(name: string, fallback = '#777'): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 
-export function statusColor(status: SectionStatus): string {
-  return cssColor(`--st-${status}`);
-}

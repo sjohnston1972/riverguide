@@ -227,11 +227,20 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         const [hist, mod] = await Promise.all([api.history(link.station_no, period, abort.signal), import('../graph.ts')]);
         if (destroyed || my !== seq) return;
         graphArea.replaceChildren();
+        graphArea.removeAttribute('role');
+        graphArea.removeAttribute('aria-label');
         if (!hist.points.length) {
           graphArea.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
           return;
         }
         graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level });
+        const vs = hist.points.map((p) => p.v);
+        graphArea.setAttribute('role', 'img');
+        graphArea.setAttribute(
+          'aria-label',
+          `Level at ${link.gauge.name}, last ${PERIODS.find(([p]) => p === period)?.[1] ?? period}: now ${formatLevel(vs[vs.length - 1])}, ` +
+            `lowest ${formatLevel(Math.min(...vs))}, highest ${formatLevel(Math.max(...vs))}.`,
+        );
       } catch (e) {
         if (destroyed || my !== seq || (e instanceof DOMException && e.name === 'AbortError')) return;
         graphArea.replaceChildren(errorBox(upstreamMessage(e) ?? "Couldn't load the level history.", () => void draw()));
@@ -507,33 +516,48 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       !put && !take && centre ? h('li', null, h('span', { class: 'place-tag' }, 'Section'), h('span', null, 'Section location only. Check the guidebook for access points.')) : null,
     );
 
-    void import('../maplib.ts')
-      .then(({ L, baseMap, cssColor }) => {
-        if (destroyed) return;
-        const map = baseMap(mapEl, { scrollWheelZoom: false });
-        cleanups.push(() => map.remove());
-        const pts: [number, number][] = [];
-        const add = (p: { lat: number; lon: number }, label: string, letter: string, color: string) => {
-          const m = L.marker([p.lat, p.lon], {
-            icon: L.divIcon({ className: 'place-marker', html: `<span style="background:${color}">${letter}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }),
-            title: label,
-            alt: label,
-          });
-          m.bindPopup(h('div', null, h('strong', null, label)));
-          m.addTo(map);
-          pts.push([p.lat, p.lon]);
-        };
-        const loch = cssColor('--loch', '#1c6596');
-        if (put) add(put, `Put-in: ${put.label}`, 'P', loch);
-        if (take) add(take, `Take-out: ${take.label}`, 'T', cssColor('--ink', '#14232b'));
-        if (!pts.length && centre) {
-          L.circleMarker([centre.lat, centre.lon], { radius: 9, color: loch, weight: 2, dashArray: approx ? '3 3' : undefined, fillOpacity: 0.25 }).addTo(map);
-          pts.push([centre.lat, centre.lon]);
-        }
-        if (pts.length === 1) map.setView(pts[0], 12);
-        else map.fitBounds(L.latLngBounds(pts), { padding: [30, 30], maxZoom: 14 });
-      })
-      .catch(() => mapEl.replaceChildren(h('p', { class: 'muted' }, "Couldn't load the map.")));
+    // Leaflet (~50 kB) and the tiles load only when the map is about to scroll into view: on a phone it sits
+    // below the level graph the reader came for.
+    const loadMap = () =>
+      import('../maplib.ts')
+        .then(({ L, baseMap, cssColor }) => {
+          if (destroyed) return;
+          const map = baseMap(mapEl, { scrollWheelZoom: false });
+          cleanups.push(() => map.remove());
+          const pts: [number, number][] = [];
+          const add = (p: { lat: number; lon: number }, label: string, letter: string, color: string) => {
+            const m = L.marker([p.lat, p.lon], {
+              icon: L.divIcon({ className: 'place-marker', html: `<span style="background:${color}">${letter}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }),
+              title: label,
+              alt: label,
+            });
+            m.bindPopup(h('div', null, h('strong', null, label)));
+            m.addTo(map);
+            pts.push([p.lat, p.lon]);
+          };
+          const loch = cssColor('--loch', '#1c6596');
+          if (put) add(put, `Put-in: ${put.label}`, 'P', loch);
+          if (take) add(take, `Take-out: ${take.label}`, 'T', cssColor('--ink', '#14232b'));
+          if (!pts.length && centre) {
+            L.circleMarker([centre.lat, centre.lon], { radius: 9, color: loch, weight: 2, dashArray: approx ? '3 3' : undefined, fillOpacity: 0.25 }).addTo(map);
+            pts.push([centre.lat, centre.lon]);
+          }
+          if (pts.length === 1) map.setView(pts[0], 12);
+          else map.fitBounds(L.latLngBounds(pts), { padding: [30, 30], maxZoom: 14 });
+        })
+        .catch(() => mapEl.replaceChildren(h('p', { class: 'muted' }, "Couldn't load the map.")));
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          io.disconnect();
+          void loadMap();
+        },
+        { rootMargin: '300px' },
+      );
+      io.observe(mapEl);
+      cleanups.push(() => io.disconnect());
+    } else void loadMap();
 
     return h(
       'section',

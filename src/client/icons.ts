@@ -12,7 +12,6 @@ export const ICONS = {
   map: svg('<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'),
   search: svg('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'),
   sliders: svg('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
-  external: svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5H5V6h5"/>'),
   back: svg('<path d="M15 5l-7 7 7 7"/>'),
   send: svg('<path d="M4 12l16-8-6 16-2.5-6.5z"/>'),
   stop: svg('<rect x="7" y="7" width="10" height="10" rx="1.5"/>'),
