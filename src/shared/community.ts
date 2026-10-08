@@ -4,7 +4,8 @@
 // level. Once enough independent reports exist, the band is set where the
 // reports change from too low to runnable (and runnable to too high). A side
 // with no evidence keeps the estimated threshold, and one-sided evidence can
-// only move a threshold in the direction it supports.
+// only move a threshold in the direction it supports, and only as far as at
+// least two people agree (so one mistaken report can't drag it).
 
 export const VERDICTS = ['too_low', 'scrapy', 'good', 'pushy', 'too_high'] as const;
 export type Verdict = (typeof VERDICTS)[number];
@@ -25,7 +26,7 @@ export const BAND_RULES = { reports: 5, people: 3, days: 2 } as const;
 export interface CalibrationPoint {
   level: number;
   verdict: Verdict;
-  /** 1 + "same for me" votes. */
+  /** 1 + "same for me" votes from other people (capped by the Worker). */
   weight: number;
   /** Stable pseudonymous id for distinct-people counting (hashed IP). */
   person: string;
@@ -60,6 +61,20 @@ export function hasEnoughEvidence(e: Evidence): boolean {
 const round = (v: number) => Math.round(v * 100) / 100;
 
 /**
+ * The most extreme level that at least two different people support: walk the reports from
+ * the most extreme inwards and stop at the second distinct person. Null with only one person.
+ */
+export function secondPersonLevel(points: CalibrationPoint[], extreme: 'lowest' | 'highest'): number | null {
+  const sorted = [...points].sort((a, b) => (extreme === 'lowest' ? a.level - b.level : b.level - a.level));
+  const people = new Set<string>();
+  for (const p of sorted) {
+    people.add(p.person);
+    if (people.size === 2) return p.level;
+  }
+  return null;
+}
+
+/**
  * Best boundary between points that should sit below it and points that should
  * sit above it: the threshold with the least (weighted) disagreement. Ties take
  * the middle of the best range, so a clean split lands halfway between the groups.
@@ -88,20 +103,31 @@ export function deriveBand(
   const tooLow = points.filter((p) => p.verdict === 'too_low');
   const tooHigh = points.filter((p) => p.verdict === 'too_high');
   const run = points.filter((p) => RUNNABLE.has(p.verdict));
-  const lowestRun = run.length ? Math.min(...run.map((p) => p.level)) : null;
-  const highestRun = run.length ? Math.max(...run.map((p) => p.level)) : null;
 
+  // Both sides reported: split between them (weighted, tolerant of an outlier). One side only:
+  // move the estimate only as far as two people agree.
   let min = estimate.min;
   if (tooLow.length && run.length) min = splitLevel(tooLow, run);
-  else if (run.length && min != null) min = Math.min(min, lowestRun!); // runnable lower than estimated
-  else if (tooLow.length) min = round(Math.max(min ?? -Infinity, Math.max(...tooLow.map((p) => p.level)) + 0.01));
+  else if (run.length && min != null) {
+    const runLow = secondPersonLevel(run, 'lowest'); // runnable lower than estimated
+    if (runLow != null) min = Math.min(min, runLow);
+  } else if (tooLow.length) {
+    const lowHigh = secondPersonLevel(tooLow, 'highest'); // still too low above the estimate
+    if (lowHigh != null) min = round(Math.max(min ?? -Infinity, lowHigh + 0.01));
+  }
 
   let max = estimate.max;
   if (tooHigh.length && run.length) max = splitLevel(run, tooHigh);
-  else if (run.length && max != null) max = Math.max(max, highestRun!); // runnable higher than estimated
-  else if (tooHigh.length) max = round(Math.min(max ?? Infinity, Math.min(...tooHigh.map((p) => p.level)) - 0.01));
+  else if (run.length && max != null) {
+    const runHigh = secondPersonLevel(run, 'highest'); // runnable higher than estimated
+    if (runHigh != null) max = Math.max(max, runHigh);
+  } else if (tooHigh.length) {
+    const highLow = secondPersonLevel(tooHigh, 'lowest'); // already too high below the estimate
+    if (highLow != null) max = round(Math.min(max ?? Infinity, highLow - 0.01));
+  }
 
-  // Reports that contradict each other badly enough to cross over give no usable band.
+  // No threshold at all says nothing; reports that cross over give no usable band.
+  if (min == null && max == null) return null;
   if (min != null && max != null && min >= max) return null;
 
   return {

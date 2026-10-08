@@ -60,8 +60,8 @@ Precedence: **manual > community > paddler (Where's the Water) > estimate**.
 
 On each river page, under "Paddled it?", anyone can say how a section was: **too low · scrapy · good · pushy · too high**, plus a day, a time of day and an optional note. The Worker records the headline gauge's level at that time from SEPA history. Other people can respond with 👍 "Same for me" (adds weight) or 👎 "Not for me".
 
-- **Community band.** Once a section has at least 5 reports from 3 people (distinct hashed IPs) on 2 different days, `src/shared/community.ts` sets the lower threshold where reports change from too low to runnable, and the upper threshold where they change from runnable to too high. A side with no evidence keeps the estimate. One-sided evidence can only move a threshold in the direction it supports. The band is stored in `community_bands` and overrides paddler levels and estimates, but never manual bands (see the precedence above). It shows as "community" in the list.
-- **Disputed reports** stop counting when 3 or more people disagree and disagreements outnumber agreements.
+- **Community band.** Once a section has at least 5 reports from 3 people (distinct hashed IPs) on 2 different days, `src/shared/community.ts` sets the lower threshold where reports change from too low to runnable, and the upper threshold where they change from runnable to too high. A side with no evidence keeps the estimate. One-sided evidence can only move a threshold in the direction it supports, and only as far as at least two people agree. The band is stored in `community_bands` and overrides paddler levels and estimates, but never manual bands (see the precedence above). It shows as "community" in the list.
+- **Disputed reports** stop counting when 3 or more people disagree and disagreements outnumber agreements. "Same for me" adds weight per person, at most +3, and never from the author's own connection. (People = distinct hashed IPs.)
 - **Abuse controls.**
   - One Turnstile check per device, which issues a signed 1-year `rg_dev` cookie.
   - 10 writes per minute per IP.
@@ -69,7 +69,7 @@ On each river page, under "Paddled it?", anyone can say how a section was: **too
   - One report per device per section per day.
   - Reports up to 7 days old only.
   - Votes are one per device, and you can't vote on your own report.
-- **Reporting content.** A "Report note" link sits on each note. A note flagged 3 times is hidden. People can delete their own reports.
+- **Reporting content.** A "Report note" link sits on each note. A note flagged by 3 people is hidden. People can delete their own reports.
 - **Kill switch.** Set `COMMUNITY_ENABLED` to `"false"` and redeploy.
 
 Moderation (D1):
