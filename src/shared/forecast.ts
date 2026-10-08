@@ -99,14 +99,17 @@ export function lookupChange(model: ForecastModel, level: number, rainToday: num
  * `delta`: change in level over the last 24 hours (used by models that take the trend into account).
  */
 export function predictLevels(model: ForecastModel, current: number, rain: DailyRain, delta = 0): LevelOutlook {
+  // Floor at the gauge's lowest modelled level (or the current one, if lower): some gauges read below 0 m at base flow.
+  const floor = Math.min(current, model.levels![0]);
+  const f = (v: number) => r3(Math.max(floor, v));
   const [m1, lo1, hi1] = lookupChange(model, current, rain.today, rain.tomorrow, delta);
-  const t1 = Math.max(0, current + m1);
+  const t1 = Math.max(floor, current + m1);
   const [m2, lo2, hi2] = lookupChange(model, t1, rain.tomorrow, rain.dayAfter, t1 - current);
-  const t2 = Math.max(0, t1 + m2);
+  const t2 = Math.max(floor, t1 + m2);
   return {
-    tomorrow: { level: r3(t1), lo: r3(Math.max(0, current + lo1)), hi: r3(Math.max(0, current + hi1)) },
+    tomorrow: { level: r3(t1), lo: f(current + lo1), hi: f(current + hi1) },
     // The day after compounds tomorrow's uncertainty.
-    dayAfter: { level: r3(t2), lo: r3(Math.max(0, current + lo1 + lo2)), hi: r3(Math.max(0, current + hi1 + hi2)) },
+    dayAfter: { level: r3(t2), lo: f(current + lo1 + lo2), hi: f(current + hi1 + hi2) },
   };
 }
 
