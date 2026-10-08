@@ -633,6 +633,15 @@ button {
   text-decoration: none;
 }
 
+/* Why a status is Unknown: "Old reading", "No band yet". */
+.reason-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-3);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
 .lvl {
   display: inline-flex;
   align-items: baseline;
@@ -763,6 +772,11 @@ button {
   margin-top: 6px;
   color: var(--ink-2);
   max-width: 60ch;
+}
+
+/* "Couldn't refresh; showing levels from 14:32" */
+.headline-sub-warn {
+  color: var(--st-low-ink);
 }
 
 .list-layout {

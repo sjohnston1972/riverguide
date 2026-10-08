@@ -28,7 +28,15 @@ export function currentRoute(): Route {
   return matchRoute(location.pathname, location.search);
 }
 
+/** Where the user was on a history entry, restored when they come back to it. */
+export function savedScroll(): number | null {
+  const y = (history.state as { scrollY?: unknown } | null)?.scrollY;
+  return typeof y === 'number' ? y : null;
+}
+
 export function navigate(url: string, opts: { replace?: boolean } = {}): void {
+  // Remember the scroll position of the page being left, for Back.
+  history.replaceState({ ...(history.state ?? {}), scrollY: window.scrollY }, '');
   if (opts.replace) history.replaceState(null, '', url);
   else history.pushState(null, '', url);
   listener?.(currentRoute(), { pop: false });
@@ -41,6 +49,8 @@ export function replaceUrl(url: string): void {
 
 export function startRouter(onRoute: Listener): void {
   listener = onRoute;
+  // Pages render after their data loads, so the browser's own restoration would land on a skeleton.
+  history.scrollRestoration = 'manual';
   window.addEventListener('popstate', () => onRoute(currentRoute(), { pop: true }));
   document.addEventListener('click', (e) => {
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;

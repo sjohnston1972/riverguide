@@ -9,7 +9,7 @@ import { mountLora } from './pages/lora.ts';
 import { mountNotFound } from './pages/notfound.ts';
 import { mountReleases } from './pages/releases.ts';
 import { mountRiver } from './pages/river.ts';
-import { type Route, startRouter } from './router.ts';
+import { type Route, savedScroll, startRouter } from './router.ts';
 import { initTheme, themeToggle } from './theme.ts';
 
 export interface ChatContext {
@@ -115,6 +115,32 @@ api
     config = { chat_enabled: false, community_enabled: false, turnstile_site_key: null, show_full_guide_text: false };
   });
 
+/**
+ * Back/forward: return to where the user was. Pages fill in after their data loads, so keep
+ * re-applying the position until the page is tall enough, for up to 5 s or until the user
+ * scrolls or taps.
+ */
+let cancelRestore: (() => void) | null = null;
+function restoreScroll(y: number): void {
+  cancelRestore?.();
+  const until = Date.now() + 5000;
+  let timer = 0;
+  const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const;
+  const stop = () => {
+    clearTimeout(timer);
+    for (const e of events) window.removeEventListener(e, stop);
+    cancelRestore = null;
+  };
+  const step = () => {
+    window.scrollTo(0, y);
+    if (Math.abs(window.scrollY - y) > 1 && Date.now() < until) timer = window.setTimeout(step, 50);
+    else stop();
+  };
+  for (const e of events) window.addEventListener(e, stop, { passive: true });
+  cancelRestore = stop;
+  step();
+}
+
 function render(route: Route, nav: { pop: boolean }): void {
   for (const [name, a] of Object.entries(navLinks)) {
     const active =
@@ -156,7 +182,10 @@ function render(route: Route, nav: { pop: boolean }): void {
     default:
       page = mountNotFound(main, ctx);
   }
-  if (!nav.pop) window.scrollTo(0, 0);
+  cancelRestore?.();
+  const y = nav.pop ? savedScroll() : null;
+  if (y != null) restoreScroll(y);
+  else window.scrollTo(0, 0);
   // Move focus for screen readers without scrolling.
   const h1 = main.querySelector('h1');
   if (h1 && !firstRender) {

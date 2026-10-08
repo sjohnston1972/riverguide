@@ -82,6 +82,15 @@ export function relativeTime(iso: string | null, now = Date.now()): string {
 }
 
 /** "24 January 2011" from YYYY-MM-DD (or any parseable date). */
+/** "14:32" today, "Tue 14:32" on another day (UK time). */
+export function clockTime(iso: string, now = Date.now()): string {
+  const tz = { timeZone: 'Europe/London' } as const;
+  const d = new Date(iso);
+  const day = (x: Date) => x.toLocaleDateString('en-GB', tz);
+  const time = d.toLocaleTimeString('en-GB', { ...tz, hour: '2-digit', minute: '2-digit' });
+  return day(d) === day(new Date(now)) ? time : `${d.toLocaleDateString('en-GB', { ...tz, weekday: 'short' })} ${time}`;
+}
+
 export function formatDate(s: string | null): string | null {
   if (!s) return null;
   const t = Date.parse(s.length === 10 ? `${s}T12:00:00Z` : s);
