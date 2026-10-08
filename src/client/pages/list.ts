@@ -1,7 +1,7 @@
 // Home page: rivers list with filters, and the same filters on a map (/map).
 
 import type { SectionSummary } from '../../shared/types.ts';
-import { api } from '../api.ts';
+import { api, sectionsOffline } from '../api.ts';
 import { errorBox, estimateMark, levelWithTrend, skeletonLines, statusPill, tomorrowTag, unknownReason } from '../components.ts';
 import { clear, h, icon } from '../dom.ts';
 import {
@@ -239,8 +239,9 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     const narrowed = base.length !== sections.length;
     // How old the levels are, from the newest current reading (not the poll schedule).
     const newest = sections.reduce<string | null>((m, s) => (s.level_at && !s.stale && (!m || s.level_at > m) ? s.level_at : m), null);
-    const levels = refreshFailed
-      ? `Couldn't refresh${newest ? `; showing levels from ${clockTime(newest)}` : ''}.`
+    const noSignal = sectionsOffline();
+    const levels = refreshFailed || noSignal
+      ? `${noSignal ? 'No connection' : "Couldn't refresh"}${newest ? `; showing levels from ${clockTime(newest)}` : ''}.`
       : newest
         ? `SEPA levels as of ${clockTime(newest)}.`
         : 'Levels from SEPA gauges.';
@@ -249,7 +250,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
         ? `Out of ${base.length} matching your search and filters. ${levels}`
         : `Out of ${sections.length} sections across Scotland. ${levels}`
       : 'No river sections are loaded yet.';
-    sub.classList.toggle('headline-sub-warn', refreshFailed);
+    sub.classList.toggle('headline-sub-warn', refreshFailed || noSignal);
     resultCount.textContent = shown.length === sections.length ? `${shown.length} sections` : `Showing ${shown.length} of ${sections.length} sections`;
 
     if (view === 'list') renderList(shown);
