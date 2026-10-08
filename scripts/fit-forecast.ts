@@ -205,7 +205,10 @@ writeFileSync('data/private/forecast-comparison.json', JSON.stringify(comparison
     `\ntrend input: better on ${better.length}, worse on ${worse.length}, about the same on ${comparison.length - better.length - worse.length} of ${comparison.length} gauges; median skill ${med(comparison.map((c) => c.plain)).toFixed(3)} -> ${med(chosen).toFixed(3)}`,
   );
 }
-writeFileSync('data/gauge-forecast.json', JSON.stringify({ built: new Date().toISOString().slice(0, 10), method: 'analogue grid', k: K, test_days: TEST_DAYS, min_skill: MIN_SKILL, models }) + '\n');
+// One model per line, so a refit shows which gauges changed instead of one 1.5 MB line.
+const meta = JSON.stringify({ built: new Date().toISOString().slice(0, 10), method: 'analogue grid', k: K, test_days: TEST_DAYS, min_skill: MIN_SKILL });
+const modelLines = Object.entries(models).map(([no, m]) => `${JSON.stringify(no)}:${JSON.stringify(m)}`);
+writeFileSync('data/gauge-forecast.json', `${meta.slice(0, -1)},"models":{\n${modelLines.join(',\n')}\n}}\n`);
 const fitted = Object.values(models).filter(Boolean) as ForecastModel[];
 const usable = fitted.filter((m) => m.usable);
 const q = (v: number[], p: number) => [...v].sort((a, b) => a - b)[Math.floor(p * (v.length - 1))];
