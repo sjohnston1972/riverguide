@@ -84,14 +84,10 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     title.textContent = d.name;
     setFavouriteName(star, d.name);
     const sub = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
-    head.querySelector('.river-grade')?.remove();
     head.querySelector('.river-sub')?.remove();
-    head.querySelector('.facts')?.remove();
     head.querySelector('.river-source')?.remove();
     head.append(
-      gradeLine(d),
       h('p', { class: 'river-sub' }, sub),
-      facts(d),
       // Sections added from Where's the Water: their grade, length and access come from it.
       d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : '',
     );
@@ -152,11 +148,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       h(
         'div',
         { class: 'hero-top' },
-        h('div', { class: 'hero-pills' }, statusPill(d.status, 'lg'), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null, tomorrowTag(d)),
+        h('div', { class: 'hero-pills' }, statusPill(d.status), step ? h('span', { class: `step-tag s-${step}` }, STEP_LABEL[step]) : null, tomorrowTag(d)),
         basis ? h('p', { class: 'hero-basis' }, basis) : null,
         d.release_today ? h('p', { class: 'release-today' }, 'Scheduled release today.') : null,
       ),
       h('div', { class: 'hero-actions' }, askBtn),
+      detailsStrip(d),
     );
     const card = h('section', { class: 'now-card' }, top);
     if (!links.length) {
@@ -435,28 +432,21 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return `${pct < 10 ? pct.toFixed(1).replace(/\.0$/, '') : Math.round(pct)}%`;
   }
 
-  /** The grade, prominently, under the title. */
-  function gradeLine(d: SectionDetail): HTMLElement {
+  /** Grade, length and character along the bottom edge of the status band. */
+  function detailsStrip(d: SectionDetail): HTMLElement | null {
     // Consistent spacing: "1(2)" -> "1 (2)", like "3/4 (5)".
     const grade = d.grade_text ? gradeLabel(d.grade_text).replace(/^Grade\s*/i, '').replace(/\s*\(/g, ' (').trim() : '';
-    return h(
-      'div',
-      { class: 'river-grade', hidden: !grade },
-      h('span', { class: 'grade-badge', 'aria-label': `Grade ${grade}` }, h('span', { class: 'grade-badge-label' }, 'Grade'), h('span', { class: 'grade-badge-value' }, grade)),
-    );
-  }
-
-  function facts(d: SectionDetail): HTMLElement {
     const items: [string, string | null][] = [
+      ['Grade', grade || null],
       ['Length', d.length_text],
-      ['Time', d.time_text],
       ['Character', characterLabel(d.character)],
     ];
     const present = items.filter(([, v]) => v);
+    if (!present.length) return null;
     return h(
       'dl',
-      { class: 'facts', hidden: present.length === 0 },
-      present.map(([k, v]) => h('div', { class: 'fact' }, h('dt', null, k), h('dd', null, v!))),
+      { class: 'hero-details' },
+      present.map(([k, v]) => h('div', { class: 'hero-detail' }, h('dt', null, k), h('dd', null, v!))),
     );
   }
 
