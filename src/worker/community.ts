@@ -1,8 +1,9 @@
 // Community level reports: submit, vote, flag, and derive community bands.
 
-import type { Hono } from 'hono';
+import type { Context, Hono } from 'hono';
 import { z } from 'zod';
 import { BAND_RULES, type CalibrationPoint, deriveBand, evidenceOf, levelAt, VERDICTS, type Verdict } from '../shared/community.ts';
+import { ukToday } from '../shared/status.ts';
 import type { CommunityReport, CommunityReports } from '../shared/types.ts';
 import { getGauge, getSection } from './data.ts';
 import { type AppEnv, flag } from './env.ts';
@@ -40,15 +41,18 @@ interface PointRow {
   level: number;
   verdict: Verdict;
   ip_hash: string;
-  day: string;
+  paddled_at: string;
   agrees: number;
   disagrees: number;
 }
 
+/** The UK calendar day of an instant: what the paddler picked, not the UTC date (they differ around midnight in BST). */
+export const ukDay = (iso: string): string => ukToday(new Date(iso));
+
 async function calibrationPoints(db: D1Database, slug: string, stationNo: string): Promise<CalibrationPoint[]> {
   const { results } = await db
     .prepare(
-      `SELECT r.level, r.verdict, r.ip_hash, substr(r.paddled_at, 1, 10) AS day,
+      `SELECT r.level, r.verdict, r.ip_hash, r.paddled_at,
               COALESCE(SUM(v.vote = 1), 0) AS agrees, COALESCE(SUM(v.vote = -1), 0) AS disagrees
        FROM reports r LEFT JOIN report_votes v ON v.report_id = r.id
        WHERE r.slug = ? AND r.station_no = ? AND r.hidden = 0 AND r.level IS NOT NULL
@@ -58,7 +62,7 @@ async function calibrationPoints(db: D1Database, slug: string, stationNo: string
     .all<PointRow>();
   return results
     .filter((r) => !(r.disagrees >= DISPUTED_AT && r.disagrees > r.agrees))
-    .map((r) => ({ level: r.level, verdict: r.verdict, weight: 1 + r.agrees, person: r.ip_hash, day: r.day }));
+    .map((r) => ({ level: r.level, verdict: r.verdict, weight: 1 + r.agrees, person: r.ip_hash, day: ukDay(r.paddled_at) }));
 }
 
 /** Recompute (or remove) the community band for each gauge a section has reports against. */
@@ -145,6 +149,14 @@ async function deviceOf(env: AppEnv, cookieHeader: string | undefined): Promise<
   return env.SESSION_SECRET ? verifyDevice(env.SESSION_SECRET, readCookie(cookieHeader ?? null, DEVICE_COOKIE)) : null;
 }
 
+const clientIp = (c: Context<{ Bindings: AppEnv }>) => c.req.header('cf-connecting-ip') ?? 'local';
+
+/** Per-IP burst limit shared by every community write (reports, votes, flags, deletes, the bot check). */
+async function overLimit(c: Context<{ Bindings: AppEnv }>): Promise<Response | null> {
+  if ((await c.env.COMMUNITY_LIMITER.limit({ key: clientIp(c) })).success) return null;
+  return c.json({ error: 'rate', message: 'Slow down a little — try again in a minute.' }, 429);
+}
+
 export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
   const disabled = { error: 'disabled', message: 'Community reports are switched off at the moment.' };
 
@@ -177,6 +189,8 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
   // One bot check per device -> long-lived signed device cookie.
   app.post('/api/community/verify', async (c) => {
     if (!communityEnabled(c.env)) return c.json(disabled, 503);
+    const limited = await overLimit(c);
+    if (limited) return limited;
     const { token } = await c.req.json<{ token?: string }>().catch(() => ({ token: undefined }));
     if (c.env.TURNSTILE_SECRET) {
       const ok = typeof token === 'string' && (await verifyTurnstile(c.env.TURNSTILE_SECRET, token, c.req.header('cf-connecting-ip') ?? null));
@@ -191,10 +205,9 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     if (!communityEnabled(env)) return c.json(disabled, 503);
     const device = await deviceOf(env, c.req.header('cookie'));
     if (!device) return c.json({ error: 'verify', message: 'Please complete the quick check first.' }, 401);
-    const ip = c.req.header('cf-connecting-ip') ?? 'local';
-    if (!(await env.COMMUNITY_LIMITER.limit({ key: ip })).success) {
-      return c.json({ error: 'rate', message: 'Slow down a little — try again in a minute.' }, 429);
-    }
+    const limited = await overLimit(c);
+    if (limited) return limited;
+    const ip = clientIp(c);
     const parsed = NewReportBody.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'bad_request', message: 'Please choose how it was and when you paddled.' }, 400);
 
@@ -210,12 +223,14 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     const paddledAt = new Date(when).toISOString();
     const ipH = await ipHash(env.SESSION_SECRET!, ip);
 
-    const [sameDay, todayCount] = await Promise.all([
-      env.DB.prepare('SELECT id FROM reports WHERE slug = ? AND device = ? AND substr(paddled_at, 1, 10) = ? AND hidden = 0')
-        .bind(slug, device, paddledAt.slice(0, 10))
-        .first(),
+    // One report per device per section per UK day. Candidates within a day either side, then compared by UK day.
+    const [nearby, todayCount] = await Promise.all([
+      env.DB.prepare('SELECT paddled_at FROM reports WHERE slug = ? AND device = ? AND hidden = 0 AND paddled_at BETWEEN ? AND ?')
+        .bind(slug, device, new Date(when - 86_400_000).toISOString(), new Date(when + 86_400_000).toISOString())
+        .all<{ paddled_at: string }>(),
       env.DB.prepare('SELECT count(*) AS n FROM reports WHERE ip_hash = ? AND created_at >= ?').bind(ipH, today()).first<{ n: number }>(),
     ]);
+    const sameDay = nearby.results.some((r) => ukDay(r.paddled_at) === ukDay(paddledAt));
     if (sameDay) return c.json({ error: 'duplicate', message: "You've already reported this section for that day. Delete it first to change it." }, 409);
     if ((todayCount?.n ?? 0) >= MAX_REPORTS_PER_IP_PER_DAY) {
       return c.json({ error: 'quota', message: 'Daily report limit reached. Thanks for contributing — try again tomorrow.' }, 429);
@@ -243,6 +258,8 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
 
   app.delete('/api/reports/:id', async (c) => {
     if (!communityEnabled(c.env)) return c.json(disabled, 503);
+    const limited = await overLimit(c);
+    if (limited) return limited;
     const device = await deviceOf(c.env, c.req.header('cookie'));
     const row = await c.env.DB.prepare('SELECT slug, device FROM reports WHERE id = ?').bind(c.req.param('id')).first<{ slug: string; device: string }>();
     if (!row) return c.json({ error: 'Not found' }, 404);
@@ -256,6 +273,8 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     if (!communityEnabled(c.env)) return c.json(disabled, 503);
     const device = await deviceOf(c.env, c.req.header('cookie'));
     if (!device) return c.json({ error: 'verify', message: 'Please complete the quick check first.' }, 401);
+    const limited = await overLimit(c);
+    if (limited) return limited;
     const parsed = VoteBody.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success) return c.json({ error: 'bad_request', message: 'Invalid vote.' }, 400);
     const id = c.req.param('id');
@@ -279,6 +298,8 @@ export function registerCommunityRoutes(app: Hono<{ Bindings: AppEnv }>): void {
     if (!communityEnabled(c.env)) return c.json(disabled, 503);
     const device = await deviceOf(c.env, c.req.header('cookie'));
     if (!device) return c.json({ error: 'verify', message: 'Please complete the quick check first.' }, 401);
+    const limited = await overLimit(c);
+    if (limited) return limited;
     const id = c.req.param('id');
     await c.env.DB.prepare('INSERT OR IGNORE INTO report_flags (report_id, device, created_at) SELECT id, ?, ? FROM reports WHERE id = ?')
       .bind(device, new Date().toISOString(), id)
