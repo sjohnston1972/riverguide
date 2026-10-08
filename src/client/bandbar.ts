@@ -39,7 +39,7 @@ export function bandBar(link: SectionGaugeLink): HTMLElement | null {
   };
 
   const zones: HTMLElement[] = [];
-  const pl = link.basis === 'paddler' || link.basis === 'community' ? link.levels : null;
+  const pl = link.basis === 'paddler' || link.basis === 'community' || link.basis === 'manual' ? link.levels : null;
   if (pl) {
     // Paddler scale: each step runs from its threshold to the next one.
     const edges: Array<[string, number, number]> = [

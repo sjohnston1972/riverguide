@@ -1,4 +1,22 @@
 {
   "sections": {},
-  "links": {}
+  "links": {
+    "river-leny-a84-layby-to-lade-inn": [
+      {
+        "station_no": "14888",
+        "relation": "on-section",
+        "min_level": 0.9,
+        "max_level": 2.0,
+        "reason": "Local knowledge: scrapeable from 0.78 m on Anie, runnable from 0.9 m.",
+        "levels": {
+          "scrape": 0.78,
+          "low": 0.9,
+          "medium": 1.0,
+          "high": 1.3,
+          "very_high": 1.6,
+          "huge": 2.0
+        }
+      }
+    ]
+  }
 }

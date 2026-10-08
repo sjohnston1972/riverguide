@@ -54,6 +54,10 @@ interface Enriched {
 }
 // data/overrides.json is hand-edited, so it is checked strictly: a misspelt key fails the build
 // instead of being silently ignored.
+/** A paddler step ladder (where each step starts), ascending. */
+const Ladder = z
+  .strictObject({ scrape: z.number(), low: z.number(), medium: z.number(), high: z.number(), very_high: z.number(), huge: z.number() })
+  .refine((l) => Object.values(l).every((v, i, a) => i === 0 || v > a[i - 1]), 'ladder steps must increase: scrape < low < medium < high < very_high < huge');
 const ManualLink = z.strictObject({
   station_no: z.string().regex(/^\d+$/),
   relation: z.enum(['on-section', 'upstream', 'downstream', 'proxy']),
@@ -61,6 +65,8 @@ const ManualLink = z.strictObject({
   max_level: z.number().nullable(),
   confidence: z.enum(['high', 'medium', 'low']).optional(),
   reason: z.string().min(1),
+  /** Replaces the Where's the Water ladder for this gauge (otherwise theirs is kept). */
+  levels: Ladder.optional(),
 });
 const SectionOverride = z.strictObject({
   name: z.string(),
@@ -180,9 +186,12 @@ for (const e of enriched) {
     calibration_url?: string | null;
   }> = manual
     ? manual.map((m) => {
-        // Correcting a threshold shouldn't lose the paddler step ladder for the same gauge.
+        // Correcting a threshold shouldn't lose the paddler step ladder for the same gauge. A ladder given
+        // in the override replaces theirs (and their calibration graph no longer applies).
         const b = wtwBand.get(`${e.slug}|${m.station_no}`);
-        return { ...m, basis: 'manual', confidence: m.confidence ?? 'high', levels: b?.levels ?? null, calibration_url: b?.graph_url ?? null };
+        return m.levels
+          ? { ...m, basis: 'manual', confidence: m.confidence ?? 'high', levels: m.levels, calibration_url: null }
+          : { ...m, basis: 'manual', confidence: m.confidence ?? 'high', levels: b?.levels ?? null, calibration_url: b?.graph_url ?? null };
       })
     : e.links.map((l) => {
         const g = gaugeByNo.get(l.station_no);

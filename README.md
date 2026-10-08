@@ -154,7 +154,15 @@ Add to `data/overrides.json`, rebuild the seed, and apply it (numbers below are 
 }
 ```
 
-Manual links replace that section's estimated links and are shown as "set manually". A manual link on a gauge that Where's the Water has calibrated keeps its paddler step ladder.
+Manual links replace that section's estimated links and are shown as "set manually". A manual link on a gauge that Where's the Water has calibrated keeps its paddler step ladder; add `"levels": { "scrape", "low", "medium", "high", "very_high", "huge" }` (where each step starts, ascending) to set your own ladder instead.
+
+To apply one section's correction without a full reseed, take its `section_gauges` lines from the seed:
+
+```sh
+S=river-leny-a84-layby-to-lade-inn
+{ echo "DELETE FROM section_gauges WHERE slug = '$S';"; grep "INTO section_gauges" data/private/seed.sql | grep "('$S'"; } > data/private/one-section.sql
+npx wrangler d1 execute riverguide --remote --file data/private/one-section.sql
+```
 
 ## Deploy
 
