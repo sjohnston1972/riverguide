@@ -1164,45 +1164,6 @@ button {
   justify-self: start;
 }
 
-.river-grade {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  margin-top: 4px;
-}
-
-.grade-badge {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  padding: 6px 14px 7px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: var(--paper);
-  line-height: 1.1;
-}
-
-/* One typeface for the whole pill: the display font used for all numbers on the site. */
-.grade-badge {
-  font-family: var(--font-display);
-  font-variant-numeric: lining-nums tabular-nums;
-}
-
-.grade-badge-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  opacity: 0.8;
-}
-
-.grade-badge-value {
-  font-size: 1.35rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
 
 .river-sub {
   color: var(--ink-2);
@@ -1211,33 +1172,6 @@ button {
 
 .river-source {
   font-size: 0.85rem;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 14px 0 0;
-  border-top: 1px solid var(--rule-strong);
-}
-
-.fact {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.fact:nth-child(odd) {
-  padding-right: 12px;
-}
-
-.fact dt {
-  font-size: 0.8rem;
-  color: var(--ink-2);
-  font-weight: 600;
-}
-
-.fact dd {
-  margin: 0;
-  font: 600 1.2rem/1.25 var(--font-display);
 }
 
 .river-grid {
@@ -1336,10 +1270,12 @@ button {
 }
 
 .now-card > .status-hero {
+  --hero-py: 14px;
+  --hero-px: 16px;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 10px 14px;
-  padding: 14px 16px;
+  padding: var(--hero-py) var(--hero-px);
   border: 0;
   border-bottom: 1px solid var(--rule);
   border-radius: 0;
@@ -1470,28 +1406,11 @@ button {
     display: inline;
   }
 
-  /* Facts in one row when they fit, otherwise wrap; no column rules. */
-  .facts {
-    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
-    column-gap: 12px;
-  }
-
-  .fact:nth-child(odd) {
-    padding-right: 0;
-  }
 }
 
 @media (max-width: 899px) {
   .river-head {
     padding: 8px 0 14px;
-  }
-
-  .fact {
-    padding: 7px 0;
-  }
-
-  .fact dd {
-    font-size: 1.05rem;
   }
 
   .river-grid,
@@ -2397,27 +2316,6 @@ button {
 }
 
 /* ---------- Wider screens ---------- */
-@media (min-width: 640px) {
-  .facts {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
-  }
-
-  .fact:nth-child(odd) {
-    padding-right: 0;
-  }
-
-  .fact + .fact {
-    padding-left: 14px;
-    border-left: 1px solid var(--rule);
-  }
-
-  .fact:nth-child(3) {
-    border-left: 1px solid var(--rule);
-  }
-}
-
 @media (min-width: 900px) {
   .overview {
     padding: 36px 0 24px;
@@ -2723,11 +2621,76 @@ button {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: 8px;
 }
 
-.hero-pills .step-tag {
-  font-size: 0.95rem;
+/* Every pill in the status band: one height, one font, one size; only the colour differs. */
+.hero-pills > .pill,
+.hero-pills > .step-tag,
+.hero-pills > .tomorrow-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 0.95rem/1 var(--font-display);
+  white-space: nowrap;
+}
+
+.hero-pills > .pill {
+  font-weight: 700;
+}
+
+.hero-pills > .pill-runnable { color: var(--st-runnable-ink); }
+.hero-pills > .pill-low { color: var(--st-low-ink); }
+.hero-pills > .pill-high { color: var(--st-high-ink); }
+.hero-pills > .pill-unknown { color: var(--st-unknown-ink); }
+
+.hero-pills > .pill .pill-dot,
+.hero-pills > .step-tag::before {
+  width: 10px;
+  height: 10px;
+}
+
+.hero-pills > .tomorrow-tag {
+  background: transparent;
+  border: 1px dashed var(--rule-strong);
+}
+
+/* Grade, length and character: a labelled strip along the band's bottom edge. */
+.hero-details {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin: 4px calc(-1 * var(--hero-px, 18px)) calc(-1 * var(--hero-py, 18px));
+  padding: 12px var(--hero-px, 18px);
+  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+}
+
+.hero-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.hero-detail dt {
+  font: 600 0.72rem/1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.hero-detail dd {
+  margin: 0;
+  font: 600 1rem/1.25 var(--font-display);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .release-tag {
@@ -3281,18 +3244,6 @@ button {
     gap: 10px;
   }
 
-  .facts {
-    margin-top: 24px;
-  }
-
-  .fact {
-    padding: 16px 0;
-  }
-
-  .fact + .fact {
-    padding-left: 24px;
-  }
-
   .river-grid {
     grid-template-columns: minmax(0, 1fr) 400px;
     gap: 56px;
@@ -3304,7 +3255,8 @@ button {
   }
 
   .now-card > .status-hero {
-    padding: 24px 32px;
+    --hero-py: 24px;
+    --hero-px: 32px;
   }
 
   .now-body {
@@ -3466,7 +3418,6 @@ button {
   .reading-time,
   .hero-time,
   .bb-pill,
-  .fact dt,
   .gauge-facts dt,
   .source,
   .fine-print {
