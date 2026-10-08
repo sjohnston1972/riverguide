@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { PublicConfig } from '../shared/types.ts';
 import { getGauge, getSection, listSections } from './data.ts';
+import { cachedJson, purgeSections, sectionKey, sectionsKey } from './edgecache.ts';
 import { type AppEnv, flag } from './env.ts';
 import {
   SESSION_COOKIE,
@@ -46,10 +47,10 @@ app.get('/api/config', (c) => {
   return c.json(body);
 });
 
+// Section list and pages: edge-cached and purged when a poll, a community report or the release schedule
+// changes them; browsers always revalidate (ETag), since statuses can change at any of those moments.
 app.get('/api/sections', async (c) => {
-  // Always revalidated: statuses change with each poll and as soon as a community report recalibrates a band.
-  c.header('cache-control', 'no-cache');
-  return c.json(await listSections(c.env.DB));
+  return (await cachedJson(c.req.raw, sectionsKey(), 300, c.executionCtx as ExecutionContext, () => listSections(c.env.DB)))!;
 });
 
 app.get('/api/releases', async (c) => {
@@ -63,11 +64,15 @@ app.get('/api/tides/lora', (c) => {
 });
 
 app.get('/api/sections/:slug', async (c) => {
-  const found = await getSection(c.env.DB, c.req.param('slug'));
-  if (!found) return c.json({ error: 'Not found' }, 404);
-  c.header('cache-control', 'no-cache');
-  const showGuide = flag(c.env.SHOW_FULL_GUIDE_TEXT) && found.guide;
-  return c.json(showGuide ? { ...found.detail, guide: found.guide } : found.detail);
+  const slug = c.req.param('slug');
+  // Not purged after each poll (one key per section), so a shorter TTL.
+  const res = await cachedJson(c.req.raw, sectionKey(slug), 120, c.executionCtx as ExecutionContext, async () => {
+    const found = await getSection(c.env.DB, slug);
+    if (!found) return null;
+    const showGuide = flag(c.env.SHOW_FULL_GUIDE_TEXT) && found.guide;
+    return showGuide ? { ...found.detail, guide: found.guide } : found.detail;
+  });
+  return res ?? c.json({ error: 'Not found' }, 404);
 });
 
 app.get('/api/gauges/:no/history', async (c) => {
@@ -146,7 +151,15 @@ export default {
           console.log(`SEPA rising/falling ids refreshed: ${await refreshRisingFallingIds(env.DB)}`);
         })().catch((e) => console.error('gauge metadata refresh failed', e)),
       );
-      ctx.waitUntil(refreshFreshets(env.DB).then((n) => console.log(`dam releases refreshed: ${n}`), (e) => console.error('dam releases refresh failed', e)));
+      ctx.waitUntil(
+        refreshFreshets(env.DB).then(
+          async (n) => {
+            console.log(`dam releases refreshed: ${n}`);
+            await purgeSections();
+          },
+          (e) => console.error('dam releases refresh failed', e),
+        ),
+      );
       return;
     }
     // First run after deploy (or a wiped table): load dam releases without waiting for 03:00.
@@ -159,12 +172,14 @@ export default {
     // Levels, trends and (hourly, or after UK midnight) rain, then outlooks, in one pass.
     ctx.waitUntil(
       pollReadings(env.DB).then(
-        (r) =>
+        async (r) => {
+          if (r.written) await purgeSections();
           console.log(
             `poll: ${r.levels} levels, ${r.empty} empty, ${r.written} rows written` +
               (r.rain == null ? '' : `, rain for ${r.rain}`) +
               (r.failedBatches ? `, ${r.failedBatches} batches FAILED` : ''),
-          ),
+          );
+        },
         (e) => console.error('poll failed', e),
       ),
     );

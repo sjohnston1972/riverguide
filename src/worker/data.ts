@@ -300,6 +300,32 @@ export async function getSection(db: D1Database, slug: string): Promise<DetailWi
   return { detail, guide: parseJson<GuideText>(row.guide_text) };
 }
 
+/**
+ * The headline gauge's station (what community reports are recorded against), reading
+ * only the section's own links and their gauges. Null when there is no such section.
+ */
+export async function headlineStation(db: D1Database, slug: string): Promise<{ station_no: string | null } | null> {
+  const [exists, links, bands] = await Promise.all([
+    db.prepare('SELECT 1 AS ok FROM sections WHERE slug = ?').bind(slug).first(),
+    db.prepare('SELECT * FROM section_gauges WHERE slug = ? ORDER BY rowid').bind(slug).all<LinkRow>(),
+    communityBands(db, slug),
+  ]);
+  if (!exists) return null;
+  const nos = [...new Set(links.results.map((l) => l.station_no))];
+  if (nos.length === 0) return { station_no: null };
+  const { results } = await db
+    .prepare(`SELECT ${GAUGE_COLUMNS} FROM gauges WHERE station_no IN (${nos.map(() => '?').join(', ')})`)
+    .bind(...nos)
+    .all<GaugeRow>();
+  const now = Date.now();
+  const gauges = new Map(results.map((r) => [r.station_no, toGauge(r, now)]));
+  const linked = links.results.flatMap((l) => {
+    const g = gauges.get(l.station_no);
+    return g ? [toLink(withCommunity(l, bands.get(`${l.slug}|${l.station_no}`)), g)] : [];
+  });
+  return { station_no: headline(linked).link?.station_no ?? null };
+}
+
 export async function getGauge(db: D1Database, stationNo: string): Promise<(Gauge & { ts_id: string }) | null> {
   const r = await db.prepare(`SELECT ${GAUGE_COLUMNS} FROM gauges WHERE station_no = ?`).bind(stationNo).first<GaugeRow>();
   return r ? { ...toGauge(r), ts_id: r.ts_id } : null;

@@ -96,10 +96,9 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const reports = api.reports(slug);
     reports.catch(() => undefined);
     let now = nowCard(d);
-    // A new report or vote can move the community band: refresh the status card in place.
-    // A report or vote can recalibrate the band at once: refresh this page's status and the river list.
+    // A report or vote can recalibrate the band at once: refresh this page's status, and the river list next time it's shown.
     const onChange = () => {
-      void api.sections(true).catch(() => undefined);
+      api.sections.invalidate();
       void api
         .section(slug, true)
         .then((fresh) => {
