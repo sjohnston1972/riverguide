@@ -319,10 +319,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function renderPhone(d: SectionDetail, now: { card: HTMLElement; graph: HTMLElement | null }, community: HTMLElement): void {
     const headline = d.links.find((l) => l.station_no === d.station_no) ?? null;
     const g = headline?.gauge ?? null;
-    const t = g && !g.stale ? (g.outlook?.tomorrow ?? null) : null;
-    const tomorrowWord = d.status_tomorrow && d.status_tomorrow !== 'unknown' && d.status_tomorrow !== d.status
-      ? STATUS_LABEL[d.status_tomorrow]
-      : d.step_tomorrow && d.step_tomorrow !== d.step ? STEP_LABEL[d.step_tomorrow] : null;
     const reading = g
       ? h(
           'div',
@@ -330,7 +326,6 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           g.level != null ? levelWithTrend(g.level, g.trend, g.stale) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
           h('span', { class: 'phone-reading-at' }, g.trend !== 'unknown' && g.level != null ? `${TREND_LABEL[g.trend]} at ${g.name}` : `at ${g.name}`),
           h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
-          t ? h('span', { class: 'phone-reading-next' }, `Tomorrow about ${formatLevel(t.level)}${tomorrowWord ? `, ${tomorrowWord}` : ''}`) : null,
         )
       : null;
     const board = headline ? gaugeBoard(headline) : null;
