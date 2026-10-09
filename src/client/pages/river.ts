@@ -463,7 +463,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           'span',
           null,
           head,
-          ` Tomorrow's peak about ${formatLevel(o.tomorrow.level)} (likely ${formatLevel(o.tomorrow.lo)} to ${formatLevel(o.tomorrow.hi)})${to ? `, ${to}` : ''}`,
+          // Phones keep the sentence short; wider layouts give the likely range.
+          ` Tomorrow's peak about ${formatLevel(o.tomorrow.level)}${PHONE.matches ? '' : ` (likely ${formatLevel(o.tomorrow.lo)} to ${formatLevel(o.tomorrow.hi)})`}${to ? `, ${to}` : ''}`,
           o.day_after ? `; the day after about ${formatLevel(o.day_after.level)}` : '',
           `. ${rainText[0].toUpperCase()}${rainText.slice(1)}. `,
           h('span', { class: 'outlook-note' }, 'Rough estimate from how this gauge has responded to similar rain before.'),
