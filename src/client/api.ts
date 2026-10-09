@@ -7,6 +7,7 @@ import type {
   LoraOverview,
   NewReport,
   PublicConfig,
+  RainSeries,
   ReleasesOverview,
   SectionDetail,
   SectionSummary,
@@ -100,6 +101,9 @@ export const api = {
 
   history(stationNo: string, period: string, signal?: AbortSignal): Promise<LevelHistory> {
     return getJson(`/api/gauges/${encodeURIComponent(stationNo)}/history?period=${encodeURIComponent(period)}`, signal);
+  },
+  rain(stationNo: string, period: string, signal?: AbortSignal): Promise<RainSeries> {
+    return getJson(`/api/gauges/${encodeURIComponent(stationNo)}/rain?period=${encodeURIComponent(period)}`, signal);
   },
 
   reports(slug: string, signal?: AbortSignal): Promise<CommunityReports> {

@@ -6,6 +6,7 @@ import { ApiError, api } from '../api.ts';
 import { bandBar } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
+import { rainBetween } from '../rainlayer.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill, tomorrowTag } from '../components.ts';
 import { gaugeBoard } from '../gaugeboard.ts';
@@ -40,6 +41,7 @@ const PERIODS: [string, string][] = [
   ['P7D', '7 days'],
   ['P30D', '30 days'],
 ];
+const PERIOD_DAYS: Record<string, number> = { P2D: 2, P7D: 7, P30D: 30 };
 
 type Place = PlacePoint & { precision?: string };
 
@@ -278,7 +280,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       graph = null;
       graphArea.replaceChildren(h('div', { class: 'skel skel-graph', 'aria-hidden': 'true' }));
       try {
-        const [hist, mod] = await Promise.all([api.history(link.station_no, period, abort.signal), import('../graph.ts')]);
+        // Rain is extra: the graph still draws without it.
+        const [hist, rain, mod] = await Promise.all([
+          api.history(link.station_no, period, abort.signal),
+          api.rain(link.station_no, period, abort.signal).catch(() => null),
+          import('../graph.ts'),
+        ]);
         if (destroyed || my !== seq) return;
         graphArea.replaceChildren();
         graphArea.removeAttribute('role');
@@ -287,14 +294,25 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
           graphArea.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
           return;
         }
-        graph = mod.levelGraph(graphArea, hist.points, { min: link.min_level, max: link.max_level, fill: ONE_SCREEN.matches });
+        const outlook = link.gauge.stale ? null : link.gauge.outlook;
+        graph = mod.levelGraph(graphArea, hist.points, {
+          min: link.min_level,
+          max: link.max_level,
+          fill: ONE_SCREEN.matches,
+          rain,
+          outlook,
+          days: PERIOD_DAYS[period] ?? 2,
+        });
         scheduleFit(false);
         const vs = hist.points.map((p) => p.v);
+        const fell = rain ? rainBetween(rain, Date.parse(hist.points[0].t), Date.now()) : null;
         graphArea.setAttribute('role', 'img');
         graphArea.setAttribute(
           'aria-label',
           `Level at ${link.gauge.name}, last ${PERIODS.find(([p]) => p === period)?.[1] ?? period}: now ${formatLevel(vs[vs.length - 1])}, ` +
-            `lowest ${formatLevel(Math.min(...vs))}, highest ${formatLevel(Math.max(...vs))}.`,
+            `lowest ${formatLevel(Math.min(...vs))}, highest ${formatLevel(Math.max(...vs))}.` +
+            (fell != null ? ` ${Math.round(fell)} mm of rain at the gauge.` : '') +
+            (rain && outlook?.tomorrow ? ` Tomorrow about ${formatLevel(outlook.tomorrow.level)}.` : ''),
         );
       } catch (e) {
         if (destroyed || my !== seq || (e instanceof DOMException && e.name === 'AbortError')) return;
@@ -780,7 +798,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   const overflowing = () => {
     const de = document.documentElement;
     if (de.scrollHeight > de.clientHeight + 1) return true;
-    const boxes = [...article.querySelectorAll<HTMLElement>('.col-now, .col-mid > :not(.community, .releases), .col-side > *')];
+    const boxes = [...article.querySelectorAll<HTMLElement>('.col-now, .now-graph .graph-area, .col-mid > :not(.community, .releases), .col-side > *')];
     return boxes.some((b) => b.scrollHeight > b.clientHeight + 1);
   };
   const fit = (fromFull: boolean) => {
