@@ -107,12 +107,7 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     'figure',
     { class: 'gauge-board', role: 'img', 'aria-label': parts.join(' ') },
     h('div', { class: 'gb-body', 'aria-hidden': 'true' }, pills, column),
-    h(
-      'figcaption',
-      { class: 'gb-key', 'aria-hidden': 'true' },
-      !pl && min == null && max == null ? h('span', null, 'No paddling band yet') : null,
-      h('span', null, 'Steps drawn the same height'),
-    ),
+    !pl && min == null && max == null ? h('figcaption', { class: 'gb-key', 'aria-hidden': 'true' }, 'No paddling band yet') : null,
   );
 
   // Pills at their levels; Tomorrow moves clear of Now when the two are close.
