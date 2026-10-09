@@ -26,8 +26,11 @@ import { replaceUrl, type Route } from '../router.ts';
 type View = 'list' | 'map';
 const REFRESH_MS = 5 * 60_000;
 
+/** Favourites are shown by default once this device has any. */
+const favDefault = () => favourites().size > 0;
+
 export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Page {
-  let filters: Filters = filtersFromQuery(route.search);
+  let filters: Filters = filtersFromQuery(route.search, favDefault());
   let view: View = route.name === 'map' ? 'map' : 'list';
   let sections: SectionSummary[] | null = null;
   let loadError: string | null = null;
@@ -66,6 +69,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     }, 120);
   });
 
+  // Running now and On the rise live in the filter panel; Favourites stays by the search box.
   const runningNow = h('button', { type: 'button', class: 'chip', 'aria-pressed': 'false' }, h('span', { class: 'chip-dot', 'aria-hidden': 'true' }), 'Running now');
   runningNow.addEventListener('click', () => {
     filters = { ...filters, status: filters.status === 'runnable' ? 'any' : 'runnable' };
@@ -134,13 +138,14 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   );
   const clearBtn = h('button', { type: 'button', class: 'btn btn-quiet clear-filters' }, 'Clear filters');
   clearBtn.addEventListener('click', () => {
-    filters = { ...DEFAULT_FILTERS, sort: filters.sort };
+    filters = { ...DEFAULT_FILTERS, q: filters.q, sort: filters.sort, fav: filters.fav };
     changed();
   });
 
   const panel = h(
     'div',
     { class: 'filter-panel', id: 'filter-panel' },
+    h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Show'), h('div', { class: 'chip-row' }, runningNow, riseChip)),
     region.field,
     h('div', { class: 'field-pair' }, gmin.field, gmax.field),
     status.field,
@@ -174,7 +179,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
           'aside',
           { class: 'filters', 'aria-label': 'Search and filters' },
           h('div', { class: 'search-wrap' }, icon(ICONS.search, 'icon search-icon'), search),
-          h('div', { class: 'quick-row' }, runningNow, riseChip, favChip, filterToggle),
+          h('div', { class: 'quick-row' }, favChip, filterToggle),
           panel,
         ),
         h('section', { class: 'results', 'aria-label': 'River sections' }, h('div', { class: 'results-bar' }, resultCount, h('nav', { class: 'segmented', 'aria-label': 'View' }, listLink, mapLink)), listBody, mapBody),
@@ -195,8 +200,8 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     riseChip.setAttribute('aria-pressed', String(filters.rise));
     const n = activeFilterCount(filters);
     filterToggle.querySelector('.filter-toggle-text')!.textContent = n ? `Filters (${n})` : 'Filters';
-    clearBtn.hidden = n === 0 && !filters.q;
-    const qs = filtersToQuery(filters);
+    clearBtn.hidden = n === 0;
+    const qs = filtersToQuery(filters, favDefault());
     setLastListHref(`${view === 'map' ? '/map' : '/'}${qs}`);
     listLink.href = `/${qs}`;
     mapLink.href = `/map${qs}`;
@@ -207,7 +212,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   }
 
   function changed(): void {
-    replaceUrl(`${view === 'map' ? '/map' : '/'}${filtersToQuery(filters)}`);
+    replaceUrl(`${view === 'map' ? '/map' : '/'}${filtersToQuery(filters, favDefault())}`);
     syncControls();
     renderResults();
   }
@@ -280,11 +285,11 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
             null,
             !sections!.length
               ? 'No river sections yet. Check back soon.'
-              : filters.rise && activeFilterCount(filters) === 0 && !filters.q && !filters.fav
+              : filters.rise && activeFilterCount(filters) === 1 && !filters.q && !filters.fav
                 ? 'No rivers are rising or expected to rise right now.'
                 : 'No sections match these filters.',
           ),
-          sections!.length ? h('button', { type: 'button', class: 'btn', onclick: () => { filters = { ...DEFAULT_FILTERS }; changed(); } }, 'Clear search and filters') : null,
+          sections!.length ? h('button', { type: 'button', class: 'btn', onclick: () => { filters = { ...DEFAULT_FILTERS, sort: filters.sort }; changed(); } }, 'Show all rivers') : null,
         ),
       );
       return;
@@ -352,7 +357,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   return {
     update(r: Route) {
       if (r.name !== 'list' && r.name !== 'map') return false;
-      filters = filtersFromQuery(r.search);
+      filters = filtersFromQuery(r.search, favDefault());
       view = r.name === 'map' ? 'map' : 'list';
       syncControls();
       renderResults();

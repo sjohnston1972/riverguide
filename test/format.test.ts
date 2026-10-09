@@ -166,6 +166,11 @@ describe('list filters', () => {
     expect(filtersFromQuery('?fav=1').fav).toBe(true);
     expect(filtersToQuery({ ...DEFAULT_FILTERS, fav: true })).toBe('?fav=1');
     expect(filtersFromQuery('?rise=1').rise).toBe(true);
+    // Favourites default on once there are favourites: the URL records only a change from the default.
+    expect(filtersFromQuery('', true).fav).toBe(true);
+    expect(filtersFromQuery('?fav=0', true).fav).toBe(false);
+    expect(filtersToQuery({ ...DEFAULT_FILTERS, fav: true }, true)).toBe('');
+    expect(filtersToQuery({ ...DEFAULT_FILTERS, fav: false }, true)).toBe('?fav=0');
     expect(filtersToQuery({ ...DEFAULT_FILTERS, rise: true })).toBe('?rise=1');
   });
 
@@ -203,5 +208,13 @@ describe('clockTime', () => {
     expect(clockTime('2026-10-06T13:32:00Z', now)).toBe('Tue 14:32');
     // 23:30Z on the 7th is already the 8th in the UK.
     expect(clockTime('2026-10-07T23:30:00Z', now)).toBe('00:30');
+  });
+});
+
+describe('activeFilterCount', () => {
+  it('counts the panel filters, On the rise included, but not search or favourites', async () => {
+    const { activeFilterCount } = await import('../src/client/filters.ts');
+    expect(activeFilterCount({ ...DEFAULT_FILTERS, q: 'x', fav: true })).toBe(0);
+    expect(activeFilterCount({ ...DEFAULT_FILTERS, rise: true, status: 'runnable', region: 'Far North' })).toBe(3);
   });
 });

@@ -841,6 +841,13 @@ button {
   display: grid;
 }
 
+/* Running now / On the rise, inside the filter panel. */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .field-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2790,7 +2797,7 @@ button {
   height: 18px;
 }
 
-/* Phones: the four quick filters sit in two even rows. */
+/* Phones: tighter quick filters (Favourites, Filters). */
 @media (max-width: 420px) {
   .quick-row .chip {
     padding: 0 12px;
