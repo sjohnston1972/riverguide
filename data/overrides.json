@@ -7,7 +7,7 @@
         "relation": "on-section",
         "min_level": 0.9,
         "max_level": 2.0,
-        "reason": "Local knowledge: scrapeable from 0.78 m on Anie, runnable from 0.9 m.",
+        "reason": "Local knowledge: not recommended below 0.8 m on Anie.",
         "levels": {
           "scrape": 0.78,
           "low": 0.9,

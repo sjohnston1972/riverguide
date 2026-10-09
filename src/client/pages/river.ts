@@ -339,9 +339,20 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       ? [reading, board]
       : [reading, h('p', { class: 'muted' }, d.links.length ? 'No paddling band or typical range for this gauge yet.' : 'No SEPA gauge is linked to this section. Check the guidebook for level advice.')];
 
-    // The site credits close the last panel (the footer is hidden on this layout).
-    const footerText = document.querySelector('.site-footer .wrap')?.cloneNode(true) as HTMLElement | undefined;
-    if (footerText) footerText.className = 'panel-credits';
+    // Credits close the last panel (the site footer is hidden on this layout); the full licence
+    // details are on the About page it links to.
+    const credits = h(
+      'div',
+      { class: 'panel-credits' },
+      h(
+        'p',
+        null,
+        'River levels: contains SEPA data © Scottish Environment Protection Agency and database right. Dam releases: SSE freshet schedule via SEPA. Paddler levels and extra sections from ',
+        h('a', { href: WTW_URL, target: '_blank', rel: 'noopener' }, "Where's the Water"),
+        ', maintained by Jonathan Riddell. Weather: Open-Meteo. Maps © OpenStreetMap contributors.',
+      ),
+      h('p', null, h('a', { href: '/about' }, 'About River Guide, data sources and licences')),
+    );
 
     const content: Record<(typeof PANELS)[number][0], Array<Node | null>> = {
       scale: scaleBody,
@@ -353,7 +364,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         d.guide ? guideSection(d.guide) : null,
         d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : null,
       ],
-      reports: [community, footerText ?? null],
+      reports: [community, credits],
     };
     const panels = PANELS.map(([key, label], i) =>
       h('section', { class: `panel panel-${key}`, id: `panel-${key}`, role: 'tabpanel', 'aria-label': label, 'aria-labelledby': `tab-${key}`, tabindex: i === 0 ? '0' : '-1' }, content[key]),
