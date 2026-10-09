@@ -4101,39 +4101,12 @@ button {
   }
 }
 
-.gb-band.is-now {
-  outline: 3px solid var(--ink);
-  outline-offset: -3px;
-}
-
-.gb-band.is-tomorrow {
-  outline: 2px dashed var(--ink);
-  outline-offset: -2px;
-}
-
 .gb-low { --step: var(--st-low); }
 .gb-run { --step: var(--st-runnable); }
 .gb-high { --step: var(--st-high); }
 .gb-below,
 .gb-above { --step: var(--st-unknown); }
 .gb-typical { --step: var(--loch); }
-
-/* Now as a solid line within its band, tomorrow dashed. */
-.gb-line-now,
-.gb-line-tomorrow {
-  position: absolute;
-  left: 0;
-  right: 0;
-  pointer-events: none;
-}
-
-.gb-line-now {
-  border-top: 3px solid var(--loch);
-}
-
-.gb-line-tomorrow {
-  border-top: 2px dashed var(--ink);
-}
 
 .gb-key {
   display: flex;
@@ -4149,18 +4122,6 @@ button {
   gap: 5px;
 }
 
-.gb-key-now,
-.gb-key-tomorrow {
-  width: 18px;
-}
-
-.gb-key-now {
-  border-top: 3px solid var(--loch);
-}
-
-.gb-key-tomorrow {
-  border-top: 2px dashed var(--ink);
-}
 
 /* ---------- Phones: the river page on one screen, swiped sideways ----------
    The name, details and status pills stay put; below them the Scale, Level, Weather, Access and

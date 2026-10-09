@@ -1,7 +1,6 @@
 // Gauge board for phones: the paddling scale as a column of equal-height bands, each step's name
-// and range written inside its band, so every label sits on its band on any screen. The current
-// level is a solid line within its band and tomorrow's prediction a dashed one, each placed in
-// proportion between the band's limits, with Now / Tomorrow pills pointing in from the left.
+// and range written inside its band, so every label sits on its band on any screen. Now / Tomorrow
+// pills point in from the left at each level, placed in proportion between its band's limits.
 // Not to scale in metres: each band carries its own numbers.
 
 import type { PaddlerStep, SectionGaugeLink } from '../shared/types.ts';
@@ -85,12 +84,10 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     bands.map((b) =>
       h(
         'div',
-        { class: `gb-band ${b.cls}${b.now ? ' is-now' : ''}${b.tomorrow ? ' is-tomorrow' : ''}` },
+        { class: `gb-band ${b.cls}` },
         h('span', { class: 'gb-text' }, h('span', { class: 'gb-name' }, b.name), h('span', { class: 'gb-range' }, b.range)),
       ),
     ),
-    level != null ? h('div', { class: 'gb-line-now', style: `bottom:${pos(level).toFixed(2)}%` }) : null,
-    t ? h('div', { class: 'gb-line-tomorrow', style: `bottom:${pos(t.level).toFixed(2)}%` }) : null,
   );
   const pills = h(
     'div',
@@ -115,8 +112,6 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
       { class: 'gb-key', 'aria-hidden': 'true' },
       !pl && min == null && max == null ? h('span', null, 'No paddling band yet') : null,
       h('span', null, 'Steps drawn the same height'),
-      h('span', null, h('i', { class: 'gb-key-now' }), 'now'),
-      t ? h('span', null, h('i', { class: 'gb-key-tomorrow' }), 'tomorrow') : null,
     ),
   );
 
