@@ -110,7 +110,7 @@ export function gradeLabel(grade: string): string {
 
 export const STEP_LABEL: Record<PaddlerStep, string> = {
   empty: 'Empty',
-  scrape: 'Scrapeable',
+  scrape: 'Scrape',
   low: 'Low',
   medium: 'Medium',
   high: 'High',

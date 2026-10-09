@@ -65,7 +65,7 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
           null,
           'About 110 sections use levels that paddlers have set on ',
           WTW(),
-          ': scrapeable, low, medium, high, very high and huge, each a level on a SEPA gauge. The list and river pages show which step a river is on now (for example "Medium"). Runnable means scrapeable or above, and too high means huge.',
+          ': scrape, low, medium, high, very high and huge, each a level on a SEPA gauge. The list and river pages show which step a river is on now (for example "Medium"). Runnable means scrape or above, and too high means huge.',
         ),
         h('dt', null, '4. Estimated from guidebook descriptions'),
         h(
