@@ -74,7 +74,8 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
   const step = niceStep(hi - lo);
   const ticks: HTMLElement[] = [];
   for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
-    if (level != null && Math.abs(pct(v) - pct(level)) < 5) continue; // the Now pill sits there
+    // The Now and Tomorrow pills sit at their levels on the left; no tick label under them.
+    if ([level, t?.level].some((x) => x != null && Math.abs(pct(v) - pct(x)) < 5)) continue;
     ticks.push(h('span', { class: 'gb-tick', style: `bottom:${pct(v).toFixed(2)}%` }, `${v.toFixed(step < 0.25 ? 1 : step < 1 ? 2 : 0).replace(/\.?0+$/, '') || '0'} m`));
   }
 
@@ -96,7 +97,6 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
         'div',
         { class: `gb-label${z.now ? ' is-now' : ''}${z.tomorrow ? ' is-tomorrow' : ''}`, 'data-at': String((pct(z.from) + pct(z.to)) / 2) },
         h('span', { class: 'gb-name' }, z.name),
-        h('span', { class: 'gb-range' }, z.range),
       ),
     ),
   );
@@ -104,7 +104,8 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     'div',
     { class: 'gb-marks' },
     ticks,
-    level != null ? h('span', { class: 'gb-now', style: `bottom:${pct(level).toFixed(2)}%` }, `Now ${formatLevel(level)}`) : null,
+    level != null ? h('span', { class: 'gb-now', 'data-at': String(pct(level)) }, `Now ${formatLevel(level)}`) : null,
+    t ? h('span', { class: 'gb-now gb-next', 'data-at': String(pct(t.level)) }, `Tomorrow ${formatLevel(t.level)}`) : null,
   );
 
   const parts: string[] = [level != null ? `Current level ${formatLevel(level)}.` : 'No current reading.'];
@@ -123,26 +124,44 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
       'figcaption',
       { class: 'gb-key', 'aria-hidden': 'true' },
       typical ? h('span', null, h('i', { class: 'gb-key-typical' }), 'Typical range') : null,
-      t ? h('span', null, h('i', { class: 'gb-key-tomorrow' }), `Tomorrow about ${formatLevel(t.level)}`) : null,
       !zones.length ? h('span', null, 'No paddling band for this gauge yet') : null,
     ),
   );
 
-  // Place the zone names at their zones' middles, nudged apart where zones are too thin to label.
+  // Place the zone names at their zones' middles, and the Now / Tomorrow pills at their levels,
+  // nudging apart any that would overlap (thin zones, or tomorrow close to now).
   const place = () => {
     const H = labels.clientHeight;
     if (!H) return;
     const items = [...labels.children] as HTMLElement[];
-    const gap = 18;
-    let prevTop = Infinity; // px from the top, working upwards from the bottom zone
-    for (const it of items) {
-      const want = H - (Number(it.dataset.at) / 100) * H; // centre, px from top
-      const top = Math.min(want, prevTop - gap);
-      it.style.top = `${Math.max(gap / 2, top)}px`;
-      prevTop = Math.max(gap / 2, top);
-    }
+    // A short board (small screen, large text) gets the tighter label style when the names wouldn't fit.
+    labels.classList.remove('gb-tight');
+    const need = () => Math.max(14, ...items.map((i) => i.offsetHeight + 1));
+    if (need() * items.length > H * 0.92) labels.classList.add('gb-tight');
+    const gap = need();
+    // Zones are listed bottom to top. Push names up where they'd overlap, then, if that ran them
+    // into the top edge, back down; only a board too short for every name leaves any touching.
+    const tops = items.map((it) => H - (Number(it.dataset.at) / 100) * H); // centres, px from the top
+    for (let i = 1; i < tops.length; i++) tops[i] = Math.min(tops[i], tops[i - 1] - gap);
+    const last = tops.length - 1;
+    if (last >= 0) tops[last] = Math.max(gap / 2, tops[last]);
+    for (let i = last - 1; i >= 0; i--) tops[i] = Math.max(tops[i], tops[i + 1] + gap);
+    items.forEach((it, i) => (it.style.top = `${Math.min(H - gap / 2, tops[i])}px`));
+    const pills = [...marks.querySelectorAll<HTMLElement>('.gb-now')];
+    const centre = (p: HTMLElement) => H - (Number(p.dataset.at) / 100) * H;
+    const [now, next] = pills;
+    if (now) now.style.top = `${centre(now)}px`;
+    if (now && next) {
+      const space = Math.max(now.offsetHeight, next.offsetHeight) + 4;
+      const want = centre(next);
+      const away = want <= centre(now) ? -1 : 1; // tomorrow above (or level with) now goes above it
+      const top = Math.abs(want - centre(now)) < space ? centre(now) + away * space : want;
+      next.style.top = `${Math.min(H - next.offsetHeight / 2, Math.max(next.offsetHeight / 2, top))}px`;
+    } else if (next) next.style.top = `${centre(next)}px`;
   };
   if ('ResizeObserver' in window) new ResizeObserver(place).observe(labels);
   requestAnimationFrame(place);
+  // Label heights change once the display font arrives.
+  void document.fonts?.ready.then(() => requestAnimationFrame(place));
   return el;
 }
