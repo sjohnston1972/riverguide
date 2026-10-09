@@ -64,4 +64,25 @@ describe('summariseWeather', () => {
     expect(w.hours[0].time).toBe('2026-10-06T12:00:00Z');
     expect(w.hours).toHaveLength(48);
   });
+  it('reads the sky now and summarises three UK days', () => {
+    // From UK midnight on Thu 8 Oct (23:00 UTC the day before, summer time) for four days.
+    const start = Date.parse('2026-10-07T23:00:00Z');
+    const time: string[] = [];
+    for (let h = 0; h < 96; h++) time.push(new Date(start + h * 3_600_000).toISOString().slice(0, 16));
+    const n = time.length;
+    const day = (h: number) => Math.floor(h / 24);
+    const w = summariseWeather(57, -5, {
+      hourly: {
+        time,
+        precipitation: time.map((_, h) => (day(h) === 1 && h % 24 >= 12 ? 1 : 0)),
+        temperature_2m: time.map((_, h) => 5 + day(h) + (h % 24) / 4),
+        wind_speed_10m: Array(n).fill(10),
+        weather_code: time.map((_, h) => (day(h) === 1 && h % 24 === 18 ? 63 : 3)),
+        is_day: time.map((_, h) => (h % 24 >= 7 && h % 24 < 19 ? 1 : 0)),
+      },
+    }, Date.parse('2026-10-09T09:30:00Z'));
+    expect(w.now).toEqual({ temp_c: 5 + 1 + 10 / 4, code: 3, is_day: true, wind_kmh: 10 });
+    expect(w.days?.map((d) => d.date)).toEqual(['2026-10-09', '2026-10-10', '2026-10-11']);
+    expect(w.days?.[0]).toMatchObject({ code: 63, rain_mm: 12, min_c: 6, max_c: 6 + 23 / 4 });
+  });
 });

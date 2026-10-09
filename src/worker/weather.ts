@@ -1,11 +1,13 @@
 // Open-Meteo forecast (CC BY 4.0) with the past day's rain, cached 30 minutes per ~1 km cell.
 
-import type { RainSeries, Weather } from '../shared/types.ts';
+import type { RainSeries, Weather, WeatherDay } from '../shared/types.ts';
 import { UpstreamError } from '../shared/upstream.ts';
 
 interface OpenMeteo {
-  hourly: { time: string[]; temperature_2m: number[]; precipitation: number[]; wind_speed_10m: number[] };
+  hourly: { time: string[]; temperature_2m: number[]; precipitation: number[]; wind_speed_10m: number[]; weather_code?: number[]; is_day?: number[] };
 }
+
+const ukDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' });
 
 const TTL_SECONDS = 30 * 60;
 
@@ -25,6 +27,33 @@ export function summariseWeather(lat: number, lon: number, data: OpenMeteo, now 
       rain_mm: h.precipitation[i],
       wind_kmh: h.wind_speed_10m[i],
     }));
+  const codes = h.weather_code;
+  const n = times.indexOf(hourStart);
+  const current =
+    codes && n >= 0
+      ? { temp_c: h.temperature_2m[n], code: codes[n], is_day: (h.is_day?.[n] ?? 1) === 1, wind_kmh: h.wind_speed_10m[n] }
+      : null;
+  // Today, tomorrow and the day after, by UK date, from every hour we have of each.
+  const days: WeatherDay[] = [];
+  if (codes) {
+    const byDate = new Map<string, number[]>();
+    times.forEach((t, i) => {
+      const d = ukDate.format(t);
+      byDate.set(d, [...(byDate.get(d) ?? []), i]);
+    });
+    const today = ukDate.format(hourStart);
+    for (const [date, idx] of byDate) {
+      if (date < today || days.length === 3 || idx.length < 18) continue;
+      const temps = idx.map((i) => h.temperature_2m[i]);
+      days.push({
+        date,
+        code: Math.max(...idx.map((i) => codes[i])),
+        max_c: Math.max(...temps),
+        min_c: Math.min(...temps),
+        rain_mm: Math.round(idx.reduce((s, i) => s + (h.precipitation[i] ?? 0), 0) * 10) / 10,
+      });
+    }
+  }
   return {
     lat,
     lon,
@@ -32,6 +61,8 @@ export function summariseWeather(lat: number, lon: number, data: OpenMeteo, now 
     rain_next_24h_mm: sum(hourStart, hourStart + 24 * 3_600_000),
     rain_next_48h_mm: sum(hourStart, hourStart + 48 * 3_600_000),
     hours,
+    now: current,
+    days,
   };
 }
 
@@ -40,7 +71,7 @@ export async function getWeather(latIn: number, lonIn: number, ctx: ExecutionCon
   const lon = Math.round(lonIn * 100) / 100;
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    '&hourly=temperature_2m,precipitation,wind_speed_10m&past_days=1&forecast_days=3&timezone=GMT';
+    '&hourly=temperature_2m,precipitation,wind_speed_10m,weather_code,is_day&past_days=1&forecast_days=3&timezone=GMT';
 
   const cache = caches.default;
   const key = new Request(url);

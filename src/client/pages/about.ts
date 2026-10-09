@@ -147,6 +147,7 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         ),
         h('li', null, h('strong', null, 'Other section details: '), 'section names, grades and level descriptions are compiled from paddling guidebook information.'),
         h('li', null, h('strong', null, 'Weather: '), ext('https://open-meteo.com/', 'Open-Meteo'), ', licensed under ', ext('https://creativecommons.org/licenses/by/4.0/', 'CC BY 4.0'), '.'),
+        h('li', null, h('strong', null, 'Weather icons: '), ext('https://github.com/basmilius/weather-icons', 'Meteocons'), ' by Bas Milius, MIT licence.'),
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
       ),
     ),

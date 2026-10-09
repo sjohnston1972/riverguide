@@ -4406,6 +4406,144 @@ button {
     font-size: 0.78rem;
   }
 
+  /* The section fills the panel and the rain chart takes whatever height is spare. */
+  .river-phone .panel-weather > .weather,
+  .river-phone .panel-weather .weather > div,
+  .river-phone .panel-weather .rain-strip-wrap,
+  .river-phone .panel-weather .rain-chart {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-phone .panel-weather .weather > div {
+    gap: 8px;
+  }
+
+  /* The tab already says Weather. */
+  .river-phone .panel-weather .weather:has(.wx-now) > h2 {
+    display: none;
+  }
+
+  .river-phone .panel-weather .rc-plot {
+    flex: 1 1 64px;
+    height: auto;
+    min-height: 56px;
+    max-height: 150px;
+  }
+
+  /* The sky and temperature now, large. */
+  .wx-now {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .wx-now-icon img {
+    display: block;
+    width: 112px;
+    height: 112px;
+    margin: -14px -6px -14px -14px;
+  }
+
+  .wx-now-temp {
+    margin: 0;
+    font: 700 4.4rem/0.9 var(--font-display);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wx-now-temp span {
+    position: relative;
+    top: 0.25em;
+    margin-left: 2px;
+    font-size: 0.42em;
+    vertical-align: top;
+  }
+
+  .wx-now-words {
+    display: grid;
+    gap: 2px;
+    margin: 0 0 0 8px;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+  }
+
+  .wx-now-words b {
+    font: 700 1.15rem/1.1 var(--font-display);
+    color: var(--ink);
+  }
+
+  /* Today and the next two days. */
+  .wx-days {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .wx-day {
+    display: grid;
+    justify-items: center;
+    min-width: 0;
+    padding: 8px 6px 10px;
+    text-align: center;
+  }
+
+  .wx-day + .wx-day {
+    border-left: 1px solid var(--rule);
+  }
+
+  .wx-day h3 {
+    margin: 0;
+    font: 700 0.95rem/1.2 var(--font-display);
+  }
+
+  .wx-day-icon img {
+    display: block;
+    width: 72px;
+    height: 72px;
+    margin: -4px 0 -8px;
+  }
+
+  .wx-hl {
+    margin: 0;
+    font: 700 1.35rem/1 var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wx-hl span {
+    color: var(--ink-3);
+    font-size: 0.8em;
+  }
+
+  .wx-mm {
+    margin: 4px 0 0;
+    font: 700 0.95rem/1 var(--font-display);
+    color: var(--loch);
+  }
+
+  .wx-mm small {
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--ink-2);
+  }
+
+  .wx-past {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+  }
+
+  .wx-past b {
+    color: var(--ink);
+  }
+
   /* The board shrinks to the space left, so its key always shows; scrolling is only a last resort. */
   .river-phone .panel-scale {
     overflow-y: auto;
@@ -4497,5 +4635,57 @@ button {
 
   .panel-credits p + p {
     margin-top: 6px;
+  }
+}
+
+/* Short phones: the weather tab squeezes to stay on one screen. */
+@media (max-width: 599px) and (max-height: 700px) {
+  .wx-now-icon img {
+    width: 64px;
+    height: 64px;
+    margin: -10px -4px -10px -10px;
+  }
+
+  .wx-now-temp {
+    font-size: 3rem;
+  }
+
+  .wx-now-words b {
+    font-size: 1rem;
+  }
+
+  .wx-range {
+    display: none;
+  }
+
+  .wx-day {
+    padding: 5px 4px 7px;
+  }
+
+  .wx-day-icon img {
+    width: 42px;
+    height: 42px;
+    margin: -2px 0 -4px;
+  }
+
+  .wx-hl {
+    font-size: 1.15rem;
+  }
+
+  .river-phone .panel-weather .rc-key,
+  .river-phone .panel-weather .weather:has(.wx-now) .wx-line {
+    display: none;
+  }
+
+  .river-phone .panel-weather .rc-plot {
+    min-height: 40px;
+  }
+
+  .river-phone .panel-weather .weather > div {
+    gap: 6px;
+  }
+
+  .river-phone .panel-weather .rc-summary {
+    font-size: 0.8rem;
   }
 }
