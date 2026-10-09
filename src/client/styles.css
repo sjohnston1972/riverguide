@@ -4319,16 +4319,9 @@ button {
     color: var(--ink-2);
   }
 
-  .phone-reading .hero-time,
-  .phone-reading-next {
-    flex-basis: 100%;
+  .phone-reading .hero-time {
     font-size: 0.85rem;
     color: var(--ink-3);
-  }
-
-  .phone-reading-next {
-    color: var(--ink-2);
-    font-weight: 600;
   }
 
   /* In the Level panel the pills and details are already at the top of the screen, and the
