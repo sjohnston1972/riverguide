@@ -84,6 +84,8 @@
   --st-unknown-tint: #e3e8ea;
   --st-unknown-ink: #475860;
   --marker-ring: #ffffff;
+  --rain: #6a72c9;
+  --rain-due: #b4b8e4;
 
   --font-display: 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -121,6 +123,8 @@
     --st-unknown-tint: #25343a;
     --st-unknown-ink: #c3cfd3;
     --marker-ring: #0f1b20;
+    --rain: #9aa2ee;
+    --rain-due: #535a8f;
     color-scheme: dark;
   }
 }
@@ -152,6 +156,8 @@
   --st-unknown-tint: #25343a;
   --st-unknown-ink: #c3cfd3;
   --marker-ring: #0f1b20;
+  --rain: #9aa2ee;
+  --rain-due: #535a8f;
   color-scheme: dark;
 }
 
@@ -1618,6 +1624,51 @@ button {
 
 .u-legend th {
   font-weight: 600;
+}
+
+/* Key for the rain strip and outlook, on the legend's line when there's room. */
+.uplot:has(.graph-key) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  column-gap: 14px;
+}
+
+.uplot:has(.graph-key) > .u-wrap {
+  flex: 0 0 100%;
+}
+
+.graph-key {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 14px;
+  padding: 0 6px 2px;
+  font-size: 0.78rem;
+  color: var(--ink-2);
+}
+
+.graph-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.graph-key i {
+  display: inline-block;
+  width: 9px;
+  height: 10px;
+  border-radius: 1px;
+}
+
+.graph-key .k-rain { background: var(--rain); }
+.graph-key .k-rain-due { background: var(--rain-due); }
+
+.graph-key .k-outlook {
+  width: 16px;
+  border-top: 2px dashed var(--loch);
+  background: color-mix(in srgb, var(--loch) 22%, transparent);
 }
 
 /* Weather */
@@ -3766,7 +3817,7 @@ button {
 
   .river-dash .col-now > .now-graph {
     flex: 1 1 0;
-    min-height: 170px;
+    min-height: 290px;
     display: flex;
     flex-direction: column;
     padding: 10px 14px 12px;

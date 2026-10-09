@@ -171,6 +171,15 @@ export interface LevelHistory {
   points: LevelPoint[];
 }
 
+/** Hourly rain at a gauge (Open-Meteo), from the start of a history period to the end of the day after tomorrow. */
+export interface RainSeries {
+  station_no: string;
+  period: string;
+  /** The first hour (UTC); each value is the rain in the hour starting there, then one hour on. */
+  start: string;
+  mm: number[];
+}
+
 export interface WeatherHour {
   time: string;
   temp_c: number;

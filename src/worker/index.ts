@@ -22,7 +22,7 @@ import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { refreshFreshets } from './freshets.ts';
 import { loraOverview, releasesOverview } from './schedules.ts';
 import { configureSepa } from './sepa-auth.ts';
-import { getWeather } from './weather.ts';
+import { getRainSeries, getWeather } from './weather.ts';
 
 type HonoEnv = { Bindings: AppEnv };
 const app = new Hono<HonoEnv>();
@@ -101,6 +101,15 @@ app.get('/api/gauges/:no/history', async (c) => {
   if (!g) return c.json({ error: 'Not found' }, 404);
   c.header('cache-control', 'public, max-age=300');
   return c.json(await levelHistory(g.station_no, g.ts_id, period, c.executionCtx as ExecutionContext));
+});
+
+app.get('/api/gauges/:no/rain', async (c) => {
+  const period = (c.req.query('period') ?? 'P2D') as HistoryPeriod;
+  if (!HISTORY_PERIODS.includes(period)) return c.json({ error: 'Bad period' }, 400);
+  const g = await getGauge(c.env.DB, c.req.param('no'));
+  if (!g) return c.json({ error: 'Not found' }, 404);
+  c.header('cache-control', 'public, max-age=900');
+  return c.json(await getRainSeries(g.station_no, g.lat, g.lon, period, c.executionCtx as ExecutionContext));
 });
 
 app.get('/api/weather', async (c) => {
