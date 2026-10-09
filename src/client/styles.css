@@ -4053,8 +4053,9 @@ button {
   flex: 1 1 0;
   min-height: 0;
   container-type: size;
-  border-left: 8px solid var(--step);
-  background: color-mix(in srgb, var(--step) 42%, var(--surface));
+  /* The full-colour strip is painted in the background, not a border, so it meets the divider
+     between bands square (two borders would join on a diagonal). */
+  background: linear-gradient(to right, var(--step) 8px, color-mix(in srgb, var(--step) 42%, var(--surface)) 8px);
   color: var(--ink);
   white-space: nowrap;
 }
@@ -4066,7 +4067,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 12px 0 14px;
+  padding: 0 12px 0 22px;
 }
 
 .gb-band + .gb-band {
