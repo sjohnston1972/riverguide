@@ -3994,12 +3994,13 @@ button {
   min-height: 0;
 }
 
+/* Pills and metres on the left, the board, then the step names. */
 .gb-body {
-  flex: 1 1 auto;
-  min-height: 260px;
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 84px 58px minmax(0, 1fr);
-  column-gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 58px minmax(96px, auto);
+  column-gap: 12px;
 }
 
 .gb-marks,
@@ -4017,12 +4018,12 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-/* "Now 0.72 m", pointing at the water line. */
+/* "Now 0.72 m" pointing at the water line; "Tomorrow 0.90 m" (dashed) at the predicted level. */
 .gb-now {
   position: absolute;
   right: 2px;
   z-index: 1;
-  transform: translateY(50%);
+  transform: translateY(-50%);
   padding: 6px 9px;
   border-radius: 999px;
   background: var(--ink);
@@ -4039,6 +4040,17 @@ button {
   transform: translateY(-50%);
   border: 6px solid transparent;
   border-left-color: var(--ink);
+}
+
+.gb-next {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px dashed var(--ink);
+  padding: 5px 9px;
+}
+
+.gb-next::after {
+  right: -12px;
 }
 
 .gb-staff {
@@ -4098,19 +4110,10 @@ button {
 .gb-label {
   position: absolute;
   left: 0;
-  right: 0;
   transform: translateY(-50%);
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 8px;
   font: 600 0.92rem/1.1 var(--font-display);
-}
-
-.gb-range {
-  color: var(--ink-3);
-  font: 500 0.8rem/1 var(--font-display);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -4125,6 +4128,16 @@ button {
   padding: 2px 6px;
   border-radius: 4px;
   outline: 1px dashed var(--ink);
+}
+
+.gb-tight .gb-label {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.gb-tight .gb-label.is-now .gb-name,
+.gb-tight .gb-label.is-tomorrow .gb-name {
+  padding: 1px 5px;
 }
 
 .gb-key {
@@ -4148,10 +4161,6 @@ button {
   background: var(--ink-3);
 }
 
-.gb-key-tomorrow {
-  width: 18px;
-  border-top: 2px dashed var(--ink);
-}
 
 /* ---------- Phones: the river page on one screen, swiped sideways ----------
    The name, details and status pills stay put; below them the Scale, Level, Weather, Access and
@@ -4275,8 +4284,13 @@ button {
     flex: none;
   }
 
+  /* The board shrinks to the space left, so its key always shows; scrolling is only a last resort. */
   .river-phone .panel-scale {
-    overflow-y: hidden;
+    overflow-y: auto;
+  }
+
+  .river-phone .panel-scale .gb-body {
+    min-height: 160px;
   }
 
   .river-phone .panel-scale .gauge-board {
