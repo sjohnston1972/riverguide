@@ -3985,7 +3985,7 @@ button {
   }
 }
 
-/* ---------- Gauge board (phones): the scale stood upright like a river staff gauge ---------- */
+/* ---------- Gauge board (phones): equal-height bands, each labelled inside ---------- */
 .gauge-board {
   margin: 0;
   display: flex;
@@ -3994,45 +3994,35 @@ button {
   min-height: 0;
 }
 
-/* Pills and metres on the left, the board, then the step names. */
+/* Now / Tomorrow pills on the left, the bands on the right. */
 .gb-body {
   flex: 1 1 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 58px minmax(96px, auto);
+  grid-template-columns: max-content minmax(0, 1fr);
   column-gap: 12px;
 }
 
-.gb-marks,
-.gb-post,
-.gb-labels {
+/* Wide enough for "Tomorrow 0.93 m". */
+.gb-pills {
   position: relative;
+  min-width: 9.4em;
+  font-size: 0.82rem;
 }
 
-.gb-tick {
-  position: absolute;
-  right: 0;
-  transform: translateY(50%);
-  font: 600 0.78rem/1 var(--font-display);
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
-
-/* "Now 0.72 m" pointing at the water line; "Tomorrow 0.90 m" (dashed) at the predicted level. */
-.gb-now {
+.gb-pill {
   position: absolute;
   right: 2px;
-  z-index: 1;
   transform: translateY(-50%);
   padding: 6px 9px;
   border-radius: 999px;
   background: var(--ink);
   color: var(--paper);
-  font: 700 0.85rem/1 var(--font-display);
+  font: 700 1em/1 var(--font-display);
   white-space: nowrap;
 }
 
-.gb-now::after {
+.gb-pill::after {
   content: '';
   position: absolute;
   right: -11px;
@@ -4042,125 +4032,135 @@ button {
   border-left-color: var(--ink);
 }
 
-.gb-next {
+.gb-pill-next {
   background: var(--surface);
   color: var(--ink);
   border: 1.5px dashed var(--ink);
   padding: 5px 9px;
 }
 
-.gb-next::after {
-  right: -12px;
-}
-
-.gb-staff {
-  position: absolute;
-  inset: 0 0 0 10px;
+.gb-bands {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
   overflow: hidden;
   border: 2px solid var(--ink);
-  border-radius: 6px;
-  background: var(--surface-2);
+  border-radius: 8px;
 }
 
-.gb-zone {
-  position: absolute;
-  left: 0;
-  right: 0;
-  background: var(--step, var(--surface-2));
-}
-
-.gb-low {
-  background: repeating-linear-gradient(135deg, var(--st-low-tint) 0 6px, color-mix(in srgb, var(--st-low) 30%, var(--st-low-tint)) 6px 8px);
-}
-
-.gb-run {
-  background: color-mix(in srgb, var(--st-runnable) 55%, var(--surface));
-}
-
-.gb-high {
-  background: color-mix(in srgb, var(--st-high) 45%, var(--surface));
-}
-
-/* The water, up to the current level. */
-.gb-water {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: color-mix(in srgb, var(--loch) 42%, transparent);
-  border-top: 3px solid var(--loch);
-}
-
-.gb-tomorrow {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 2px dashed var(--ink);
-}
-
-/* The gauge's typical range, as a bar beside the board. */
-.gb-typical {
-  position: absolute;
-  left: 0;
-  width: 5px;
-  border-radius: 3px;
-  background: var(--ink-3);
-}
-
-.gb-label {
-  position: absolute;
-  left: 0;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  font: 600 0.92rem/1.1 var(--font-display);
+/* One band per step. Its text scales with the band (container units): as big as the band allows. */
+.gb-band {
+  flex: 1 1 0;
+  min-height: 0;
+  container-type: size;
+  border-left: 8px solid var(--step);
+  background: color-mix(in srgb, var(--step) 42%, var(--surface));
+  color: var(--ink);
   white-space: nowrap;
 }
 
-.gb-label.is-now .gb-name {
-  padding: 3px 7px;
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--paper);
+/* Short bands: name and range on one line. */
+.gb-text {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px 0 14px;
 }
 
-.gb-label.is-tomorrow .gb-name {
-  padding: 2px 6px;
-  border-radius: 4px;
-  outline: 1px dashed var(--ink);
+.gb-band + .gb-band {
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
 }
 
-.gb-tight .gb-label {
-  font-size: 0.78rem;
-  line-height: 1;
+.gb-name {
+  font: 700 clamp(0.85rem, min(46cqh, 9cqw), 1.9rem)/1 var(--font-display);
 }
 
-.gb-tight .gb-label.is-now .gb-name,
-.gb-tight .gb-label.is-tomorrow .gb-name {
-  padding: 1px 5px;
+.gb-range {
+  font: 600 clamp(0.75rem, min(30cqh, 6cqw), 1.25rem)/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+/* Taller bands: the range under the name, so both can be much bigger. */
+@container (min-height: 46px) {
+  .gb-text {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .gb-name {
+    font-size: clamp(0.9rem, min(40cqh, 15cqw), 2.3rem);
+  }
+
+  .gb-range {
+    font-size: clamp(0.78rem, min(22cqh, 8cqw), 1.35rem);
+  }
+}
+
+.gb-band.is-now {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+.gb-band.is-tomorrow {
+  outline: 2px dashed var(--ink);
+  outline-offset: -2px;
+}
+
+.gb-low { --step: var(--st-low); }
+.gb-run { --step: var(--st-runnable); }
+.gb-high { --step: var(--st-high); }
+.gb-below,
+.gb-above { --step: var(--st-unknown); }
+.gb-typical { --step: var(--loch); }
+
+/* Now as a solid line within its band, tomorrow dashed. */
+.gb-line-now,
+.gb-line-tomorrow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.gb-line-now {
+  border-top: 3px solid var(--loch);
+}
+
+.gb-line-tomorrow {
+  border-top: 2px dashed var(--ink);
 }
 
 .gb-key {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  font-size: 0.82rem;
+  gap: 2px 14px;
+  font-size: 0.78rem;
   color: var(--ink-2);
 }
 
 .gb-key span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
-.gb-key-typical {
-  width: 5px;
-  height: 14px;
-  border-radius: 3px;
-  background: var(--ink-3);
+.gb-key-now,
+.gb-key-tomorrow {
+  width: 18px;
 }
 
+.gb-key-now {
+  border-top: 3px solid var(--loch);
+}
+
+.gb-key-tomorrow {
+  border-top: 2px dashed var(--ink);
+}
 
 /* ---------- Phones: the river page on one screen, swiped sideways ----------
    The name, details and status pills stay put; below them the Scale, Level, Weather, Access and
@@ -4192,22 +4192,38 @@ button {
     flex-direction: column;
   }
 
+  /* Back arrow, title and star on one line; region, grade and length under it. */
   .river-phone .river-head {
-    padding: 2px 0 6px;
-    gap: 2px;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 4px;
+    row-gap: 0;
+    padding: 4px 0 4px;
   }
 
   .river-phone .river-head .back-link {
-    min-height: 30px;
-    font-size: 0.9rem;
+    min-height: 36px;
+    min-width: 30px;
+    margin-left: -8px;
+    font-size: 0;
+  }
+
+  .river-phone .river-head .back-link .icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .river-phone .river-head .river-sub {
+    grid-column: 1 / -1;
   }
 
   .river-phone .river-title {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
+    line-height: 1.15;
   }
 
   .river-phone .river-sub {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
   }
 
   .river-phone .river-body {
@@ -4218,13 +4234,17 @@ button {
     gap: 8px;
   }
 
+  .river-phone .phone-pills {
+    gap: 5px;
+  }
+
   .river-phone .phone-pills > .pill,
   .river-phone .phone-pills > .step-tag,
   .river-phone .phone-pills > .tomorrow-tag {
-    height: 30px;
-    padding: 0 11px;
+    height: 26px;
+    padding: 0 9px;
     border-radius: 999px;
-    font: 600 0.92rem/1 var(--font-display);
+    font: 600 0.84rem/1 var(--font-display);
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -4245,8 +4265,8 @@ button {
 
   .river-phone .phone-pills .pill-dot,
   .river-phone .phone-pills > .step-tag::before {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
   }
 
   /* The panels: side by side, snapping, each as wide as the screen's content. */
@@ -4290,7 +4310,7 @@ button {
   }
 
   .river-phone .panel-scale .gb-body {
-    min-height: 160px;
+    min-height: 200px;
   }
 
   .river-phone .panel-scale .gauge-board {
@@ -4301,27 +4321,22 @@ button {
     margin-top: auto;
   }
 
-  .phone-reading {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 10px;
-    row-gap: 2px;
+  /* One line: the trend, the gauge and the reading's age (the level is the Now pill). */
+  .phone-trend {
     margin: 0;
-  }
-
-  .phone-reading .lvl {
-    font-size: 2.4rem;
-  }
-
-  .phone-reading-at {
-    font-weight: 600;
+    font-size: 0.85rem;
     color: var(--ink-2);
   }
 
-  .phone-reading .hero-time {
-    font-size: 0.85rem;
-    color: var(--ink-3);
+  .phone-trend b {
+    font-weight: 700;
+  }
+
+  .phone-trend .trend-rising { color: var(--st-high); }
+  .phone-trend .trend-falling { color: var(--loch); }
+
+  .river-phone .panel-scale {
+    gap: 8px;
   }
 
   /* In the Level panel the pills and details are already at the top of the screen, and the
