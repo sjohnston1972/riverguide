@@ -30,7 +30,8 @@ function clampGrade(v: string | null, fallback: number): number {
   return Number.isInteger(n) && n >= 1 && n <= 6 ? n : fallback;
 }
 
-export function filtersFromQuery(search: string): Filters {
+/** `favDefault`: whether the favourites filter is on when the URL doesn't say (on once there are favourites). */
+export function filtersFromQuery(search: string, favDefault = false): Filters {
   const p = new URLSearchParams(search);
   const status = (p.get('status') ?? 'any') as StatusFilter;
   let gmin = clampGrade(p.get('gmin'), 1);
@@ -43,12 +44,12 @@ export function filtersFromQuery(search: string): Filters {
     gmax,
     status: p.get('now') === '1' ? 'runnable' : STATUSES.includes(status) ? status : 'any',
     sort: p.get('sort') === 'name' ? 'name' : 'status',
-    fav: p.get('fav') === '1',
+    fav: p.get('fav') === '1' ? true : p.get('fav') === '0' ? false : favDefault,
     rise: p.get('rise') === '1',
   };
 }
 
-export function filtersToQuery(f: Filters): string {
+export function filtersToQuery(f: Filters, favDefault = false): string {
   const p = new URLSearchParams();
   if (f.q.trim()) p.set('q', f.q.trim());
   if (f.region) p.set('region', f.region);
@@ -56,14 +57,15 @@ export function filtersToQuery(f: Filters): string {
   if (f.gmax !== 6) p.set('gmax', String(f.gmax));
   if (f.status !== 'any') p.set('status', f.status);
   if (f.sort !== 'status') p.set('sort', f.sort);
-  if (f.fav) p.set('fav', '1');
+  if (f.fav !== favDefault) p.set('fav', f.fav ? '1' : '0');
   if (f.rise) p.set('rise', '1');
   const s = p.toString();
   return s ? `?${s}` : '';
 }
 
+/** Filters set in the filter panel (search and favourites sit outside it). */
 export function activeFilterCount(f: Filters): number {
-  return (f.region ? 1 : 0) + (f.gmin !== 1 || f.gmax !== 6 ? 1 : 0) + (f.status !== 'any' ? 1 : 0);
+  return (f.region ? 1 : 0) + (f.gmin !== 1 || f.gmax !== 6 ? 1 : 0) + (f.status !== 'any' ? 1 : 0) + (f.rise ? 1 : 0);
 }
 
 /** On the rise: the gauge is rising now (SEPA's indicator) or the outlook expects a rise. */
