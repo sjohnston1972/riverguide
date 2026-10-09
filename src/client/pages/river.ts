@@ -21,6 +21,7 @@ import {
   gradeLabel,
   RELATION_LABEL,
   relativeTime,
+  TREND_ARROW,
   TREND_LABEL,
   TYPICAL_LABEL,
   STEP_LABEL,
@@ -104,13 +105,15 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     setFavouriteName(star, d.name);
     const region = [d.river !== d.name ? d.river : null, d.region].filter(Boolean).join(', ');
     // On phones the status band's details move up here, next to the name.
-    const sub = PHONE.matches ? [region, ...sectionDetails(d).map(([k, v]) => (k === 'Grade' ? `Grade ${v}` : v))].join(' · ') : region;
+    const sub = PHONE.matches
+      ? [region, ...sectionDetails(d).filter(([k]) => k !== 'Character').map(([k, v]) => (k === 'Grade' ? `Grade ${v}` : v))].join(' · ')
+      : region;
     head.querySelector('.river-sub')?.remove();
     head.querySelector('.river-source')?.remove();
     head.append(
       h('p', { class: 'river-sub' }, sub),
       // Sections added from Where's the Water: their grade, length and access come from it.
-      d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : '',
+      d.source === 'wtw' && !PHONE.matches ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : '',
     );
 
     const reports = api.reports(slug);
@@ -319,13 +322,16 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   function renderPhone(d: SectionDetail, now: { card: HTMLElement; graph: HTMLElement | null }, community: HTMLElement): void {
     const headline = d.links.find((l) => l.station_no === d.station_no) ?? null;
     const g = headline?.gauge ?? null;
+    // One line: trend, gauge, age. The level itself is the board's Now pill.
     const reading = g
       ? h(
-          'div',
-          { class: 'phone-reading' },
-          g.level != null ? levelWithTrend(g.level, g.trend, g.stale) : h('span', { class: 'lvl lvl-none' }, 'No reading'),
-          h('span', { class: 'phone-reading-at' }, g.trend !== 'unknown' && g.level != null ? `${TREND_LABEL[g.trend]} at ${g.name}` : `at ${g.name}`),
-          h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `Stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
+          'p',
+          { class: 'phone-trend' },
+          g.level != null && !g.stale && g.trend !== 'unknown'
+            ? h('b', { class: `trend-${g.trend}` }, `${TREND_ARROW[g.trend]} ${TREND_LABEL[g.trend]}`)
+            : g.level == null ? 'No reading' : null,
+          ` at ${g.name} · `,
+          h('span', { class: g.stale ? 'hero-time stale' : 'hero-time' }, g.stale ? `stale: last reading ${relativeTime(g.level_at)}` : relativeTime(g.level_at)),
         )
       : null;
     const board = headline ? gaugeBoard(headline) : null;
@@ -341,7 +347,12 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
       scale: scaleBody,
       level: [now.card, now.graph, releasesSection(d)],
       weather: [weatherSection(d) ?? h('p', { class: 'muted' }, 'No location for a forecast.')],
-      access: [placesSection(d), nearbySection(d), d.guide ? guideSection(d.guide) : null],
+      access: [
+        placesSection(d),
+        nearbySection(d),
+        d.guide ? guideSection(d.guide) : null,
+        d.source === 'wtw' ? h('p', { class: 'river-source muted' }, 'Section details from ', wtwLink(), '.') : null,
+      ],
       reports: [community, footerText ?? null],
     };
     const panels = PANELS.map(([key, label], i) =>

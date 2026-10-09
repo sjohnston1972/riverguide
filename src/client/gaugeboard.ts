@@ -1,28 +1,28 @@
-// Vertical "gauge board" for phones: the paddling scale drawn like a river's staff gauge, with the
-// water filled to the current level, tomorrow's predicted level as a dashed line and the gauge's
-// typical range as a bar beside it. Same information as the band bar (bandbar.ts), stood upright.
+// Gauge board for phones: the paddling scale as a column of equal-height bands, each step's name
+// and range written inside its band, so every label sits on its band on any screen. The current
+// level is a solid line within its band and tomorrow's prediction a dashed one, each placed in
+// proportion between the band's limits, with Now / Tomorrow pills pointing in from the left.
+// Not to scale in metres: each band carries its own numbers.
 
 import type { PaddlerStep, SectionGaugeLink } from '../shared/types.ts';
 import { h } from './dom.ts';
 import { formatLevel, STEP_LABEL } from './labels.ts';
 
-interface Zone {
+interface Band {
   cls: string;
   name: string;
   range: string;
+  /** Limits used to place a level inside the band (the open ends use the scale's padded edges). */
   from: number;
   to: number;
-  /** The zone the level is in now, and the one it is predicted to be in tomorrow. */
   now: boolean;
   tomorrow: boolean;
 }
 
-function niceStep(range: number): number {
-  for (const s of [0.1, 0.2, 0.25, 0.5, 1, 2, 5]) if (range / s <= 6) return s;
-  return 10;
-}
+const LADDER: Exclude<PaddlerStep, 'empty'>[] = ['scrape', 'low', 'medium', 'high', 'very_high', 'huge'];
 
-const LADDER: PaddlerStep[] = ['empty', 'scrape', 'low', 'medium', 'high', 'very_high', 'huge'];
+/** "0.38–0.40 m": short enough to fit inside a band. */
+const between = (a: number, b: number) => `${a.toFixed(2)}–${formatLevel(b)}`;
 
 /** The board for one linked gauge, or null when there is nothing to draw it against. */
 export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
@@ -35,133 +35,111 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
   const pl = link.levels;
   if (!pl && min == null && max == null && (tLow == null || tHigh == null)) return null;
 
+  // Open-ended bands (the bottom and top ones) run to the readings' padded extremes.
   const values = [level, min, max, tLow, tHigh, t?.level, ...(pl ? Object.values(pl) : [])].filter((v): v is number => v != null && Number.isFinite(v));
-  if (values.length < 2) return null;
-  let lo = Math.min(...values);
-  let hi = Math.max(...values);
-  const pad = Math.max((hi - lo) * 0.12, 0.1);
-  lo -= pad;
-  hi += pad;
-  if (lo < 0 && Math.min(...values) >= 0) lo = 0;
-  const pct = (v: number) => ((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * 100;
+  const span = Math.max(...values) - Math.min(...values);
+  const lo = Math.min(...values) - Math.max(span * 0.1, 0.1);
+  const hi = Math.max(...values) + Math.max(span * 0.1, 0.1);
+  const inBand = (v: number | null | undefined, a: number, b: number, top: boolean) => v != null && v >= a && (top || v < b);
 
-  // Zones from the bottom up: the paddler ladder, or low / runnable / high from the band.
-  const zones: Zone[] = [];
+  const bands: Band[] = [];
+  const add = (cls: string, name: string, range: string, from: number, to: number, top = false) =>
+    bands.push({ cls, name, range, from, to, now: inBand(level, from, to, top), tomorrow: false });
   if (pl) {
-    const starts = LADDER.map((s) => (s === 'empty' ? lo : pl[s as Exclude<PaddlerStep, 'empty'>]));
+    add('s-empty', STEP_LABEL.empty, `under ${formatLevel(pl.scrape)}`, Math.min(lo, pl.scrape), pl.scrape);
     LADDER.forEach((s, i) => {
-      const from = starts[i];
-      const to = i + 1 < starts.length ? starts[i + 1] : hi;
-      if (to <= from) return;
-      const range = s === 'empty' ? `under ${formatLevel(pl.scrape)}` : s === 'huge' ? `from ${formatLevel(pl.huge)}` : `${formatLevel(from)} to ${formatLevel(to)}`;
-      zones.push({ cls: `s-${s}`, name: STEP_LABEL[s], range, from, to, now: link.step === s, tomorrow: link.step_tomorrow === s && link.step_tomorrow !== link.step });
+      const from = pl[s];
+      const next = LADDER[i + 1];
+      const to = next ? pl[next] : Math.max(hi, from);
+      add(`s-${s}`, STEP_LABEL[s], next ? between(from, to) : `from ${formatLevel(from)}`, from, to, !next);
     });
   } else if (min != null || max != null) {
-    const run = { from: min ?? lo, to: max ?? hi };
-    const inZone = (v: number | null | undefined, a: number, b: number) => v != null && v >= a && v < b;
-    if (min != null) zones.push({ cls: 'gb-low', name: 'Low', range: `under ${formatLevel(min)}`, from: lo, to: min, now: inZone(level, lo, min), tomorrow: inZone(t?.level, lo, min) && !inZone(level, lo, min) });
-    zones.push({
-      cls: 'gb-run',
-      name: 'Runnable',
-      range: min != null && max != null ? `${formatLevel(min)} to ${formatLevel(max)}` : min != null ? `from ${formatLevel(min)}` : `under ${formatLevel(max!)}`,
-      ...run,
-      now: inZone(level, run.from, run.to),
-      tomorrow: inZone(t?.level, run.from, run.to) && !inZone(level, run.from, run.to),
-    });
-    if (max != null) zones.push({ cls: 'gb-high', name: 'Too high', range: `from ${formatLevel(max)}`, from: max, to: hi, now: inZone(level, max, hi + 1), tomorrow: inZone(t?.level, max, hi + 1) && !inZone(level, max, hi + 1) });
+    if (min != null) add('gb-low', 'Low', `under ${formatLevel(min)}`, Math.min(lo, min), min);
+    const runTo = max ?? Math.max(hi, min!);
+    add('gb-run', 'Runnable', min != null && max != null ? between(min, max) : min != null ? `from ${formatLevel(min)}` : `under ${formatLevel(max!)}`, min ?? Math.min(lo, max!), runTo, max == null);
+    if (max != null) add('gb-high', 'Too high', `from ${formatLevel(max)}`, max, Math.max(hi, max), true);
+  } else {
+    // No paddling band: where the level sits against the gauge's typical range.
+    add('gb-below', 'Below typical', `under ${formatLevel(tLow!)}`, Math.min(lo, tLow!), tLow!);
+    add('gb-typical', 'Typical range', between(tLow!, tHigh!), tLow!, tHigh!);
+    add('gb-above', 'Above typical', `from ${formatLevel(tHigh!)}`, tHigh!, Math.max(hi, tHigh!), true);
+  }
+  if (t) {
+    const i = bands.findIndex((b, j) => inBand(t.level, b.from, b.to, j === bands.length - 1));
+    if (i >= 0 && !bands[i].now) bands[i].tomorrow = true;
   }
 
-  const step = niceStep(hi - lo);
-  const ticks: HTMLElement[] = [];
-  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) {
-    // The Now and Tomorrow pills sit at their levels on the left; no tick label under them.
-    if ([level, t?.level].some((x) => x != null && Math.abs(pct(v) - pct(x)) < 5)) continue;
-    ticks.push(h('span', { class: 'gb-tick', style: `bottom:${pct(v).toFixed(2)}%` }, `${v.toFixed(step < 0.25 ? 1 : step < 1 ? 2 : 0).replace(/\.?0+$/, '') || '0'} m`));
-  }
+  /** A level's position, % from the bottom: its band's slot plus how far it is through the band. */
+  const pos = (v: number) => {
+    const n = bands.length;
+    let i = bands.findIndex((b, j) => inBand(v, b.from, b.to, j === n - 1));
+    if (i < 0) i = v < bands[0].from ? 0 : n - 1;
+    const b = bands[i];
+    const f = Math.min(1, Math.max(0, (v - b.from) / (b.to - b.from || 1)));
+    return ((i + f) / n) * 100;
+  };
 
-  const board = h(
+  const column = h(
     'div',
-    { class: 'gb-staff' },
-    zones.map((z) => h('div', { class: `gb-zone ${z.cls}`, style: `bottom:${pct(z.from).toFixed(2)}%;height:${(pct(z.to) - pct(z.from)).toFixed(2)}%` })),
-    level != null ? h('div', { class: 'gb-water', style: `height:${pct(level).toFixed(2)}%` }) : null,
-    t ? h('div', { class: 'gb-tomorrow', style: `bottom:${pct(t.level).toFixed(2)}%` }) : null,
-  );
-  const typical =
-    tLow != null && tHigh != null ? h('div', { class: 'gb-typical', style: `bottom:${pct(tLow).toFixed(2)}%;height:${(pct(tHigh) - pct(tLow)).toFixed(2)}%`, title: `Typical range ${formatLevel(tLow)} to ${formatLevel(tHigh)}` }) : null;
-
-  const labels = h(
-    'div',
-    { class: 'gb-labels' },
-    zones.map((z) =>
+    { class: 'gb-bands' },
+    bands.map((b) =>
       h(
         'div',
-        { class: `gb-label${z.now ? ' is-now' : ''}${z.tomorrow ? ' is-tomorrow' : ''}`, 'data-at': String((pct(z.from) + pct(z.to)) / 2) },
-        h('span', { class: 'gb-name' }, z.name),
+        { class: `gb-band ${b.cls}${b.now ? ' is-now' : ''}${b.tomorrow ? ' is-tomorrow' : ''}` },
+        h('span', { class: 'gb-text' }, h('span', { class: 'gb-name' }, b.name), h('span', { class: 'gb-range' }, b.range)),
       ),
     ),
+    level != null ? h('div', { class: 'gb-line-now', style: `bottom:${pos(level).toFixed(2)}%` }) : null,
+    t ? h('div', { class: 'gb-line-tomorrow', style: `bottom:${pos(t.level).toFixed(2)}%` }) : null,
   );
-  const marks = h(
+  const pills = h(
     'div',
-    { class: 'gb-marks' },
-    ticks,
-    level != null ? h('span', { class: 'gb-now', 'data-at': String(pct(level)) }, `Now ${formatLevel(level)}`) : null,
-    t ? h('span', { class: 'gb-now gb-next', 'data-at': String(pct(t.level)) }, `Tomorrow ${formatLevel(t.level)}`) : null,
+    { class: 'gb-pills' },
+    level != null ? h('span', { class: 'gb-pill', 'data-at': String(pos(level)) }, `Now ${formatLevel(level)}`) : null,
+    t ? h('span', { class: 'gb-pill gb-pill-next', 'data-at': String(pos(t.level)) }, `Tomorrow ${formatLevel(t.level)}`) : null,
   );
 
   const parts: string[] = [level != null ? `Current level ${formatLevel(level)}.` : 'No current reading.'];
-  const cur = zones.find((z) => z.now);
+  const cur = bands.find((b) => b.now);
   if (cur) parts.push(`${cur.name} (${cur.range}).`);
-  for (const z of zones) parts.push(`${z.name}: ${z.range}.`);
-  if (tLow != null && tHigh != null) parts.push(`Typical range ${formatLevel(tLow)} to ${formatLevel(tHigh)}.`);
   if (t) parts.push(`Tomorrow about ${formatLevel(t.level)}, likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)}.`);
-  if (!zones.length) parts.push('No paddling band for this gauge yet.');
+  for (const b of [...bands].reverse()) parts.push(`${b.name}: ${b.range}.`);
+  if (!pl && min == null && max == null) parts.push('No paddling band for this gauge yet.');
 
   const el = h(
     'figure',
     { class: 'gauge-board', role: 'img', 'aria-label': parts.join(' ') },
-    h('div', { class: 'gb-body', 'aria-hidden': 'true' }, marks, h('div', { class: 'gb-post' }, typical, board), labels),
+    h('div', { class: 'gb-body', 'aria-hidden': 'true' }, pills, column),
     h(
       'figcaption',
       { class: 'gb-key', 'aria-hidden': 'true' },
-      typical ? h('span', null, h('i', { class: 'gb-key-typical' }), 'Typical range') : null,
-      !zones.length ? h('span', null, 'No paddling band for this gauge yet') : null,
+      !pl && min == null && max == null ? h('span', null, 'No paddling band yet') : null,
+      h('span', null, 'Steps drawn the same height'),
+      h('span', null, h('i', { class: 'gb-key-now' }), 'now'),
+      t ? h('span', null, h('i', { class: 'gb-key-tomorrow' }), 'tomorrow') : null,
     ),
   );
 
-  // Place the zone names at their zones' middles, and the Now / Tomorrow pills at their levels,
-  // nudging apart any that would overlap (thin zones, or tomorrow close to now).
+  // Pills at their levels; Tomorrow moves clear of Now when the two are close.
   const place = () => {
-    const H = labels.clientHeight;
+    const H = pills.clientHeight;
     if (!H) return;
-    const items = [...labels.children] as HTMLElement[];
-    // A short board (small screen, large text) gets the tighter label style when the names wouldn't fit.
-    labels.classList.remove('gb-tight');
-    const need = () => Math.max(14, ...items.map((i) => i.offsetHeight + 1));
-    if (need() * items.length > H * 0.92) labels.classList.add('gb-tight');
-    const gap = need();
-    // Zones are listed bottom to top. Push names up where they'd overlap, then, if that ran them
-    // into the top edge, back down; only a board too short for every name leaves any touching.
-    const tops = items.map((it) => H - (Number(it.dataset.at) / 100) * H); // centres, px from the top
-    for (let i = 1; i < tops.length; i++) tops[i] = Math.min(tops[i], tops[i - 1] - gap);
-    const last = tops.length - 1;
-    if (last >= 0) tops[last] = Math.max(gap / 2, tops[last]);
-    for (let i = last - 1; i >= 0; i--) tops[i] = Math.max(tops[i], tops[i + 1] + gap);
-    items.forEach((it, i) => (it.style.top = `${Math.min(H - gap / 2, tops[i])}px`));
-    const pills = [...marks.querySelectorAll<HTMLElement>('.gb-now')];
+    const [now, next] = [...pills.children] as HTMLElement[];
     const centre = (p: HTMLElement) => H - (Number(p.dataset.at) / 100) * H;
-    const [now, next] = pills;
-    if (now) now.style.top = `${centre(now)}px`;
-    if (now && next) {
-      const space = Math.max(now.offsetHeight, next.offsetHeight) + 4;
-      const want = centre(next);
-      const away = want <= centre(now) ? -1 : 1; // tomorrow above (or level with) now goes above it
-      const top = Math.abs(want - centre(now)) < space ? centre(now) + away * space : want;
-      next.style.top = `${Math.min(H - next.offsetHeight / 2, Math.max(next.offsetHeight / 2, top))}px`;
-    } else if (next) next.style.top = `${centre(next)}px`;
+    const clamp = (p: HTMLElement, y: number) => Math.min(H - p.offsetHeight / 2, Math.max(p.offsetHeight / 2, y));
+    if (now) now.style.top = `${clamp(now, centre(now))}px`;
+    if (next) {
+      let y = centre(next);
+      if (now) {
+        const space = Math.max(now.offsetHeight, next.offsetHeight) + 4;
+        const nowY = clamp(now, centre(now));
+        if (Math.abs(y - nowY) < space) y = nowY + (y <= nowY ? -space : space);
+      }
+      next.style.top = `${clamp(next, y)}px`;
+    }
   };
-  if ('ResizeObserver' in window) new ResizeObserver(place).observe(labels);
+  if ('ResizeObserver' in window) new ResizeObserver(place).observe(pills);
   requestAnimationFrame(place);
-  // Label heights change once the display font arrives.
   void document.fonts?.ready.then(() => requestAnimationFrame(place));
   return el;
 }
