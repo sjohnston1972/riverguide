@@ -4261,9 +4261,53 @@ button {
     padding-bottom: 12px;
   }
 
-  /* Cards keep their full height; the panel scrolls instead of squashing them. */
+  /* Cards keep their full height; the panel scrolls instead of squashing them. A panel never
+     scrolls sideways itself: sideways is the swipe between panels. */
   .river-phone .panel > * {
     flex: none;
+  }
+
+  .river-phone .panel {
+    overflow-x: hidden;
+  }
+
+  /* Weather sized to fit one screen, so a drag on it is a swipe, not a scroll. */
+  .river-phone .panel-weather .weather {
+    gap: 8px;
+  }
+
+  .river-phone .panel-weather .rain-stat {
+    padding: 7px 10px;
+  }
+
+  .river-phone .panel-weather .rain-num {
+    font-size: 1.35rem;
+  }
+
+  .river-phone .panel-weather .rain-chart {
+    gap: 6px;
+  }
+
+  .river-phone .panel-weather .rc-summary {
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+
+  .river-phone .panel-weather .rc-plot {
+    height: 64px;
+    margin-bottom: 18px;
+    /* Room for "8 mm/h" at any text size. */
+    margin-left: 4.6em;
+  }
+
+  .river-phone .panel-weather .rc-key {
+    gap: 2px 12px;
+    font-size: 0.75rem;
+  }
+
+  .river-phone .panel-weather .wx-line,
+  .river-phone .panel-weather .source {
+    font-size: 0.78rem;
   }
 
   /* The board shrinks to the space left, so its key always shows; scrolling is only a last resort. */
