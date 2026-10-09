@@ -1,12 +1,13 @@
 // River section page.
 
 import { distanceKm } from '../../shared/geo.ts';
-import type { Gauge, GuideText, PlacePoint, SectionDetail, SectionGaugeLink, Weather } from '../../shared/types.ts';
+import type { Gauge, GuideText, PlacePoint, SectionDetail, SectionGaugeLink, Weather, WeatherDay, WeatherNow } from '../../shared/types.ts';
 import { ApiError, api } from '../api.ts';
 import { bandBar } from '../bandbar.ts';
 import { communityPanel } from '../community.ts';
 import { rainChart } from '../rainchart.ts';
 import { rainBetween } from '../rainlayer.ts';
+import { sky, weatherIcon } from '../weathericons.ts';
 import { damReleaseRow, ebbRow, SEPA_FRESHETS_URL } from '../schedule.ts';
 import { errorBox, levelWithTrend, skeletonLines, statusPill, tomorrowTag } from '../components.ts';
 import { gaugeBoard } from '../gaugeboard.ts';
@@ -42,6 +43,7 @@ const PERIODS: [string, string][] = [
   ['P30D', '30 days'],
 ];
 const PERIOD_DAYS: Record<string, number> = { P2D: 2, P7D: 7, P30D: 30 };
+const WEEKDAY = new Intl.DateTimeFormat('en-GB', { weekday: 'long', timeZone: 'UTC' });
 
 type Place = PlacePoint & { precision?: string };
 
@@ -638,6 +640,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   function weatherBody(w: Weather): Node[] {
+    if (PHONE.matches && w.now && w.days?.length === 3) return phoneWeather(w, w.now, w.days);
     const stat = (label: string, mm: number) => h('div', { class: 'rain-stat' }, h('span', { class: 'rain-num' }, mm.toFixed(1), h('small', null, ' mm')), h('span', { class: 'rain-label' }, label));
     const hours = w.hours.slice(0, 48);
     const out: Node[] = [h('div', { class: 'rain-stats' }, stat('Past 24 h', w.rain_past_24h_mm), stat('Next 24 h', w.rain_next_24h_mm), stat('Next 48 h', w.rain_next_48h_mm))];
@@ -655,6 +658,49 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     }
     out.push(h('p', { class: 'source muted' }, 'Forecast from ', h('a', { href: 'https://open-meteo.com/', target: '_blank', rel: 'noopener' }, 'Open-Meteo'), ' for the section location.'));
     return out;
+  }
+
+  /** Phones: the sky and temperature now, large; a card for each of three days; then the 48-hour rain chart, which takes any spare height. */
+  function phoneWeather(w: Weather, now: WeatherNow, days: WeatherDay[]): Node[] {
+    const hours = w.hours.slice(0, 48);
+    const temps = hours.map((x) => x.temp_c);
+    const winds = hours.map((x) => x.wind_kmh);
+    const nowLabel = sky(now.code, now.is_day).label;
+    const dayName = (d: WeatherDay, i: number) => (i === 0 ? 'Today' : WEEKDAY.format(new Date(`${d.date}T12:00:00Z`)));
+    const out: Array<Node | null> = [
+      h(
+        'div',
+        { class: 'wx-now', role: 'img', 'aria-label': `Now ${Math.round(now.temp_c)} °C, ${nowLabel.toLowerCase()}, wind ${Math.round(now.wind_kmh)} km/h.` },
+        weatherIcon(now.code, now.is_day, 'wx-now-icon'),
+        h('p', { class: 'wx-now-temp', 'aria-hidden': 'true' }, String(Math.round(now.temp_c)), h('span', null, '°C')),
+        h(
+          'p',
+          { class: 'wx-now-words', 'aria-hidden': 'true' },
+          h('b', null, nowLabel),
+          h('span', null, `Wind ${Math.round(now.wind_kmh)} km/h`),
+          temps.length ? h('span', { class: 'wx-range' }, `${Math.round(Math.min(...temps))} to ${Math.round(Math.max(...temps))} °C over the next 48 h`) : null,
+        ),
+      ),
+      h(
+        'ul',
+        { class: 'wx-days' },
+        days.map((d, i) =>
+          h(
+            'li',
+            { class: 'wx-day', 'aria-label': `${dayName(d, i)}: ${sky(d.code).label.toLowerCase()}, high ${Math.round(d.max_c)} °C, low ${Math.round(d.min_c)} °C, ${d.rain_mm.toFixed(1)} mm of rain.` },
+            h('h3', { 'aria-hidden': 'true' }, dayName(d, i)),
+            weatherIcon(d.code, true, 'wx-day-icon'),
+            h('p', { class: 'wx-hl', 'aria-hidden': 'true' }, `${Math.round(d.max_c)}°`, h('span', null, ` ${Math.round(d.min_c)}°`)),
+            h('p', { class: 'wx-mm', 'aria-hidden': 'true' }, d.rain_mm.toFixed(1), h('small', null, ' mm')),
+          ),
+        ),
+      ),
+      h('p', { class: 'wx-past' }, h('b', null, `${w.rain_past_24h_mm.toFixed(1)} mm`), ' of rain in the past 24 hours.'),
+      hours.length ? h('div', { class: 'rain-strip-wrap' }, h('p', { class: 'strip-label' }, 'Rain, next 48 hours'), rainChart(hours)) : null,
+      winds.length ? h('p', { class: 'wx-line' }, `Wind ${Math.round(Math.min(...winds))} to ${Math.round(Math.max(...winds))} km/h.`) : null,
+      h('p', { class: 'source muted' }, 'Forecast from ', h('a', { href: 'https://open-meteo.com/', target: '_blank', rel: 'noopener' }, 'Open-Meteo'), ' for the section location.'),
+    ];
+    return out.filter((n): n is Node => n != null);
   }
 
   // ---- Put-in / take-out ----

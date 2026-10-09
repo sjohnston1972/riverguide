@@ -187,6 +187,23 @@ export interface WeatherHour {
   wind_kmh: number;
 }
 
+/** WMO weather code (Open-Meteo): 0 clear, 1-3 cloud, 45/48 fog, 51-57 drizzle, 61-67 rain, 71-77 snow, 80-86 showers, 95-99 thunder. */
+export interface WeatherNow {
+  temp_c: number;
+  code: number;
+  is_day: boolean;
+  wind_kmh: number;
+}
+
+/** One UK day: its sky (the most severe hour), high and low, and total rain. */
+export interface WeatherDay {
+  date: string;
+  code: number;
+  max_c: number;
+  min_c: number;
+  rain_mm: number;
+}
+
 export interface Weather {
   lat: number;
   lon: number;
@@ -194,6 +211,10 @@ export interface Weather {
   rain_next_24h_mm: number;
   rain_next_48h_mm: number;
   hours: WeatherHour[];
+  /** The current hour. */
+  now?: WeatherNow | null;
+  /** Today, tomorrow and the day after (UK days). */
+  days?: WeatherDay[];
 }
 
 export interface PublicConfig {
