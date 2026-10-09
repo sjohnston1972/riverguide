@@ -640,7 +640,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   }
 
   function weatherBody(w: Weather): Node[] {
-    if (PHONE.matches && w.now && w.days?.length === 3) return phoneWeather(w, w.now, w.days);
+    if (w.now && w.days?.length === 3) return weatherCards(w, w.now, w.days);
     const stat = (label: string, mm: number) => h('div', { class: 'rain-stat' }, h('span', { class: 'rain-num' }, mm.toFixed(1), h('small', null, ' mm')), h('span', { class: 'rain-label' }, label));
     const hours = w.hours.slice(0, 48);
     const out: Node[] = [h('div', { class: 'rain-stats' }, stat('Past 24 h', w.rain_past_24h_mm), stat('Next 24 h', w.rain_next_24h_mm), stat('Next 48 h', w.rain_next_48h_mm))];
@@ -660,8 +660,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     return out;
   }
 
-  /** Phones: the sky and temperature now, large; a card for each of three days; then the 48-hour rain chart, which takes any spare height. */
-  function phoneWeather(w: Weather, now: WeatherNow, days: WeatherDay[]): Node[] {
+  /** The sky and temperature now, large; a card for each of three days; then the 48-hour rain chart (on phones it takes any spare height). */
+  function weatherCards(w: Weather, now: WeatherNow, days: WeatherDay[]): Node[] {
     const hours = w.hours.slice(0, 48);
     const temps = hours.map((x) => x.temp_c);
     const winds = hours.map((x) => x.wind_kmh);
@@ -670,28 +670,32 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const out: Array<Node | null> = [
       h(
         'div',
-        { class: 'wx-now', role: 'img', 'aria-label': `Now ${Math.round(now.temp_c)} °C, ${nowLabel.toLowerCase()}, wind ${Math.round(now.wind_kmh)} km/h.` },
-        weatherIcon(now.code, now.is_day, 'wx-now-icon'),
-        h('p', { class: 'wx-now-temp', 'aria-hidden': 'true' }, String(Math.round(now.temp_c)), h('span', null, '°C')),
+        { class: 'wx-top' },
         h(
-          'p',
-          { class: 'wx-now-words', 'aria-hidden': 'true' },
-          h('b', null, nowLabel),
-          h('span', null, `Wind ${Math.round(now.wind_kmh)} km/h`),
-          temps.length ? h('span', { class: 'wx-range' }, `${Math.round(Math.min(...temps))} to ${Math.round(Math.max(...temps))} °C over the next 48 h`) : null,
-        ),
-      ),
-      h(
-        'ul',
-        { class: 'wx-days' },
-        days.map((d, i) =>
+          'div',
+          { class: 'wx-now', role: 'img', 'aria-label': `Now ${Math.round(now.temp_c)} °C, ${nowLabel.toLowerCase()}, wind ${Math.round(now.wind_kmh)} km/h.` },
+          weatherIcon(now.code, now.is_day, 'wx-now-icon'),
+          h('p', { class: 'wx-now-temp', 'aria-hidden': 'true' }, String(Math.round(now.temp_c)), h('span', null, '°C')),
           h(
-            'li',
-            { class: 'wx-day', 'aria-label': `${dayName(d, i)}: ${sky(d.code).label.toLowerCase()}, high ${Math.round(d.max_c)} °C, low ${Math.round(d.min_c)} °C, ${d.rain_mm.toFixed(1)} mm of rain.` },
-            h('h3', { 'aria-hidden': 'true' }, dayName(d, i)),
-            weatherIcon(d.code, true, 'wx-day-icon'),
-            h('p', { class: 'wx-hl', 'aria-hidden': 'true' }, `${Math.round(d.max_c)}°`, h('span', null, ` ${Math.round(d.min_c)}°`)),
-            h('p', { class: 'wx-mm', 'aria-hidden': 'true' }, d.rain_mm.toFixed(1), h('small', null, ' mm')),
+            'p',
+            { class: 'wx-now-words', 'aria-hidden': 'true' },
+            h('b', null, nowLabel),
+            h('span', null, `Wind ${Math.round(now.wind_kmh)} km/h`),
+            temps.length ? h('span', { class: 'wx-range' }, `${Math.round(Math.min(...temps))} to ${Math.round(Math.max(...temps))} °C over the next 48 h`) : null,
+          ),
+        ),
+        h(
+          'ul',
+          { class: 'wx-days' },
+          days.map((d, i) =>
+            h(
+              'li',
+              { class: 'wx-day', 'aria-label': `${dayName(d, i)}: ${sky(d.code).label.toLowerCase()}, high ${Math.round(d.max_c)} °C, low ${Math.round(d.min_c)} °C, ${d.rain_mm.toFixed(1)} mm of rain.` },
+              h('h3', { 'aria-hidden': 'true' }, dayName(d, i)),
+              weatherIcon(d.code, true, 'wx-day-icon'),
+              h('p', { class: 'wx-hl', 'aria-hidden': 'true' }, `${Math.round(d.max_c)}°`, h('span', null, ` ${Math.round(d.min_c)}°`)),
+              h('p', { class: 'wx-mm', 'aria-hidden': 'true' }, d.rain_mm.toFixed(1), h('small', null, ' mm')),
+            ),
           ),
         ),
       ),
@@ -845,7 +849,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
   const overflowing = () => {
     const de = document.documentElement;
     if (de.scrollHeight > de.clientHeight + 1) return true;
-    const boxes = [...article.querySelectorAll<HTMLElement>('.col-now, .now-graph .graph-area, .col-mid > :not(.community, .releases), .col-side > *')];
+    const boxes = [...article.querySelectorAll<HTMLElement>('.col-now, .col-mid > :not(.community, .releases), .col-side > *')];
     return boxes.some((b) => b.scrollHeight > b.clientHeight + 1);
   };
   const fit = (fromFull: boolean) => {

@@ -1828,6 +1828,151 @@ button {
   border-radius: 2px;
 }
 
+/* Weather: the sky and temperature now, then a card for each of three days. */
+.weather {
+  container-type: inline-size;
+}
+
+.weather > div:has(> .wx-top) {
+  display: grid;
+  gap: 10px;
+}
+
+/* The sky now and the day cards: stacked, or side by side in a wide tile. */
+.wx-top {
+  display: grid;
+  gap: 8px;
+}
+
+@container (min-width: 480px) {
+  .wx-top {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+  }
+
+  .wx-top .wx-now {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+
+  .wx-top .wx-now-words {
+    margin: 4px 0 0;
+  }
+}
+
+.wx-now {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.wx-now-icon img {
+  display: block;
+  width: 84px;
+  height: 84px;
+  margin: -12px -4px -12px -12px;
+}
+
+.wx-now-temp {
+  margin: 0;
+  font: 700 3.4rem/0.9 var(--font-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-now-temp span {
+  position: relative;
+  top: 0.25em;
+  margin-left: 2px;
+  font-size: 0.42em;
+  vertical-align: top;
+}
+
+.wx-now-words {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 0 8px;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.wx-now-words b {
+  font: 700 1.05rem/1.1 var(--font-display);
+  color: var(--ink);
+}
+
+/* Today and the next two days. */
+.wx-days {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.wx-day {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  padding: 8px 6px 10px;
+  text-align: center;
+}
+
+.wx-day + .wx-day {
+  border-left: 1px solid var(--rule);
+}
+
+.wx-day h3 {
+  margin: 0;
+  font: 700 0.95rem/1.2 var(--font-display);
+}
+
+.wx-day-icon img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: -4px 0 -6px;
+}
+
+.wx-hl {
+  margin: 0;
+  font: 700 1.2rem/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-hl span {
+  color: var(--ink-3);
+  font-size: 0.8em;
+}
+
+.wx-mm {
+  margin: 4px 0 0;
+  font: 700 0.95rem/1 var(--font-display);
+  color: var(--loch);
+}
+
+.wx-mm small {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.wx-past {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ink-2);
+}
+
+.wx-past b {
+  color: var(--ink);
+}
+
 .wx-line {
   font-size: 0.95rem;
 }
@@ -3823,9 +3968,10 @@ button {
     padding: 10px 14px 12px;
   }
 
+  /* Room for the plot, its rain strip and its legend; less and the column overflows, so the page zooms out. */
   .river-dash .now-graph .graph-area {
     flex: 1 1 0;
-    min-height: 0;
+    min-height: 224px;
   }
 
   /* Dam releases or tides, under the level history: a short list that scrolls in place. */
@@ -3999,6 +4145,78 @@ button {
   .river-dash .weather .source,
   .river-dash .weather .wx-line {
     font-size: 0.8rem;
+  }
+
+  /* The sky now and the day cards, compact enough for the tile. Wind is in the "now" line. */
+  .river-dash .weather .wx-now-icon img {
+    width: 64px;
+    height: 64px;
+    margin: -8px -4px -8px -8px;
+  }
+
+  .river-dash .weather .wx-now-temp {
+    font-size: 2.8rem;
+  }
+
+  .river-dash .weather .wx-day {
+    padding: 5px 4px 7px;
+  }
+
+  .river-dash .weather .wx-day-icon img {
+    width: 44px;
+    height: 44px;
+    margin: -2px 0 -4px;
+  }
+
+  .river-dash .weather .wx-hl {
+    font-size: 1.1rem;
+  }
+
+  .river-dash .weather:has(.wx-now) .wx-line,
+  .river-dash .weather .wx-range {
+    display: none;
+  }
+
+  /* The tile's height is set by the layout. Only the rain chart gives way, down to a minimum; past
+     that the tile overflows and the page zooms out. */
+  .river-dash .weather:has(.wx-now) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-dash .weather:has(.wx-now) > div {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .river-dash .weather:has(.wx-now) > div > *,
+  .river-dash .weather:has(.wx-now) .rain-chart > * {
+    flex: none;
+  }
+
+  .river-dash .weather:has(.wx-now) .rain-strip-wrap,
+  .river-dash .weather:has(.wx-now) .rain-chart {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .river-dash .weather:has(.wx-now) .rain-chart .rc-plot {
+    flex: 1 1 36px;
+    height: auto;
+    min-height: 36px;
+    max-height: 110px;
+  }
+
+  /* Short laptop screens: drop the rain colour key and the chart's label to keep the tile whole. */
+  @media (max-height: 800px) {
+    .river-dash .weather:has(.wx-now) .rc-key,
+    .river-dash .weather:has(.wx-now) .strip-label {
+      display: none;
+    }
   }
 
   .river-dash .rc-summary {
@@ -4432,116 +4650,28 @@ button {
     max-height: 150px;
   }
 
-  /* The sky and temperature now, large. */
-  .wx-now {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .wx-now-icon img {
-    display: block;
+  /* Phones: the sky now and the day cards a size up from desktop. */
+  .river-phone .wx-now-icon img {
     width: 112px;
     height: 112px;
     margin: -14px -6px -14px -14px;
   }
 
-  .wx-now-temp {
-    margin: 0;
-    font: 700 4.4rem/0.9 var(--font-display);
-    letter-spacing: -0.02em;
-    font-variant-numeric: tabular-nums;
+  .river-phone .wx-now-temp {
+    font-size: 4.4rem;
   }
 
-  .wx-now-temp span {
-    position: relative;
-    top: 0.25em;
-    margin-left: 2px;
-    font-size: 0.42em;
-    vertical-align: top;
+  .river-phone .wx-now-words b {
+    font-size: 1.15rem;
   }
 
-  .wx-now-words {
-    display: grid;
-    gap: 2px;
-    margin: 0 0 0 8px;
-    font-size: 0.82rem;
-    color: var(--ink-2);
-  }
-
-  .wx-now-words b {
-    font: 700 1.15rem/1.1 var(--font-display);
-    color: var(--ink);
-  }
-
-  /* Today and the next two days. */
-  .wx-days {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    background: var(--surface);
-    overflow: hidden;
-  }
-
-  .wx-day {
-    display: grid;
-    justify-items: center;
-    min-width: 0;
-    padding: 8px 6px 10px;
-    text-align: center;
-  }
-
-  .wx-day + .wx-day {
-    border-left: 1px solid var(--rule);
-  }
-
-  .wx-day h3 {
-    margin: 0;
-    font: 700 0.95rem/1.2 var(--font-display);
-  }
-
-  .wx-day-icon img {
-    display: block;
+  .river-phone .wx-day-icon img {
     width: 72px;
     height: 72px;
-    margin: -4px 0 -8px;
   }
 
-  .wx-hl {
-    margin: 0;
-    font: 700 1.35rem/1 var(--font-display);
-    font-variant-numeric: tabular-nums;
-  }
-
-  .wx-hl span {
-    color: var(--ink-3);
-    font-size: 0.8em;
-  }
-
-  .wx-mm {
-    margin: 4px 0 0;
-    font: 700 0.95rem/1 var(--font-display);
-    color: var(--loch);
-  }
-
-  .wx-mm small {
-    font-size: 0.8em;
-    font-weight: 600;
-    color: var(--ink-2);
-  }
-
-  .wx-past {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--ink-2);
-  }
-
-  .wx-past b {
-    color: var(--ink);
+  .river-phone .wx-hl {
+    font-size: 1.35rem;
   }
 
   /* The board shrinks to the space left, so its key always shows; scrolling is only a last resort. */
@@ -4640,35 +4770,35 @@ button {
 
 /* Short phones: the weather tab squeezes to stay on one screen. */
 @media (max-width: 599px) and (max-height: 700px) {
-  .wx-now-icon img {
+  .river-phone .wx-now-icon img {
     width: 64px;
     height: 64px;
     margin: -10px -4px -10px -10px;
   }
 
-  .wx-now-temp {
+  .river-phone .wx-now-temp {
     font-size: 3rem;
   }
 
-  .wx-now-words b {
+  .river-phone .wx-now-words b {
     font-size: 1rem;
   }
 
-  .wx-range {
+  .river-phone .wx-range {
     display: none;
   }
 
-  .wx-day {
+  .river-phone .wx-day {
     padding: 5px 4px 7px;
   }
 
-  .wx-day-icon img {
+  .river-phone .wx-day-icon img {
     width: 42px;
     height: 42px;
     margin: -2px 0 -4px;
   }
 
-  .wx-hl {
+  .river-phone .wx-hl {
     font-size: 1.15rem;
   }
 
