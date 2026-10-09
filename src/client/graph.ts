@@ -341,15 +341,16 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
     };
     plot = new uPlot(options, [xs, ys], el);
     if (rain) {
+      const narrow = el.clientWidth < 420;
       const start = Date.parse(rain.start);
       const due = rain.mm.some((mm, i) => mm > 0 && start + (i + 1) * HOUR > now);
       plot.root.append(
         h(
           'div',
           { class: 'graph-key', 'aria-hidden': 'true' },
-          h('span', null, h('i', { class: 'k-rain' }), 'Rain at the gauge'),
+          h('span', null, h('i', { class: 'k-rain' }), narrow ? 'Rain' : 'Rain at the gauge'),
           due ? h('span', null, h('i', { class: 'k-rain-due' }), 'Forecast rain') : null,
-          ahead.length ? h('span', null, h('i', { class: 'k-outlook' }), 'Outlook, likely range') : null,
+          ahead.length ? h('span', null, h('i', { class: 'k-outlook' }), narrow ? 'Outlook' : 'Outlook, likely range') : null,
         ),
       );
     }

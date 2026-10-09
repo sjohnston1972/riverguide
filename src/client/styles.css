@@ -4329,6 +4329,44 @@ button {
     overflow-x: hidden;
   }
 
+  /* Level panel: the graph first, as tall as the screen allows, with the top of the next card
+     peeking in below so it's clear there's more. */
+  .river-phone .panel-level > .now-graph {
+    height: calc(100% - 40px);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 8px 6px;
+  }
+
+  /* Heading and period switch on one line, even on narrow phones. */
+  .river-phone .panel-level .now-graph-head {
+    flex-wrap: nowrap;
+    padding-left: 4px;
+  }
+
+  .river-phone .panel-level .now-graph-head h2 {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .river-phone .panel-level .now-graph-head .seg {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 0.85rem;
+  }
+
+  .river-phone .panel-level .u-legend,
+  .river-phone .panel-level .graph-key {
+    font-size: 0.75rem;
+  }
+
+  .river-phone .panel-level .now-graph .graph-area {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
   /* Weather sized to fit one screen, so a drag on it is a swipe, not a scroll. */
   .river-phone .panel-weather .weather {
     gap: 8px;

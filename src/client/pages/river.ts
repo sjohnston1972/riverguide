@@ -298,7 +298,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         graph = mod.levelGraph(graphArea, hist.points, {
           min: link.min_level,
           max: link.max_level,
-          fill: ONE_SCREEN.matches,
+          fill: ONE_SCREEN.matches || PHONE.matches,
           rain,
           outlook,
           days: PERIOD_DAYS[period] ?? 2,
@@ -374,7 +374,8 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
 
     const content: Record<(typeof PANELS)[number][0], Array<Node | null>> = {
       scale: scaleBody,
-      level: [now.card, now.graph, releasesSection(d)],
+      // The graph leads, filling the screen; the reading and outlook follow.
+      level: [now.graph, now.card, releasesSection(d)],
       weather: [weatherSection(d) ?? h('p', { class: 'muted' }, 'No location for a forecast.')],
       access: [
         placesSection(d),
