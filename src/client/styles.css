@@ -864,6 +864,26 @@ button {
   justify-self: start;
 }
 
+/* Clear on the left, Done on the right. */
+.filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.filter-done {
+  min-width: 7rem;
+  margin-left: auto;
+}
+
+/* The desktop sidebar is always open: no Done. */
+@media (min-width: 900px) {
+  .filter-done {
+    display: none;
+  }
+}
+
 .results-bar {
   display: flex;
   align-items: center;
@@ -1006,6 +1026,10 @@ button {
 
 .row-side .lvl {
   font-size: 1.05rem;
+}
+
+.row-tomorrow:empty {
+  display: none;
 }
 
 /* ---------- Map view ---------- */
@@ -4969,9 +4993,10 @@ button {
     height: 7px;
   }
 
-  .river-list .row-status .tomorrow-tag {
-    padding: 0 7px;
+  .river-list .row-tomorrow .tomorrow-tag {
+    padding: 1px 7px;
     font-size: 0.76rem;
+    line-height: 1.3;
   }
 
   .river-list .row-status .step-tag,
@@ -5092,5 +5117,67 @@ body {
 
   .quick-row .view-toggle .seg {
     padding: 0 9px;
+  }
+}
+
+/* Phones: the name across the top; status, then tomorrow (a line kept even when empty) on the
+   left; the level large on the right, beside both. */
+@media (max-width: 599px) {
+  .river-list .river-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'main main'
+      'status level'
+      'tomorrow level';
+    column-gap: 10px;
+    row-gap: 5px;
+    align-items: center;
+  }
+
+  .river-list .row-main {
+    grid-area: main;
+  }
+
+  .river-list .row-side {
+    display: contents;
+  }
+
+  .river-list .row-status {
+    grid-area: status;
+  }
+
+  /* "Old reading" repeats the level's own "old" mark. */
+  .river-list .row-status .reason-tag {
+    display: none;
+  }
+
+  .river-list .row-tomorrow {
+    grid-area: tomorrow;
+    display: flex;
+    align-items: center;
+    /* The tag's own height (text, padding, border), so rows match with or without one. */
+    min-height: calc(0.76rem * 1.3 + 4px);
+  }
+
+  .river-list .row-side .lvl {
+    grid-area: level;
+    align-self: center;
+    justify-self: end;
+    margin: 0;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .river-list .row-side .lvl-none {
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: none;
+    border: 0;
+    padding: 0;
   }
 }
