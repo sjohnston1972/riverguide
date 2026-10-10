@@ -68,14 +68,6 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
           WTW(),
           ': scrape, low, medium, high, very high and huge, each a level on a SEPA gauge. The list and river pages show which step a river is on now (for example "Medium"). Runnable means scrape or above, and too high means huge.',
         ),
-        h('dt', null, '4. Estimated from guidebook descriptions'),
-        h(
-          'dd',
-          null,
-          'Everything else is an estimate, marked ',
-          h('abbr', { class: 'est', title: 'Thresholds estimated from guidebook descriptions' }, 'est.'),
-          ' in the list, with a confidence rating (high, medium or low). Where the guidebook gives levels in metres, those are used. Where it only says "after heavy rain" or "needs a spate", the wording is matched to how often the gauge reaches each level: "needs a spate" might mean a level reached on about 10% of days. For the few gauges without enough history, the band is placed within the gauge\'s typical range instead.',
-        ),
       ),
 
       h('h2', null, 'Level outlook'),
