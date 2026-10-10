@@ -780,7 +780,7 @@ button {
 
 /* ---------- Rivers list ---------- */
 .overview {
-  padding: 24px 0 18px;
+  padding: 16px 0 8px;
 }
 
 .headline {
@@ -788,7 +788,7 @@ button {
 }
 
 .headline-sub {
-  margin-top: 6px;
+  margin: 0;
   color: var(--ink-2);
   max-width: 60ch;
 }
@@ -2531,7 +2531,7 @@ button {
 /* ---------- Wider screens ---------- */
 @media (min-width: 900px) {
   .overview {
-    padding: 36px 0 24px;
+    padding: 24px 0 12px;
   }
 
   .list-layout {
@@ -3271,12 +3271,26 @@ button {
   }
 }
 
-/* The footer links to About; on the narrowest phones the header keeps the four main tabs. */
-@media (max-width: 420px) {
-  .nav-about {
-    display: none;
-  }
+/* Narrow screens: About is a "?" in a ring after the main tabs. */
+.nav-short.nav-help {
+  display: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1;
+}
 
+@media (max-width: 520px) {
+  .nav-short.nav-help {
+    display: inline-grid;
+  }
+}
+
+@media (max-width: 420px) {
   .nav-link {
     padding: 0 4px;
     font-size: 0.95rem;
@@ -3443,7 +3457,7 @@ button {
 
   /* River list */
   .overview {
-    padding: 64px 0 40px;
+    padding: 32px 0 16px;
   }
 
   .list-layout {
@@ -4817,5 +4831,159 @@ button {
 
   .river-phone .panel-weather .rc-summary {
     font-size: 0.8rem;
+  }
+}
+
+/* Terms of use: a dialog on a first visit, until accepted. */
+.terms {
+  width: min(34rem, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.terms::backdrop {
+  /* A dark scrim in both themes. */
+  background: rgba(5, 12, 15, 0.62);
+  backdrop-filter: blur(2px);
+}
+
+.terms-form {
+  display: grid;
+  gap: 14px;
+  padding: 22px 24px 24px;
+}
+
+.terms-form h2 {
+  font-size: 1.5rem;
+}
+
+.terms-body {
+  display: grid;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.terms-body ul,
+.about-terms ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.terms-tick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.terms-tick input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--loch);
+}
+
+.terms-go {
+  justify-self: end;
+  min-width: 9rem;
+}
+
+.terms-go:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 599px) {
+  .terms-form {
+    padding: 18px 16px 18px;
+  }
+
+  .terms-form h2 {
+    font-size: 1.3rem;
+  }
+
+  .terms-body {
+    font-size: 0.9rem;
+  }
+
+  .terms-go {
+    justify-self: stretch;
+  }
+}
+
+/* Phones: compact river rows. The name, then region and grade on one line (cut short with an
+   ellipsis), then status, step, tomorrow and level on the line beneath. */
+@media (max-width: 599px) {
+  .river-list .river-row {
+    gap: 5px;
+    min-height: 0;
+    padding: 9px 8px 9px 16px;
+  }
+
+  .river-list .row-name {
+    font-size: 1.05rem;
+    line-height: 1.15;
+  }
+
+  .river-list .row-meta {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
+  }
+
+  .river-list .row-meta > span + span::before {
+    content: ' · ';
+  }
+
+  .river-list .row-side {
+    gap: 4px 8px;
+  }
+
+  .river-list .row-status {
+    gap: 4px;
+  }
+
+  .river-list .row-status .pill {
+    padding: 1px 8px 1px 6px;
+    font-size: 0.78rem;
+  }
+
+  .river-list .row-status .pill-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .river-list .row-status .tomorrow-tag {
+    padding: 0 7px;
+    font-size: 0.76rem;
+  }
+
+  .river-list .row-status .step-tag,
+  .river-list .row-status .release-tag {
+    font-size: 0.78rem;
+  }
+
+  .river-list .row-side .lvl {
+    font-size: 0.95rem;
+  }
+
+  .river-item .fav-row {
+    margin-right: 2px;
   }
 }

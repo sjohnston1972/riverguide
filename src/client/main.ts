@@ -1,6 +1,7 @@
 import './styles.css';
 import type { PublicConfig } from '../shared/types.ts';
 import { api } from './api.ts';
+import { requireTerms } from './disclaimer.ts';
 import { clear, h, icon } from './dom.ts';
 import { ICONS } from './icons.ts';
 import { mountAbout } from './pages/about.ts';
@@ -41,7 +42,7 @@ const navLinks: Record<string, HTMLAnchorElement> = {
   map: h('a', { href: '/map', class: 'nav-link' }, 'Map'),
   releases: h('a', { href: '/releases', class: 'nav-link' }, 'Releases'),
   lora: h('a', { href: '/falls-of-lora', class: 'nav-link', 'aria-label': 'Falls of Lora' }, h('span', { class: 'nav-long' }, 'Falls of Lora'), h('span', { class: 'nav-short', 'aria-hidden': 'true' }, 'Lora')),
-  about: h('a', { href: '/about', class: 'nav-link nav-about' }, 'About'),
+  about: h('a', { href: '/about', class: 'nav-link nav-about', 'aria-label': 'About' }, h('span', { class: 'nav-long' }, 'About'), h('span', { class: 'nav-short nav-help', 'aria-hidden': 'true' }, '?')),
 };
 
 const header = h(
@@ -90,6 +91,7 @@ const skip = h('a', { href: '#main', class: 'skip-link', onclick: (e: Event) => 
 const root = document.getElementById('root') ?? document.body;
 clear(root);
 root.append(skip, header, main, footer, chatButton);
+requireTerms();
 
 function openChat(context?: ChatContext): void {
   if (!config?.chat_enabled) return;

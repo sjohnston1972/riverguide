@@ -1,6 +1,7 @@
 // About: what the site is, how statuses work, data sources and licences.
 
 import { statusPill } from '../components.ts';
+import { termsContent } from '../disclaimer.ts';
 import { h } from '../dom.ts';
 import type { AppCtx, Page } from '../main.ts';
 
@@ -150,6 +151,8 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, h('strong', null, 'Weather icons: '), ext('https://github.com/basmilius/weather-icons', 'Meteocons'), ' by Bas Milius, MIT licence.'),
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
       ),
+
+      h('section', { class: 'about-terms', id: 'terms' }, h('h2', null, 'Terms of use'), termsContent()),
     ),
   );
   return {

@@ -48,8 +48,10 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   let destroyed = false;
 
   // ---- Controls ----
-  const headline = h('h1', { class: 'headline' }, 'Checking river levels');
-  const sub = h('p', { class: 'headline-sub' }, 'Live SEPA gauge readings for whitewater sections across Scotland.');
+  // The page heading is for screen readers; the list speaks for itself. The line under it only
+  // appears when the levels couldn't be refreshed.
+  const headline = h('h1', { class: 'visually-hidden' }, 'Scottish river levels');
+  const sub = h('p', { class: 'headline-sub headline-sub-warn', hidden: true });
 
   const search = h('input', {
     type: 'search',
@@ -223,8 +225,6 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     ctx.setTitle(view === 'map' ? 'Map' : null);
 
     if (loadError) {
-      headline.textContent = 'River levels unavailable';
-      sub.textContent = 'The list will appear once the levels load.';
       resultCount.textContent = '';
       clear(listBody);
       listBody.hidden = false;
@@ -238,24 +238,12 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       return;
     }
 
-    const { base, shown } = applyFilters(sections, filters, favourites());
-    const runnable = base.filter((s) => s.status === 'runnable').length;
-    headline.textContent = `${runnable} ${runnable === 1 ? 'section' : 'sections'} estimated runnable`;
-    const narrowed = base.length !== sections.length;
+    const { shown } = applyFilters(sections, filters, favourites());
     // How old the levels are, from the newest current reading (not the poll schedule).
     const newest = sections.reduce<string | null>((m, s) => (s.level_at && !s.stale && (!m || s.level_at > m) ? s.level_at : m), null);
     const noSignal = sectionsOffline();
-    const levels = refreshFailed || noSignal
-      ? `${noSignal ? 'No connection' : "Couldn't refresh"}${newest ? `; showing levels from ${clockTime(newest)}` : ''}.`
-      : newest
-        ? `SEPA levels as of ${clockTime(newest)}.`
-        : 'Levels from SEPA gauges.';
-    sub.textContent = sections.length
-      ? narrowed
-        ? `Out of ${base.length} matching your search and filters. ${levels}`
-        : `Out of ${sections.length} sections across Scotland. ${levels}`
-      : 'No river sections are loaded yet.';
-    sub.classList.toggle('headline-sub-warn', refreshFailed || noSignal);
+    sub.hidden = !(refreshFailed || noSignal);
+    sub.textContent = `${noSignal ? 'No connection' : "Couldn't refresh the levels"}${newest ? `; showing levels from ${clockTime(newest)}` : ''}.`;
     resultCount.textContent = shown.length === sections.length ? `${shown.length} sections` : `Showing ${shown.length} of ${sections.length} sections`;
 
     if (view === 'list') renderList(shown);
@@ -384,7 +372,15 @@ function row(s: SectionSummary): HTMLLIElement {
         'span',
         { class: 'row-main' },
         h('span', { class: 'row-name' }, s.name),
-        h('span', { class: 'row-meta' }, s.river && s.river !== s.name ? h('span', null, s.river) : null, h('span', null, gradeLabel(s.grade_text)), h('span', { class: 'row-region' }, s.region)),
+        // The river's name only when the section's name doesn't already start with it. Region before
+        // grade: a long grade is what gets cut short on a phone.
+        h(
+          'span',
+          { class: 'row-meta' },
+          s.river && !s.name.toLowerCase().startsWith(s.river.toLowerCase()) ? h('span', null, s.river) : null,
+          h('span', { class: 'row-region' }, s.region),
+          h('span', null, gradeLabel(s.grade_text)),
+        ),
       ),
       h(
         'span',
