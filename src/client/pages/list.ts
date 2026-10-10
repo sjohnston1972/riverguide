@@ -25,6 +25,8 @@ import { replaceUrl, type Route } from '../router.ts';
 
 type View = 'list' | 'map';
 const REFRESH_MS = 5 * 60_000;
+/** The desktop layout, with the filters in a sidebar (styles.css, min-width 900px). */
+const WIDE = window.matchMedia('(min-width: 900px)');
 
 /** Favourites are shown by default once this device has any. */
 const favDefault = () => favourites().size > 0;
@@ -163,6 +165,14 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   const listLink = h('a', { class: 'seg', href: '/' }, icon(ICONS.list), 'List');
   const mapLink = h('a', { class: 'seg', href: '/map' }, icon(ICONS.map), 'Map');
   const resultCount = h('p', { class: 'result-count', 'aria-live': 'polite' });
+  const viewNav = h('nav', { class: 'segmented view-toggle', 'aria-label': 'View' }, listLink, mapLink);
+  const quickRow = h('div', { class: 'quick-row' }, favChip, filterToggle);
+  const resultsBar = h('div', { class: 'results-bar' }, resultCount);
+  // List / Map sits on the Favourites and Filters line, except beside the desktop sidebar,
+  // which is too narrow for all three: there it heads the results.
+  const placeViewNav = () => (WIDE.matches ? resultsBar : quickRow).append(viewNav);
+  placeViewNav();
+  WIDE.addEventListener('change', placeViewNav);
 
   const listBody = h('div', { class: 'list-body' });
   const mapBody = h('div', { class: 'map-body', hidden: true });
@@ -181,10 +191,10 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
           'aside',
           { class: 'filters', 'aria-label': 'Search and filters' },
           h('div', { class: 'search-wrap' }, icon(ICONS.search, 'icon search-icon'), search),
-          h('div', { class: 'quick-row' }, favChip, filterToggle),
+          quickRow,
           panel,
         ),
-        h('section', { class: 'results', 'aria-label': 'River sections' }, h('div', { class: 'results-bar' }, resultCount, h('nav', { class: 'segmented', 'aria-label': 'View' }, listLink, mapLink)), listBody, mapBody),
+        h('section', { class: 'results', 'aria-label': 'River sections' }, resultsBar, listBody, mapBody),
       ),
     ),
   );
@@ -356,6 +366,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
       window.clearInterval(timer);
       document.removeEventListener(FAVOURITES_EVENT, onFavourites);
       window.clearTimeout(searchTimer);
+      WIDE.removeEventListener('change', placeViewNav);
       map?.destroy();
     },
   };

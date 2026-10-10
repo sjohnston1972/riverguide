@@ -52,7 +52,6 @@ export function characterLabel(c: string | null): string | null {
   return CHARACTER_LABEL[c] ?? c.charAt(0).toUpperCase() + c.slice(1);
 }
 
-export const ESTIMATE_TOOLTIP = 'Thresholds estimated from guidebook descriptions';
 export const COMMUNITY_TOOLTIP = 'Thresholds set from community paddling reports';
 
 export function basisWording(basis: BandBasis, confidence: Confidence): string {
