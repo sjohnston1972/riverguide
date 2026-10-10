@@ -4987,3 +4987,35 @@ button {
     margin-right: 2px;
   }
 }
+
+/* No sideways overscroll on the page itself (the browser's swipe-to-go-back in the content area). */
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
+/* A short message near the bottom of the screen, above the phone tab bar. */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+
+.toast.is-shown {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
