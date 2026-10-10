@@ -5019,3 +5019,78 @@ body {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Below desktop: Favourites, Filters and List / Map on one line, all the same height. */
+@media (max-width: 899px) {
+  /* One line; it only wraps if even the compact version (below) can't fit. */
+  .quick-row {
+    container-type: inline-size;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .quick-row .chip {
+    flex: none;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 14px;
+    gap: 6px;
+  }
+
+  .quick-row .view-toggle {
+    height: 40px;
+    margin-left: auto;
+    padding: 3px;
+    align-items: stretch;
+  }
+
+  .quick-row .view-toggle .seg {
+    min-height: 0;
+    padding: 0 12px;
+  }
+
+  /* The count on its own above the list. */
+  .results-bar {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 599px) {
+  .quick-row {
+    gap: 6px;
+  }
+
+  .quick-row .chip {
+    padding: 0 11px;
+    font-size: 0.9rem;
+  }
+
+  .quick-row .view-toggle .seg {
+    gap: 4px;
+    padding: 0 9px;
+    font-size: 0.88rem;
+  }
+
+  .quick-row .chip .icon svg,
+  .quick-row .view-toggle .icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* A narrow row (a small phone, or large text): Filters, List and Map lose their icons. In em, so it
+   follows the text size. */
+@container (max-width: 21em) {
+  .quick-row .filter-toggle .icon,
+  .quick-row .view-toggle .icon {
+    display: none;
+  }
+
+  .quick-row .chip {
+    padding: 0 10px;
+  }
+
+  .quick-row .view-toggle .seg {
+    padding: 0 9px;
+  }
+}

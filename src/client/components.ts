@@ -2,7 +2,7 @@
 
 import type { Confidence, SectionStatus, SectionSummary, StatusBasis, Trend } from '../shared/types.ts';
 import { h } from './dom.ts';
-import { COMMUNITY_TOOLTIP, ESTIMATE_TOOLTIP, formatLevel, OUTLOOK_ARROW, STATUS_LABEL, STEP_LABEL, TREND_ARROW, TREND_LABEL } from './labels.ts';
+import { COMMUNITY_TOOLTIP, formatLevel, OUTLOOK_ARROW, STATUS_LABEL, STEP_LABEL, TREND_ARROW, TREND_LABEL } from './labels.ts';
 
 export function statusPill(status: SectionStatus, size: 'sm' | 'lg' = 'sm'): HTMLSpanElement {
   return h('span', { class: `pill pill-${status} pill-${size}` }, h('span', { class: 'pill-dot', 'aria-hidden': 'true' }), STATUS_LABEL[status]);
@@ -13,9 +13,8 @@ export function estimateMark(basis: StatusBasis, confidence: Confidence | null =
     const tip = confidence ? `${COMMUNITY_TOOLTIP} (${confidence} confidence)` : COMMUNITY_TOOLTIP;
     return h('abbr', { class: 'est est-community', title: tip, 'aria-label': tip }, 'community');
   }
-  if (basis !== 'estimate') return null;
-  const tip = confidence ? `${ESTIMATE_TOOLTIP} (${confidence} confidence)` : ESTIMATE_TOOLTIP;
-  return h('abbr', { class: `est est-${confidence ?? 'unknown'}`, title: tip, 'aria-label': `Estimate: ${tip}` }, 'est.');
+  // Estimated bands carry no mark.
+  return null;
 }
 
 /**
