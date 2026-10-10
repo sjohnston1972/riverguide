@@ -1,6 +1,7 @@
 import './styles.css';
 import type { PublicConfig } from '../shared/types.ts';
 import { api } from './api.ts';
+import { startBackGuard } from './backguard.ts';
 import { requireTerms } from './disclaimer.ts';
 import { clear, h, icon } from './dom.ts';
 import { ICONS } from './icons.ts';
@@ -156,6 +157,9 @@ function render(route: Route, nav: { pop: boolean }): void {
     if (active && nav && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = Math.max(0, a.offsetLeft + a.offsetWidth - nav.clientWidth);
   }
   document.dispatchEvent(new CustomEvent('rg:navigate'));
+  // The list and map keep the screen for the rivers: the credits are on the About page (the "?"),
+  // on river pages, and on the map itself.
+  footer.hidden = route.name === 'list' || route.name === 'map';
 
   // List and map are one page with two views: switch in place to keep state.
   const sameFamily = (a: string | null, b: string) => (a === 'list' || a === 'map') && (b === 'list' || b === 'map');
@@ -200,6 +204,7 @@ function render(route: Route, nav: { pop: boolean }): void {
   firstRender = false;
 }
 
+startBackGuard();
 startRouter(render);
 
 // Offline support (public/sw.js): the app and the last levels seen still open with no signal.
