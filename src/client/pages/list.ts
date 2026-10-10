@@ -141,6 +141,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     },
   );
   const clearBtn = h('button', { type: 'button', class: 'btn btn-quiet clear-filters' }, 'Clear filters');
+  const doneBtn = h('button', { type: 'button', class: 'btn btn-primary filter-done' }, 'Done');
   clearBtn.addEventListener('click', () => {
     filters = { ...DEFAULT_FILTERS, q: filters.q, sort: filters.sort, fav: filters.fav };
     changed();
@@ -154,12 +155,23 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
     h('div', { class: 'field-pair' }, gmin.field, gmax.field),
     status.field,
     sort.field,
-    clearBtn,
+    h('div', { class: 'filter-actions' }, clearBtn, doneBtn),
   );
-  filterToggle.addEventListener('click', () => {
-    const open = !panel.classList.contains('open');
+  const setPanel = (open: boolean) => {
     panel.classList.toggle('open', open);
     filterToggle.setAttribute('aria-expanded', String(open));
+  };
+  filterToggle.addEventListener('click', () => setPanel(!panel.classList.contains('open')));
+  // Done (phones and tablets; on desktop the panel is always shown) and Escape close it.
+  doneBtn.addEventListener('click', () => {
+    setPanel(false);
+    filterToggle.focus({ preventScroll: true });
+    filterToggle.scrollIntoView({ block: 'nearest' });
+  });
+  panel.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || WIDE.matches) return;
+    setPanel(false);
+    filterToggle.focus();
   });
 
   const listLink = h('a', { class: 'seg', href: '/' }, icon(ICONS.list), 'List');
@@ -399,8 +411,9 @@ function row(s: SectionSummary): HTMLLIElement {
         h('span', { class: 'row-status' }, statusPill(s.status),
           s.step ? h('span', { class: `step-tag s-${s.step}` }, STEP_LABEL[s.step]) : (estimateMark(s.status_basis, s.status_confidence) ?? unknownReason(s)),
           s.release_today ? h('span', { class: 'release-tag' }, s.slug === 'falls-of-lora-tidal-rapid' ? 'Ebb today' : 'Release today') : null,
-          tomorrowTag(s),
         ),
+        // Its own line; on phones the line is kept even when empty, so rows line up.
+        h('span', { class: 'row-tomorrow' }, tomorrowTag(s)),
         s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
       ),
     ),
