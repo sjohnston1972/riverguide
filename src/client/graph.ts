@@ -230,7 +230,7 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
         ctx.setLineDash([]);
         // Over 30 days the next two days are a sliver: the curve alone, no markers.
         if (days <= 7) {
-          ahead.forEach(({ name, t, r }, i) => {
+          ahead.forEach(({ name, t, r }) => {
             const x = X(t);
             const y = u.valToPos(r.level, 'y', true);
             ctx.beginPath();
@@ -240,8 +240,7 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
             ctx.strokeStyle = c.text;
             ctx.lineWidth = 2 * dpr;
             ctx.stroke();
-            if (narrow && i > 0) return;
-            const label = narrow ? r.level.toFixed(2) : `${name} ${r.level.toFixed(2)} m`;
+            const label = narrow ? `${r.level.toFixed(2)} m` : `${name} ${r.level.toFixed(2)} m`;
             ctx.font = `700 ${11 * dpr}px system-ui, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
@@ -260,12 +259,44 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
       ctx.fillText('Rain', left - 8 * dpr, stripTop + stripH / 2);
     };
 
+    /** The latest reading: a dot on the end of the line, labelled with its level. */
+    const drawLatest = (u: uPlot) => {
+      if (!last) return;
+      const ctx = u.ctx;
+      const { left, top, width } = u.bbox;
+      const x = u.valToPos(Date.parse(last.t) / 1000, 'x', true);
+      const y = u.valToPos(last.v, 'y', true);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, 5 * dpr, 0, Math.PI * 2);
+      ctx.fillStyle = c.line;
+      ctx.fill();
+      ctx.strokeStyle = c.surface;
+      ctx.lineWidth = 2 * dpr;
+      ctx.stroke();
+      const label = `${last.v.toFixed(2)} m`;
+      ctx.font = `700 ${12 * dpr}px system-ui, sans-serif`;
+      ctx.textBaseline = 'bottom';
+      const w = ctx.measureText(label).width;
+      // Up and to the left of the dot (the outlook runs on to the right), kept inside the plot.
+      const lx = Math.max(left + 2 * dpr, x - 8 * dpr - w);
+      const ly = Math.max(top + 14 * dpr, y - 8 * dpr);
+      ctx.lineWidth = 3 * dpr;
+      ctx.strokeStyle = c.surface;
+      ctx.strokeText(label, Math.min(lx, left + width - w), ly);
+      ctx.fillStyle = c.text;
+      ctx.fillText(label, Math.min(lx, left + width - w), ly);
+      ctx.restore();
+    };
+
     const options: uPlot.Options = {
       width: Math.max(260, el.clientWidth),
       height: plotHeight(),
       padding: [rain ? 14 + RAIN_STRIP : 14, 10, 0, 0],
       cursor: { drag: { x: false, y: false, setScale: false }, points: { size: 8 } },
-      legend: { show: true, live: true },
+      // No legend: its on/off box for the line only got in the way. The levels that matter are
+      // labelled on the plot (the latest reading and the outlook).
+      legend: { show: false },
       scales: {
         x: { time: true, range: (_u, dmin, dmax) => [dmin, end != null ? Math.max(dmax, end / 1000) : dmax] },
         y: {
@@ -336,6 +367,7 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
             if (max != null && !bothAbove) hLine(u, max, c.high, `Too high above ${max.toFixed(2)} m`, false);
           },
           drawAhead,
+          drawLatest,
         ],
       },
     };
