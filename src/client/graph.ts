@@ -211,18 +211,34 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
       if (last && ahead.length) {
         const t0 = Date.parse(last.t);
         const slope = recentSlope(points);
-        const curve = (pick: (r: LevelRange) => number) =>
-          outlookCurve([[t0, last.v], ...ahead.map((a): [number, number] => [a.t, pick(a.r)])], slope).map(([t, v]) => [X(t), u.valToPos(v, 'y', true)]);
-        const hiC = curve((r) => r.hi);
-        const loC = curve((r) => r.lo);
+        // The line, and the range as a band around it: how far above and below the line the range
+        // reaches, growing smoothly from nothing at the latest reading to each day's range. The band
+        // follows the line's shape, so its edges can't wobble on their own.
+        const mid = outlookCurve([[t0, last.v], ...ahead.map((a): [number, number] => [a.t, a.r.level])], slope);
+        const spread = (pick: (r: LevelRange) => number) =>
+          outlookCurve([[t0, 0], ...ahead.map((a): [number, number] => [a.t, Math.max(0, pick(a.r))])], 0).map(([, w]) => Math.max(0, w));
+        const up = spread((r) => r.hi - r.level);
+        const down = spread((r) => r.level - r.lo);
+        const P = (t: number, v: number) => [X(t), u.valToPos(v, 'y', true)] as const;
         ctx.beginPath();
-        hiC.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-        for (let i = loC.length - 1; i >= 0; i--) ctx.lineTo(loC[i][0], loC[i][1]);
+        mid.forEach(([t, v], i) => {
+          const [x, y] = P(t, v + up[i]);
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        });
+        for (let i = mid.length - 1; i >= 0; i--) {
+          const [x, y] = P(mid[i][0], mid[i][1] - down[i]);
+          ctx.lineTo(x, y);
+        }
         ctx.closePath();
         ctx.fillStyle = withAlpha(c.line, 0.16);
         ctx.fill();
         ctx.beginPath();
-        curve((r) => r.level).forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        mid.forEach(([t, v], i) => {
+          const [x, y] = P(t, v);
+          if (i) ctx.lineTo(x, y);
+          else ctx.moveTo(x, y);
+        });
         ctx.strokeStyle = c.line;
         ctx.lineWidth = 2 * dpr;
         ctx.setLineDash([5 * dpr, 4 * dpr]);
@@ -276,6 +292,8 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
       ctx.stroke();
       const label = `${last.v.toFixed(2)} m`;
       ctx.font = `700 ${12 * dpr}px system-ui, sans-serif`;
+      // Set explicitly: the axes leave the canvas right-aligned.
+      ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
       const w = ctx.measureText(label).width;
       // Up and to the left of the dot (the outlook runs on to the right), kept inside the plot.
@@ -328,7 +346,11 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
           grid: { stroke: c.rule, width: 1 },
           ticks: { stroke: c.rule, width: 1 },
           size: 52,
-          values: (_u, vals) => vals.map((v) => `${v.toFixed(v !== 0 && Math.abs(v) < 1 ? 2 : 1)} m`),
+          // Two decimals below 1 m, and above it too when the ticks fall between tenths (1.05).
+          values: (_u, vals) => {
+            const fine = vals.some((v) => Math.abs(v * 10 - Math.round(v * 10)) > 1e-6);
+            return vals.map((v) => `${v.toFixed(fine || (v !== 0 && Math.abs(v) < 1) ? 2 : 1)} m`);
+          },
         },
       ],
       series: [
