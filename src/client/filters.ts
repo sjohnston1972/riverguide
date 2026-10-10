@@ -75,7 +75,8 @@ export function isRising(s: SectionSummary): boolean {
 
 /** Search, region, grade, favourites and rising; status is applied separately so counts can ignore it. */
 export function matchesBase(s: SectionSummary, f: Filters, favs: ReadonlySet<string> = new Set()): boolean {
-  if (f.fav && !favs.has(s.slug)) return false;
+  // A search looks through every river, not just the favourites.
+  if (f.fav && !normalize(f.q) && !favs.has(s.slug)) return false;
   if (f.rise && !isRising(s)) return false;
   if (f.region && s.region !== f.region) return false;
   if (f.gmin !== 1 || f.gmax !== 6) {

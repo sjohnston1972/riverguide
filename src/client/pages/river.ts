@@ -630,6 +630,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         const w = await api.weather(at.lat, at.lon, abort.signal);
         if (!destroyed) box.replaceChildren(...weatherBody(w));
         scheduleFit(false);
+        fitWeatherPanel(box);
       } catch (e) {
         if (destroyed || (e instanceof DOMException && e.name === 'AbortError')) return;
         box.replaceChildren(errorBox(upstreamMessage(e) ?? "Couldn't load the forecast.", () => void run()));
@@ -637,6 +638,51 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     };
     void run();
     return h('section', { class: 'block weather' }, h('h2', null, 'Rain and weather'), box);
+  }
+
+  /**
+   * Phones: the Weather tab should never need scrolling. If it doesn't fit the screen (a short phone,
+   * large text), step it down: wx-compact, wx-tight, then wx-min (styles.css).
+   */
+  function fitWeatherPanel(inside: HTMLElement): void {
+    const panel = inside.closest<HTMLElement>('.panel-weather');
+    if (!panel) return;
+    const steps = ['wx-compact', 'wx-tight', 'wx-min'];
+    // Steps down only, once things settle (fonts, icons, the forecast): measuring the full size again
+    // straight after compacting isn't reliable, and would flip back and forth.
+    const stepDown = () => {
+      if (!PHONE.matches) return;
+      for (const step of steps) {
+        if (panel.scrollHeight <= panel.clientHeight + 1) break;
+        panel.classList.add(step);
+      }
+    };
+    // Starting again from full size is only done at settled moments: once the fonts have loaded,
+    // each time the tab is swiped to (the text size may have changed), and for a new screen size.
+    const restart = () => {
+      panel.classList.remove(...steps);
+      stepDown();
+    };
+    let timer = 0;
+    const later = (fn: () => void) => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(fn, 250);
+    };
+    later(restart);
+    void document.fonts?.ready.then(() => later(restart));
+    const content = new ResizeObserver(() => later(stepDown));
+    content.observe(inside);
+    let size = `${panel.clientWidth}x${panel.clientHeight}`;
+    const screen = new ResizeObserver(() => {
+      const now = `${panel.clientWidth}x${panel.clientHeight}`;
+      if (now === size) return;
+      size = now;
+      later(restart);
+    });
+    screen.observe(panel);
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && later(restart), { threshold: 0.5 });
+    io.observe(panel);
+    cleanups.push(() => (window.clearTimeout(timer), content.disconnect(), screen.disconnect(), io.disconnect()));
   }
 
   function weatherBody(w: Weather): Node[] {

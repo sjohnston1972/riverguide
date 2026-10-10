@@ -187,6 +187,8 @@ describe('list filters', () => {
   it('shows only favourites when asked', () => {
     const favs = new Set(['etive', 'orchy']);
     expect(applyFilters(all, { ...DEFAULT_FILTERS, fav: true }, favs).shown.map((x) => x.slug)).toEqual(['etive', 'orchy']);
+    // A search looks through every river, favourite or not.
+    expect(applyFilters(all, { ...DEFAULT_FILTERS, fav: true, q: 'nevis' }, favs).shown.map((x) => x.slug)).toEqual(['nevis']);
     expect(applyFilters(all, { ...DEFAULT_FILTERS, fav: true }).shown).toEqual([]);
     expect(applyFilters(all, DEFAULT_FILTERS, favs).shown).toHaveLength(4);
   });

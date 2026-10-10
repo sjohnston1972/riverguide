@@ -984,9 +984,12 @@ button {
   opacity: 1;
 }
 
-.river-row:hover {
-  background: var(--surface-2);
-  color: var(--ink);
+/* Hover only with a real pointer: on touch screens a tapped tile would keep the shade ("sticky hover"). */
+@media (hover: hover) {
+  .river-row:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
 }
 
 .row-main {
@@ -3046,8 +3049,10 @@ button {
   min-width: 0;
 }
 
-.river-item:hover {
-  background: var(--surface-2);
+@media (hover: hover) {
+  .river-item:hover {
+    background: var(--surface-2);
+  }
 }
 
 .fav-row {
@@ -4806,55 +4811,97 @@ button {
   }
 }
 
-/* Short phones: the weather tab squeezes to stay on one screen. */
-@media (max-width: 599px) and (max-height: 700px) {
-  .river-phone .wx-now-icon img {
+/* Phone Weather tab that doesn't fit the screen (a short phone, large text): river.ts measures it
+   and adds wx-compact, then wx-tight, then wx-min, until it fits. */
+@media (max-width: 599px) {
+  .river-phone .panel-weather.wx-compact .wx-now-icon img {
     width: 64px;
     height: 64px;
     margin: -10px -4px -10px -10px;
   }
 
-  .river-phone .wx-now-temp {
+  .river-phone .panel-weather.wx-compact .wx-now-temp {
     font-size: 3rem;
   }
 
-  .river-phone .wx-now-words b {
+  .river-phone .panel-weather.wx-compact .wx-now-words b {
     font-size: 1rem;
   }
 
-  .river-phone .wx-range {
+  .river-phone .panel-weather.wx-compact .wx-range,
+  .river-phone .panel-weather.wx-compact .rc-key,
+  .river-phone .panel-weather.wx-compact .weather:has(.wx-now) .wx-line {
     display: none;
   }
 
-  .river-phone .wx-day {
+  .river-phone .panel-weather.wx-compact .wx-day {
     padding: 5px 4px 7px;
   }
 
-  .river-phone .wx-day-icon img {
+  .river-phone .panel-weather.wx-compact .wx-day-icon img {
     width: 42px;
     height: 42px;
     margin: -2px 0 -4px;
   }
 
-  .river-phone .wx-hl {
+  .river-phone .panel-weather.wx-compact .wx-hl {
     font-size: 1.15rem;
   }
 
-  .river-phone .panel-weather .rc-key,
-  .river-phone .panel-weather .weather:has(.wx-now) .wx-line {
-    display: none;
-  }
-
-  .river-phone .panel-weather .rc-plot {
+  .river-phone .panel-weather.wx-compact .rc-plot {
     min-height: 40px;
   }
 
-  .river-phone .panel-weather .weather > div {
+  .river-phone .panel-weather.wx-compact .weather > div {
     gap: 6px;
   }
 
-  .river-phone .panel-weather .rc-summary {
+  .river-phone .panel-weather.wx-compact .rc-summary {
     font-size: 0.8rem;
+  }
+
+  /* Still too tall: the sky now in one short line, smaller day cards, no chart label. */
+  .river-phone .panel-weather.wx-tight .wx-now-icon img {
+    width: 48px;
+    height: 48px;
+    margin: -8px -2px -8px -6px;
+  }
+
+  .river-phone .panel-weather.wx-tight .wx-now-temp {
+    font-size: 2.4rem;
+  }
+
+  .river-phone .panel-weather.wx-tight .wx-day h3 {
+    font-size: 0.85rem;
+  }
+
+  .river-phone .panel-weather.wx-tight .wx-day-icon img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .river-phone .panel-weather.wx-tight .wx-hl {
+    font-size: 1rem;
+  }
+
+  .river-phone .panel-weather.wx-tight .wx-mm {
+    margin-top: 2px;
+  }
+
+  .river-phone .panel-weather.wx-tight .strip-label {
+    display: none;
+  }
+
+  .river-phone .panel-weather.wx-tight .rc-plot {
+    min-height: 32px;
+    margin-bottom: 16px;
+  }
+
+  /* Last step (a small phone with very large text): the rain sentence stays, the chart goes. */
+  .river-phone .panel-weather.wx-min .wx-past,
+  .river-phone .panel-weather.wx-min .rc-plot,
+  .river-phone .panel-weather.wx-min .wx-now-words span {
+    display: none;
   }
 }
 
