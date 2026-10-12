@@ -87,7 +87,9 @@ export function levelGraph(el: HTMLElement, points: LevelPoint[], opts: GraphOpt
     if (!opts.fill) return opts.height ?? (rain ? 270 : 220);
     const p = plot as uPlot | null;
     const extra = p ? Math.max(0, p.root.scrollHeight - p.height) : 32;
-    return Math.max(rain ? 110 + 14 + RAIN_STRIP + 30 : 110, el.clientHeight - extra - 6);
+    // Anything else in the container (a note above the graph) takes its share too.
+    const others = [...el.children].reduce((sum, c) => (c === p?.root ? sum : sum + (c as HTMLElement).offsetHeight), 0);
+    return Math.max(rain ? 110 + 14 + RAIN_STRIP + 30 : 110, el.clientHeight - extra - others - 6);
   };
 
   function build(): void {

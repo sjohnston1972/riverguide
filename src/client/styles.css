@@ -1634,6 +1634,13 @@ button {
   padding: 20px 10px;
 }
 
+/* "SEPA isn't providing readings at the moment: showing readings up to 07:45." */
+.graph-note {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: var(--st-low-ink);
+}
+
 .uplot,
 .uplot * {
   font-family: var(--font-body);

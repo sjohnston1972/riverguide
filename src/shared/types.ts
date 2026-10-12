@@ -169,6 +169,8 @@ export interface LevelHistory {
   station_no: string;
   period: string;
   points: LevelPoint[];
+  /** SEPA couldn't provide fresh readings: these are the last ones we had (or none). */
+  unavailable?: boolean;
 }
 
 /** Hourly rain at a gauge (Open-Meteo), from the start of a history period to the end of the day after tomorrow. */

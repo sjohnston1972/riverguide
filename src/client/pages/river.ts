@@ -19,17 +19,18 @@ import { ICONS } from '../icons.ts';
 import {
   basisWording,
   characterLabel,
+  clockTime,
   formatLevel,
   gradeLabel,
+  OUTLOOK_ARROW,
+  OUTLOOK_WORDS,
   RELATION_LABEL,
   relativeTime,
+  STATUS_LABEL,
+  STEP_LABEL,
   TREND_ARROW,
   TREND_LABEL,
   TYPICAL_LABEL,
-  STEP_LABEL,
-  STATUS_LABEL,
-  OUTLOOK_WORDS,
-  OUTLOOK_ARROW,
   WTW_URL,
 } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
@@ -292,9 +293,23 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
         graphArea.replaceChildren();
         graphArea.removeAttribute('role');
         graphArea.removeAttribute('aria-label');
+        const g = link.gauge;
         if (!hist.points.length) {
-          graphArea.append(h('p', { class: 'muted graph-empty' }, 'No readings for this period.'));
+          graphArea.append(
+            h(
+              'p',
+              { class: 'muted graph-empty' },
+              hist.unavailable
+                ? `SEPA isn't providing readings at the moment${g.level != null ? `. Last reading ${formatLevel(g.level)}, ${relativeTime(g.level_at)}` : ''}.`
+                : 'No readings for this period.',
+            ),
+          );
           return;
+        }
+        // SEPA down: the readings we last had, saying so.
+        if (hist.unavailable) {
+          const lastAt = hist.points[hist.points.length - 1].t;
+          graphArea.append(h('p', { class: 'graph-note' }, `SEPA isn't providing readings at the moment: showing readings up to ${clockTime(lastAt)}.`));
         }
         const outlook = link.gauge.stale ? null : link.gauge.outlook;
         graph = mod.levelGraph(graphArea, hist.points, {

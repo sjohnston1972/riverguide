@@ -235,21 +235,42 @@ export const HISTORY_PERIODS = ['P1D', 'P2D', 'P7D', 'P30D'] as const;
 export type HistoryPeriod = (typeof HISTORY_PERIODS)[number];
 
 /** Level history for one gauge, edge-cached for 15 minutes. Long periods are thinned to ≤ 400 points. */
+/**
+ * A gauge's recent readings from SEPA, cached 15 minutes. The last good answer is also kept for a
+ * week: when SEPA fails or returns nothing (an outage), that is served instead, marked unavailable,
+ * so the graph still shows the readings up to the outage rather than nothing.
+ */
 export async function levelHistory(stationNo: string, tsId: string, period: HistoryPeriod, ctx: ExecutionContext): Promise<LevelHistory> {
   const key = new Request(`https://cache.riverguide/history/${tsId}/${period}`);
+  const lastGoodKey = new Request(`https://cache.riverguide/history-last-good/${tsId}/${period}`);
   const cached = await caches.default.match(key);
   if (cached) return (await cached.json()) as LevelHistory;
 
-  const [series] = await fetchSeriesValues([tsId], period);
-  const pts = series?.points ?? [];
-  const step = Math.max(1, Math.ceil(pts.length / 400));
-  const thinned = pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
-  const history: LevelHistory = { station_no: stationNo, period, points: thinned.map(([t, v]) => ({ t, v })) };
-
-  ctx.waitUntil(
-    caches.default.put(key, new Response(JSON.stringify(history), { headers: { 'cache-control': 'public, max-age=900' } })),
-  );
-  return history;
+  const put = (k: Request, body: LevelHistory, seconds: number) =>
+    ctx.waitUntil(caches.default.put(k, new Response(JSON.stringify(body), { headers: { 'cache-control': `public, max-age=${seconds}` } })));
+  let pts: Array<[string, number]> = [];
+  let failure: unknown = null;
+  try {
+    pts = (await fetchSeriesValues([tsId], period))[0]?.points ?? [];
+  } catch (e) {
+    failure = e;
+  }
+  if (pts.length) {
+    const step = Math.max(1, Math.ceil(pts.length / 400));
+    const thinned = pts.filter((_, i) => i % step === 0 || i === pts.length - 1);
+    const history: LevelHistory = { station_no: stationNo, period, points: thinned.map(([t, v]) => ({ t, v })) };
+    put(key, history, 900);
+    put(lastGoodKey, history, 7 * 86400);
+    return history;
+  }
+  // Nothing fresh: the last good readings, re-checked with SEPA every 2 minutes.
+  const lastGood = await caches.default.match(lastGoodKey);
+  const fallback: LevelHistory = lastGood
+    ? { ...((await lastGood.json()) as LevelHistory), unavailable: true }
+    : { station_no: stationNo, period, points: [], unavailable: true };
+  if (!fallback.points.length && failure) throw failure;
+  put(key, fallback, 120);
+  return fallback;
 }
 
 /**
