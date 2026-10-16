@@ -5227,21 +5227,25 @@ body {
 }
 
 /* Phones: every river tile the same height. Each line is one line high: the name and the
-   region/grade line cut short with an ellipsis, status and step together, then tomorrow (the line
-   kept even when empty). The favourite star is docked top right, the level bottom right. */
+   region/grade line cut short with an ellipsis, status, the paddler step on a line of its own,
+   then tomorrow (the step and tomorrow lines kept even when empty). The favourite star is docked
+   top right, the level (with its sparkline) bottom right. */
 @media (max-width: 599px) {
   .river-list .river-item {
     position: relative;
   }
 
   .river-list .river-row {
+    /* One height for every chip and every chip line. */
+    --chip-h: 1.3rem;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       'main main'
       'status level'
+      'status level'
       'tomorrow level';
     /* Fixed line heights (in rem, so they follow the text size): nothing inside can stretch a tile. */
-    grid-template-rows: auto 1.25rem calc(0.76rem * 1.3 + 4px);
+    grid-template-rows: auto var(--chip-h) var(--chip-h) var(--chip-h);
     column-gap: 10px;
     row-gap: 4px;
     align-items: center;
@@ -5273,13 +5277,30 @@ body {
     display: contents;
   }
 
+  /* Two lines: the status (and any release), then the step beneath it. */
   .river-list .row-status {
     grid-area: status;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    align-content: flex-start;
     align-items: center;
+    row-gap: 4px;
     height: 100%;
     min-width: 0;
     overflow: hidden;
+  }
+
+  .river-list .row-status .step-tag {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .river-list .row-status > *,
+  .river-list .row-tomorrow > * {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    height: var(--chip-h);
+    line-height: 1;
   }
 
   /* "Old reading" repeats the level's own "old" mark. */
@@ -5293,8 +5314,7 @@ body {
     align-items: center;
     min-width: 0;
     overflow: hidden;
-    /* The tag's own height (text, padding, border), so rows match with or without one. */
-    height: calc(0.76rem * 1.3 + 4px);
+    height: var(--chip-h);
   }
 
   .river-list .row-side .lvl {
