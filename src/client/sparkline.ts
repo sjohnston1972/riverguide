@@ -1,4 +1,4 @@
-// The river list's sparkline: the headline gauge's last day, a dotted line at the latest reading,
+// The river list's sparkline: the headline gauge's last two days, a dotted line at the latest reading,
 // then the outlook on to tomorrow (dashed, inside its likely range), over the section's levels:
 // runnable, too low (amber) and too high (the High colour), with a thin line at each threshold.
 // The curve and range are drawn the way the level graph draws them (rainlayer.ts).
@@ -12,6 +12,8 @@ export const SPARK_H = 24;
 const PAD = 2;
 /** A level range narrower than this is drawn as this, so a steady river looks steady. */
 const MIN_SPAN_M = 0.15;
+/** History shown before the latest reading. */
+export const SPARK_HISTORY_MS = 2 * DAY;
 /** Readings further apart than this are left unjoined. */
 const GAP_MS = 2 * HOUR;
 
@@ -35,7 +37,7 @@ export interface SparkGeometry {
 const f = (n: number) => Math.round(n * 10) / 10;
 
 /**
- * Where everything goes. The time axis runs from a day before the latest reading to midday
+ * Where everything goes. The time axis runs from two days before the latest reading to midday
  * tomorrow (UK), where the level graph also puts tomorrow's predicted peak, so "now" lines up
  * down the list whether or not a river has an outlook.
  */
@@ -43,7 +45,7 @@ export function sparkGeometry(s: SparkInput, w = SPARK_W, h = SPARK_H): SparkGeo
   if (!s.recent || s.level == null || !s.level_at) return null;
   const t0 = Date.parse(s.level_at);
   if (!Number.isFinite(t0)) return null;
-  const from = t0 - DAY;
+  const from = t0 - SPARK_HISTORY_MS;
   const start = Date.parse(s.recent.start);
   const past: Array<[number, number]> = [];
   s.recent.levels.forEach((v, i) => {

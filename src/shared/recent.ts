@@ -1,19 +1,19 @@
-// The last day of a gauge's readings, one per hour, kept by the 15-minute poll from the readings
+// The last two days of a gauge's readings, one per hour, kept by the 15-minute poll from the readings
 // it already fetches (no extra SEPA requests), for the sparklines on the river list.
 
 import type { RecentLevels } from './types.ts';
 
 const HOUR = 3_600_000;
-/** Hours kept before the newest one: a full day, plus the hour the day starts in. */
-export const RECENT_HOURS = 24;
+/** Hours kept before the newest one: two full days, plus the hour they start in. */
+export const RECENT_HOURS = 48;
 
 /** Stored form: [hours since the epoch, level], oldest first. */
 export type StoredRecent = Array<[number, number]>;
 
 /**
  * Merges freshly fetched readings into the stored hours. Each hour keeps one reading: the one on
- * the hour when there is one, otherwise the first fetched in that hour. Hours more than a day
- * before the newest are dropped.
+ * the hour when there is one, otherwise the first fetched in that hour. Hours more than two
+ * days before the newest are dropped.
  */
 export function mergeRecent(stored: StoredRecent | null, points: Array<[string, number]>): StoredRecent {
   const byHour = new Map<number, number>(stored ?? []);

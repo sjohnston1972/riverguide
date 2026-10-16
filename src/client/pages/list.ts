@@ -385,7 +385,7 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   };
 }
 
-/** The level with the gauge's last day and tomorrow's outlook drawn small in front of it. */
+/** The level with the gauge's last two days and tomorrow's outlook drawn small in front of it. */
 function withSparkline(lvl: HTMLSpanElement, s: SectionSummary): HTMLSpanElement {
   const spark = sparkline(s);
   if (spark) lvl.prepend(spark);

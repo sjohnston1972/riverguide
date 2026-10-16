@@ -121,7 +121,7 @@ export interface SectionSummary {
   outlook: 'rise' | 'fall' | 'steady' | null;
   status_tomorrow: SectionStatus | null;
   step_tomorrow: PaddlerStep | null;
-  /** For the list's sparkline: the headline gauge's last day of hourly levels (list only; null on a section's own page). */
+  /** For the list's sparkline: the headline gauge's last two days of hourly levels (list only; null on a section's own page). */
   recent: RecentLevels | null;
   /** The headline thresholds (the runnable band), when set. */
   min_level: number | null;
