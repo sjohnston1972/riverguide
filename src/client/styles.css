@@ -1087,6 +1087,10 @@ button {
   display: none;
 }
 
+.tomorrow-short {
+  display: none;
+}
+
 /* ---------- Map view ---------- */
 .map-canvas {
   height: calc(100dvh - var(--header-h) - 190px);
@@ -5306,6 +5310,14 @@ body {
   /* "Old reading" repeats the level's own "old" mark. */
   .river-list .row-status .reason-tag {
     display: none;
+  }
+
+  .river-list .tomorrow-long {
+    display: none;
+  }
+
+  .river-list .tomorrow-short {
+    display: inline;
   }
 
   .river-list .row-tomorrow {
