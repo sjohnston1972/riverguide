@@ -2,6 +2,7 @@
 
 import { distanceKm } from '../shared/geo.ts';
 import { parseJson } from '../shared/json.ts';
+import { type StoredRecent, toRecentLevels } from '../shared/recent.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
 import { gaugeTrend, isStale, linkRank, paddlerStep, sectionStatus, typicalStatus, ukToday } from '../shared/status.ts';
 import { damSchedule, releasingToday, sectionEbbs } from './schedules.ts';
@@ -179,8 +180,14 @@ export function headline(links: SectionGaugeLink[]): {
   return { status: 'unknown', status_basis: first ? 'typical' : 'none', link: first };
 }
 
-function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>, links: SectionGaugeLink[], releaseToday: boolean): SectionSummary {
+function summarise(
+  s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>,
+  links: SectionGaugeLink[],
+  releaseToday: boolean,
+  recent?: Map<string, StoredRecent>,
+): SectionSummary {
   const h = headline(links);
+  const g = h.link?.gauge;
   return {
     slug: s.slug,
     name: s.name,
@@ -206,6 +213,10 @@ function summarise(s: Pick<SectionRow, keyof SectionSummary & keyof SectionRow>,
     outlook: h.link?.gauge.outlook?.direction ?? null,
     status_tomorrow: h.link?.status_tomorrow ?? null,
     step_tomorrow: h.link?.step_tomorrow ?? null,
+    recent: h.link && recent ? toRecentLevels(recent.get(h.link.station_no) ?? null) : null,
+    min_level: h.link?.min_level ?? null,
+    max_level: h.link?.max_level ?? null,
+    tomorrow: g?.outlook?.tomorrow ?? null,
   };
 }
 
@@ -216,13 +227,19 @@ async function allGauges(db: D1Database): Promise<Map<string, Gauge>> {
 }
 
 export async function listSections(db: D1Database): Promise<SectionSummary[]> {
-  const [sections, links, gauges, bands, releasing] = await Promise.all([
+  const [sections, links, gauges, bands, releasing, recentRows] = await Promise.all([
     db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM sections ORDER BY name`).all<SectionRow>(),
     db.prepare('SELECT * FROM section_gauges ORDER BY rowid').all<LinkRow>(),
     allGauges(db),
     communityBands(db),
     releasingToday(db),
+    db.prepare('SELECT station_no, recent FROM gauges WHERE recent IS NOT NULL').all<{ station_no: string; recent: string }>(),
   ]);
+  const recent = new Map<string, StoredRecent>();
+  for (const r of recentRows.results) {
+    const v = parseJson<StoredRecent>(r.recent);
+    if (v) recent.set(r.station_no, v);
+  }
   const bySlug = new Map<string, SectionGaugeLink[]>();
   for (const l of links.results) {
     const g = gauges.get(l.station_no);
@@ -231,7 +248,7 @@ export async function listSections(db: D1Database): Promise<SectionSummary[]> {
     arr.push(toLink(withCommunity(l, bands.get(`${l.slug}|${l.station_no}`)), g));
     bySlug.set(l.slug, arr);
   }
-  return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? [], releasing.has(s.slug)));
+  return sections.results.map((s) => summarise(s, bySlug.get(s.slug) ?? [], releasing.has(s.slug), recent));
 }
 
 

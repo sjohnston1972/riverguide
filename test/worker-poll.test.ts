@@ -23,10 +23,11 @@ const row = (over: Partial<GaugePollRow> = {}): GaugePollRow => ({
   forecast_model: null,
   rain: null,
   outlook: null,
+  recent: null,
   ...over,
 });
 
-const none = (): PollFetched => ({ levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map() });
+const none = (): PollFetched => ({ levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map(), readings: new Map() });
 
 describe('nextGaugeState', () => {
   it('skips the write when nothing changed', () => {
@@ -72,6 +73,28 @@ describe('nextGaugeState', () => {
     const stored = JSON.stringify({ basis: 'trend', direction: 'steady', tomorrow: null, day_after: null, rain_today_mm: 1, rain_tomorrow_mm: 1, at: now.toISOString() });
     const n = nextGaugeState(row({ forecast_model: model, rain: JSON.stringify(rain), outlook: stored, level_at: '2026-10-08T07:00:00.000Z' }), none(), now);
     expect(n?.outlook).toBeNull();
+  });
+
+  it('adds fetched readings to the last day of hourly levels, and skips the write when they add nothing new', () => {
+    const f = none();
+    f.readings.set('1', [
+      ['2026-10-08T11:00:00.000Z', 0.48],
+      ['2026-10-08T11:15:00.000Z', 0.49],
+      ['2026-10-08T11:45:00.000Z', 0.5],
+    ]);
+    const stored = JSON.stringify([[Date.parse('2026-10-08T10:00:00Z') / 3_600_000, 0.47]]);
+    const n = nextGaugeState(row({ recent: stored }), f, now)!;
+    expect(JSON.parse(n.recent!)).toEqual([
+      [Date.parse('2026-10-08T10:00:00Z') / 3_600_000, 0.47],
+      [Date.parse('2026-10-08T11:00:00Z') / 3_600_000, 0.48],
+    ]);
+    expect(nextGaugeState(row({ recent: n.recent }), f, now)).toBeNull();
+  });
+
+  it('records an empty last day for a gauge SEPA had nothing for, so it is not fetched again', () => {
+    const f = none();
+    f.readings.set('1', []);
+    expect(nextGaugeState(row(), f, now)?.recent).toBe('[]');
   });
 });
 

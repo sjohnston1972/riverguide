@@ -2,6 +2,7 @@
 
 import type { ForecastModel } from '../shared/forecast.ts';
 import { parseJson } from '../shared/json.ts';
+import { mergeRecent, type StoredRecent } from '../shared/recent.ts';
 import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, fetchSeriesWindow, latestAndHourAgo } from '../shared/sepa.ts';
 import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, LevelHistory } from '../shared/types.ts';
@@ -33,6 +34,7 @@ export interface GaugePollRow {
   forecast_model: string | null;
   rain: string | null;
   outlook: string | null;
+  recent: string | null;
 }
 
 /** What one poll fetched, by station. A station missing from a map keeps its stored value. */
@@ -41,11 +43,13 @@ export interface PollFetched {
   dayAgo: Map<string, { level: number; at: string }>;
   flags: Map<string, { flag: number; at: string }>;
   rain: Map<string, StoredRain>;
+  /** Raw readings for the gauge's last day of hourly levels (see shared/recent.ts). */
+  readings: Map<string, Array<[string, number]>>;
 }
 
 type Written = Pick<
   GaugePollRow,
-  'level' | 'level_at' | 'level_hour_ago' | 'level_day_ago' | 'level_day_ago_at' | 'trend_sepa' | 'trend_sepa_at' | 'rain' | 'outlook'
+  'level' | 'level_at' | 'level_hour_ago' | 'level_day_ago' | 'level_day_ago_at' | 'trend_sepa' | 'trend_sepa_at' | 'rain' | 'outlook' | 'recent'
 >;
 
 const parse = parseJson;
@@ -71,6 +75,7 @@ export function nextGaugeState(row: GaugePollRow, fetched: PollFetched, now: Dat
   const da = fetched.dayAgo.get(row.station_no);
   const fl = fetched.flags.get(row.station_no);
   const rn = fetched.rain.get(row.station_no);
+  const rd = fetched.readings.get(row.station_no);
   const next: Written = {
     level: lv ? lv.level : row.level,
     level_at: lv ? lv.at : row.level_at,
@@ -81,6 +86,7 @@ export function nextGaugeState(row: GaugePollRow, fetched: PollFetched, now: Dat
     trend_sepa_at: fl ? fl.at : row.trend_sepa_at,
     rain: rn ? JSON.stringify(rn) : row.rain,
     outlook: row.outlook,
+    recent: rd ? JSON.stringify(mergeRecent(parse<StoredRecent>(row.recent), rd)) : row.recent,
   };
 
   if (row.forecast_model) {
@@ -134,13 +140,14 @@ export interface PollSummary {
 /**
  * The 15-minute job: latest levels, levels a day ago, SEPA's rising/falling flags and
  * (hourly, or when the UK day changes) rain, fetched together; outlooks recomputed;
- * then one UPDATE per gauge whose values actually changed.
+ * then one UPDATE per gauge whose values actually changed. A gauge with no last day of
+ * hourly levels yet (a new column or a new gauge) has its last 24 hours fetched once.
  */
 export async function pollReadings(db: D1Database, now = new Date()): Promise<PollSummary> {
   const { results: rows } = await db
     .prepare(
       `SELECT station_no, ts_id, rf_ts_id, lat, lon, level, level_at, level_hour_ago, level_day_ago, level_day_ago_at,
-              trend_sepa, trend_sepa_at, forecast_model, rain, outlook FROM gauges`,
+              trend_sepa, trend_sepa_at, forecast_model, rain, outlook, recent FROM gauges`,
     )
     .all<GaugePollRow>();
 
@@ -154,20 +161,31 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
   // about hourly per gauge rather than every poll, to spare SEPA credits.
   const dayAgoDue = rows.filter((r) => !r.level_day_ago_at || dayAgoAt - Date.parse(r.level_day_ago_at) > DAY_AGO_REFRESH_MS).map((r) => r.ts_id);
 
-  const [levelRes, dayRes, flagRes, rainRes] = await Promise.all([
+  const recentDue = rows.filter((r) => r.recent == null).map((r) => r.ts_id);
+
+  const [levelRes, dayRes, flagRes, rainRes, lastDayRes] = await Promise.all([
     // Two hours is enough to find the latest reading (SEPA lags up to ~45 min) and the one an hour before it.
     inBatches('SEPA levels', [...byTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT2H')),
     inBatches('SEPA level a day ago', dayAgoDue, BATCH, (ids) => fetchSeriesWindow(ids, dayFrom, dayTo)),
     inBatches('SEPA rising/falling', [...byRfTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT1H')),
     rainDue.length ? inBatches('Open-Meteo rain', rainDue, RAIN_BATCH, (gauges) => fetchRain(gauges, now)) : Promise.resolve(null),
+    inBatches('SEPA last day', recentDue, BATCH, (ids) => fetchSeriesValues(ids, 'P1D')),
   ]);
 
-  const fetched: PollFetched = { levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map() };
+  const fetched: PollFetched = { levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map(), readings: new Map() };
+  const addReadings = (station: string, points: Array<[string, number]>) =>
+    fetched.readings.set(station, [...(fetched.readings.get(station) ?? []), ...points]);
+  // A gauge fetched for its last day is recorded even when SEPA had nothing, so it isn't fetched again.
+  for (const s of lastDayRes.results) {
+    const station = byTs.get(s.ts_id);
+    if (station) addReadings(station, s.points);
+  }
   let empty = 0;
   for (const s of levelRes.results) {
     const station = byTs.get(s.ts_id);
     if (!station) continue;
     const { latest, hourAgo } = latestAndHourAgo(s.points);
+    if (s.points.length) addReadings(station, s.points);
     if (!latest) empty++;
     else fetched.levels.set(station, { level: latest[1], at: latest[0], hourAgo });
   }
@@ -191,9 +209,9 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
       db
         .prepare(
           `UPDATE gauges SET level = ?, level_at = ?, level_hour_ago = ?, level_day_ago = ?, level_day_ago_at = ?,
-                  trend_sepa = ?, trend_sepa_at = ?, rain = ?, outlook = ? WHERE station_no = ?`,
+                  trend_sepa = ?, trend_sepa_at = ?, rain = ?, outlook = ?, recent = ? WHERE station_no = ?`,
         )
-        .bind(n.level, n.level_at, n.level_hour_ago, n.level_day_ago, n.level_day_ago_at, n.trend_sepa, n.trend_sepa_at, n.rain, n.outlook, row.station_no),
+        .bind(n.level, n.level_at, n.level_hour_ago, n.level_day_ago, n.level_day_ago_at, n.trend_sepa, n.trend_sepa_at, n.rain, n.outlook, n.recent, row.station_no),
     );
   }
   if (stmts.length) await db.batch(stmts);
@@ -202,7 +220,7 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
     levels: fetched.levels.size,
     empty,
     written: stmts.length,
-    failedBatches: levelRes.failed + dayRes.failed + flagRes.failed + (rainRes?.failed ?? 0),
+    failedBatches: levelRes.failed + dayRes.failed + flagRes.failed + (rainRes?.failed ?? 0) + lastDayRes.failed,
     rain: rainRes ? fetched.rain.size : null,
   };
 }
