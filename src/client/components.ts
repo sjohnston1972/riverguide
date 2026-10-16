@@ -27,7 +27,15 @@ export function tomorrowTag(s: Pick<SectionSummary, 'outlook' | 'status' | 'stat
   const changedStep = !changedStatus && s.step_tomorrow && s.step_tomorrow !== s.step;
   if (!changedStatus && !changedStep) return null;
   const label = changedStatus ? STATUS_LABEL[s.status_tomorrow!] : STEP_LABEL[s.step_tomorrow!];
-  return h('span', { class: `tomorrow-tag outlook-${s.outlook}`, title: 'Rough estimate of tomorrow’s peak level' }, `${OUTLOOK_ARROW[s.outlook]} ${label} tomorrow`);
+  // "tmrw" stands in for "tomorrow" where the tag must fit beside the level box (phone list rows).
+  return h(
+    'span',
+    { class: `tomorrow-tag outlook-${s.outlook}`, title: 'Rough estimate of tomorrow’s peak level' },
+    // The tag is a flex box: its gap spaces the words.
+    `${OUTLOOK_ARROW[s.outlook]} ${label}`,
+    h('span', { class: 'tomorrow-long' }, 'tomorrow'),
+    h('span', { class: 'tomorrow-short' }, 'tmrw'),
+  );
 }
 
 /** Why a section's status is Unknown, when the level beside it doesn't already say (no gauge / no reading). */
