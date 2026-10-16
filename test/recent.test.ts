@@ -22,10 +22,10 @@ describe('mergeRecent', () => {
     expect(mergeRecent(null, [['2026-10-16T10:00:00.000+01:00', 0.12345]])).toEqual([[hour('2026-10-16T09:00:00Z'), 0.123]]);
   });
 
-  it('keeps stored hours, replaces an hour with its on-the-hour reading, and drops hours over a day old', () => {
+  it('keeps stored hours, replaces an hour with its on-the-hour reading, and drops hours over two days old', () => {
     const stored: Array<[number, number]> = [
-      [hour('2026-10-15T08:00:00Z'), 0.3],
-      [hour('2026-10-15T10:00:00Z'), 0.31],
+      [hour('2026-10-14T08:00:00Z'), 0.3],
+      [hour('2026-10-14T10:00:00Z'), 0.31],
       [hour('2026-10-16T09:00:00Z'), 0.5],
     ];
     const merged = mergeRecent(stored, [
@@ -33,7 +33,7 @@ describe('mergeRecent', () => {
       ['2026-10-16T10:00:00.000Z', 0.55],
     ]);
     expect(merged).toEqual([
-      [hour('2026-10-15T10:00:00Z'), 0.31],
+      [hour('2026-10-14T10:00:00Z'), 0.31],
       [hour('2026-10-16T09:00:00Z'), 0.5],
       [hour('2026-10-16T10:00:00Z'), 0.55],
     ]);

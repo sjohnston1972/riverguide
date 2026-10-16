@@ -5,8 +5,8 @@ import { SPARK_H, SPARK_W, sparkGeometry, type SparkInput, sparkline } from '../
 // 16 October 2026 is BST: midday tomorrow (UK) is 11:00 UTC on the 17th.
 const at = '2026-10-16T09:00:00.000Z';
 const input = (over: Partial<SparkInput> = {}): SparkInput => ({
-  // 24 hourly levels from 09:00 yesterday, rising then falling back.
-  recent: { start: '2026-10-15T09:00:00.000Z', levels: Array.from({ length: 24 }, (_, i) => 0.5 + 0.3 * Math.sin((i / 23) * Math.PI)) },
+  // 48 hourly levels from 09:00 two days ago, rising then falling back.
+  recent: { start: '2026-10-14T09:00:00.000Z', levels: Array.from({ length: 48 }, (_, i) => 0.5 + 0.3 * Math.sin((i / 47) * Math.PI)) },
   level: 0.5,
   level_at: at,
   min_level: 0.4,
@@ -19,13 +19,13 @@ const xs = (d: string) => [...d.matchAll(/([\d.]+),([\d.]+)/g)].map((m) => Numbe
 const ys = (d: string) => [...d.matchAll(/([\d.]+),([\d.]+)/g)].map((m) => Number(m[2]));
 
 describe('sparkGeometry', () => {
-  it('runs from a day before the latest reading, through it, to midday tomorrow', () => {
+  it('runs from two days before the latest reading, through it, to midday tomorrow', () => {
     const g = sparkGeometry(input())!;
     const line = xs(g.line);
     expect(line[0]).toBeCloseTo(2, 0);
     expect(line[line.length - 1]).toBe(g.nowX);
-    // A day back and 26 hours on: "now" sits 24/50 of the way across.
-    expect(g.nowX).toBeCloseTo(2 + (24 / 50) * (SPARK_W - 4), 0);
+    // Two days back and 26 hours on: "now" sits 48/74 of the way across.
+    expect(g.nowX).toBeCloseTo(2 + (48 / 74) * (SPARK_W - 4), 0);
     const ahead = xs(g.outlook);
     expect(ahead[0]).toBe(g.nowX);
     expect(ahead[ahead.length - 1]).toBeCloseTo(SPARK_W - 2, 0);
@@ -63,8 +63,8 @@ describe('sparkGeometry', () => {
   });
 
   it('leaves gaps unjoined and draws no outlook without one', () => {
-    const levels = input().recent!.levels.map((v, i) => (i >= 8 && i <= 12 ? null : v));
-    const g = sparkGeometry(input({ recent: { start: '2026-10-15T09:00:00.000Z', levels }, tomorrow: null }))!;
+    const levels = input().recent!.levels.map((v, i) => (i >= 16 && i <= 24 ? null : v));
+    const g = sparkGeometry(input({ recent: { start: '2026-10-14T09:00:00.000Z', levels }, tomorrow: null }))!;
     expect(g.line.match(/M/g)).toHaveLength(2);
     expect(g.outlook).toBe('');
     expect(g.range).toBe('');

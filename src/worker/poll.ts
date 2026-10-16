@@ -43,7 +43,7 @@ export interface PollFetched {
   dayAgo: Map<string, { level: number; at: string }>;
   flags: Map<string, { flag: number; at: string }>;
   rain: Map<string, StoredRain>;
-  /** Raw readings for the gauge's last day of hourly levels (see shared/recent.ts). */
+  /** Raw readings for the gauge's last two days of hourly levels (see shared/recent.ts). */
   readings: Map<string, Array<[string, number]>>;
 }
 
@@ -140,8 +140,8 @@ export interface PollSummary {
 /**
  * The 15-minute job: latest levels, levels a day ago, SEPA's rising/falling flags and
  * (hourly, or when the UK day changes) rain, fetched together; outlooks recomputed;
- * then one UPDATE per gauge whose values actually changed. A gauge with no last day of
- * hourly levels yet (a new column or a new gauge) has its last 24 hours fetched once.
+ * then one UPDATE per gauge whose values actually changed. A gauge with no last two days of
+ * hourly levels yet (a new column or a new gauge) has its last 48 hours fetched once.
  */
 export async function pollReadings(db: D1Database, now = new Date()): Promise<PollSummary> {
   const { results: rows } = await db
@@ -163,20 +163,20 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
 
   const recentDue = rows.filter((r) => r.recent == null).map((r) => r.ts_id);
 
-  const [levelRes, dayRes, flagRes, rainRes, lastDayRes] = await Promise.all([
+  const [levelRes, dayRes, flagRes, rainRes, lastDaysRes] = await Promise.all([
     // Two hours is enough to find the latest reading (SEPA lags up to ~45 min) and the one an hour before it.
     inBatches('SEPA levels', [...byTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT2H')),
     inBatches('SEPA level a day ago', dayAgoDue, BATCH, (ids) => fetchSeriesWindow(ids, dayFrom, dayTo)),
     inBatches('SEPA rising/falling', [...byRfTs.keys()], BATCH, (ids) => fetchSeriesValues(ids, 'PT1H')),
     rainDue.length ? inBatches('Open-Meteo rain', rainDue, RAIN_BATCH, (gauges) => fetchRain(gauges, now)) : Promise.resolve(null),
-    inBatches('SEPA last day', recentDue, BATCH, (ids) => fetchSeriesValues(ids, 'P1D')),
+    inBatches('SEPA last two days', recentDue, BATCH, (ids) => fetchSeriesValues(ids, 'P2D')),
   ]);
 
   const fetched: PollFetched = { levels: new Map(), dayAgo: new Map(), flags: new Map(), rain: new Map(), readings: new Map() };
   const addReadings = (station: string, points: Array<[string, number]>) =>
     fetched.readings.set(station, [...(fetched.readings.get(station) ?? []), ...points]);
-  // A gauge fetched for its last day is recorded even when SEPA had nothing, so it isn't fetched again.
-  for (const s of lastDayRes.results) {
+  // A gauge fetched for its last two days is recorded even when SEPA had nothing, so it isn't fetched again.
+  for (const s of lastDaysRes.results) {
     const station = byTs.get(s.ts_id);
     if (station) addReadings(station, s.points);
   }
@@ -220,7 +220,7 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
     levels: fetched.levels.size,
     empty,
     written: stmts.length,
-    failedBatches: levelRes.failed + dayRes.failed + flagRes.failed + (rainRes?.failed ?? 0) + lastDayRes.failed,
+    failedBatches: levelRes.failed + dayRes.failed + flagRes.failed + (rainRes?.failed ?? 0) + lastDaysRes.failed,
     rain: rainRes ? fetched.rain.size : null,
   };
 }

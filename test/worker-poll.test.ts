@@ -75,7 +75,7 @@ describe('nextGaugeState', () => {
     expect(n?.outlook).toBeNull();
   });
 
-  it('adds fetched readings to the last day of hourly levels, and skips the write when they add nothing new', () => {
+  it('adds fetched readings to the last two days of hourly levels, and skips the write when they add nothing new', () => {
     const f = none();
     f.readings.set('1', [
       ['2026-10-08T11:00:00.000Z', 0.48],
@@ -91,7 +91,7 @@ describe('nextGaugeState', () => {
     expect(nextGaugeState(row({ recent: n.recent }), f, now)).toBeNull();
   });
 
-  it('records an empty last day for a gauge SEPA had nothing for, so it is not fetched again', () => {
+  it('records an empty history for a gauge SEPA had nothing for, so it is not fetched again', () => {
     const f = none();
     f.readings.set('1', []);
     expect(nextGaugeState(row(), f, now)?.recent).toBe('[]');
