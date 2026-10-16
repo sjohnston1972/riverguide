@@ -1,5 +1,6 @@
 // The river list's sparkline: the headline gauge's last day, a dotted line at the latest reading,
-// then the outlook on to tomorrow (dashed, inside its likely range), over the runnable band.
+// then the outlook on to tomorrow (dashed, inside its likely range), over the section's levels:
+// runnable, too low (amber) and too high (the High colour), with a thin line at each threshold.
 // The curve and range are drawn the way the level graph draws them (rainlayer.ts).
 
 import type { LevelPoint, SectionSummary } from '../shared/types.ts';
@@ -25,8 +26,10 @@ export interface SparkGeometry {
   /** The latest reading: where the dotted line stands. */
   nowX: number;
   nowY: number;
-  /** The runnable band's top and bottom, clipped to the box; null when it is off the chart or unset. */
-  band: [number, number] | null;
+  /** The runnable, too-low and too-high zones as [top, bottom], clipped to the box; null when off the chart or unset. */
+  zones: Record<'runnable' | 'low' | 'high', [number, number] | null>;
+  /** Where the thresholds cross the box (y), for those on the chart. */
+  edges: number[];
 }
 
 const f = (n: number) => Math.round(n * 10) / 10;
@@ -86,13 +89,23 @@ export function sparkGeometry(s: SparkInput, w = SPARK_W, h = SPARK_H): SparkGeo
         .join('L')}Z`
     : '';
 
-  let band: [number, number] | null = null;
+  // A section with no thresholds gets no zones; one with only a minimum (or maximum) is runnable all the way up (or down).
+  const zones: SparkGeometry['zones'] = { runnable: null, low: null, high: null };
+  const edges: number[] = [];
   if (s.min_level != null || s.max_level != null) {
-    const top = Math.max(0, s.max_level != null ? Y(s.max_level) : 0);
-    const bottom = Math.min(h, s.min_level != null ? Y(s.min_level) : h);
-    if (bottom > top) band = [f(top), f(bottom)];
+    const clip = (top: number, bottom: number): [number, number] | null => {
+      const t = Math.max(0, top);
+      const b = Math.min(h, bottom);
+      return b > t ? [f(t), f(b)] : null;
+    };
+    const yMax = s.max_level != null ? Y(s.max_level) : -Infinity;
+    const yMin = s.min_level != null ? Y(s.min_level) : Infinity;
+    zones.runnable = clip(yMax, yMin);
+    if (s.min_level != null) zones.low = clip(yMin, h);
+    if (s.max_level != null) zones.high = clip(0, yMax);
+    for (const y of [yMax, yMin]) if (y > 0 && y < h) edges.push(f(y));
   }
-  return { line, outlook, range, nowX: f(X(t0)), nowY: f(Y(s.level)), band };
+  return { line, outlook, range, nowX: f(X(t0)), nowY: f(Y(s.level)), zones, edges };
 }
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -108,7 +121,11 @@ export function sparkline(s: SparkInput & Pick<SectionSummary, 'stale'>): SVGSVG
   const g = sparkGeometry(s);
   if (!g) return null;
   const svg = el('svg', { class: 'spark', viewBox: `0 0 ${SPARK_W} ${SPARK_H}`, preserveAspectRatio: 'none', 'aria-hidden': 'true', focusable: 'false' }) as SVGSVGElement;
-  if (g.band) svg.append(el('rect', { class: 'spark-band', x: 0, y: g.band[0], width: SPARK_W, height: f(g.band[1] - g.band[0]) }));
+  for (const zone of ['runnable', 'low', 'high'] as const) {
+    const z = g.zones[zone];
+    if (z) svg.append(el('rect', { class: `spark-zone spark-${zone}`, x: 0, y: z[0], width: SPARK_W, height: f(z[1] - z[0]) }));
+  }
+  for (const y of g.edges) svg.append(el('path', { class: 'spark-edge', d: `M0,${y}H${SPARK_W}` }));
   if (g.range) svg.append(el('path', { class: 'spark-range', d: g.range }));
   svg.append(el('path', { class: 'spark-now', d: `M${g.nowX},0V${SPARK_H}` }));
   if (g.outlook) svg.append(el('path', { class: 'spark-outlook', d: g.outlook }));

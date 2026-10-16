@@ -707,7 +707,8 @@ button {
 }
 
 /* The river list's sparkline (sparkline.ts) in front of the level: the last day, a dotted line at
-   the latest reading, tomorrow's outlook dashed inside its range, over the runnable band. Drawn in
+   the latest reading, tomorrow's outlook dashed inside its range, over the section's runnable,
+   too-low and too-high levels in the status colours, with a thin line at each threshold. Drawn in
    fixed units and stretched to size here, so strokes don't scale. */
 .spark {
   flex: none;
@@ -725,9 +726,26 @@ button {
   vector-effect: non-scaling-stroke;
 }
 
-.spark .spark-band {
-  fill: var(--st-runnable);
+.spark .spark-zone {
   opacity: 0.18;
+}
+
+.spark .spark-runnable {
+  fill: var(--st-runnable);
+}
+
+.spark .spark-low {
+  fill: var(--st-low);
+}
+
+.spark .spark-high {
+  fill: var(--st-high);
+}
+
+.spark .spark-edge {
+  stroke: var(--st-runnable);
+  stroke-opacity: 0.7;
+  stroke-width: 1;
 }
 
 .spark .spark-range {
