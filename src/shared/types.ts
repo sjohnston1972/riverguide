@@ -121,6 +121,19 @@ export interface SectionSummary {
   outlook: 'rise' | 'fall' | 'steady' | null;
   status_tomorrow: SectionStatus | null;
   step_tomorrow: PaddlerStep | null;
+  /** For the list's sparkline: the headline gauge's last day of hourly levels (list only; null on a section's own page). */
+  recent: RecentLevels | null;
+  /** The headline thresholds (the runnable band), when set. */
+  min_level: number | null;
+  max_level: number | null;
+  /** Tomorrow's predicted peak and likely range at the headline gauge (model outlook only). */
+  tomorrow: LevelRange | null;
+}
+
+/** Hourly levels from `start` (ISO, on the hour), oldest first; null where an hour has no reading. */
+export interface RecentLevels {
+  start: string;
+  levels: Array<number | null>;
 }
 
 export interface PlacePoint {

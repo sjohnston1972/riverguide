@@ -133,6 +133,10 @@ describe('list filters', () => {
     outlook: null,
     status_tomorrow: null,
     step_tomorrow: null,
+    recent: null,
+    min_level: null,
+    max_level: null,
+    tomorrow: null,
     ...over,
   });
   const all = [

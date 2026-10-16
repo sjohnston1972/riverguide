@@ -22,6 +22,7 @@ import { clockTime, gradeLabel, STEP_LABEL } from '../labels.ts';
 import type { AppCtx, Page } from '../main.ts';
 import type { SectionsMap } from '../mapview.ts';
 import { replaceUrl, type Route } from '../router.ts';
+import { sparkline } from '../sparkline.ts';
 
 type View = 'list' | 'map';
 const REFRESH_MS = 5 * 60_000;
@@ -384,6 +385,13 @@ export function mountList(container: HTMLElement, route: Route, ctx: AppCtx): Pa
   };
 }
 
+/** The level with the gauge's last day and tomorrow's outlook drawn small in front of it. */
+function withSparkline(lvl: HTMLSpanElement, s: SectionSummary): HTMLSpanElement {
+  const spark = sparkline(s);
+  if (spark) lvl.prepend(spark);
+  return lvl;
+}
+
 function row(s: SectionSummary): HTMLLIElement {
   return h(
     'li',
@@ -414,7 +422,7 @@ function row(s: SectionSummary): HTMLLIElement {
         ),
         // Its own line; on phones the line is kept even when empty, so rows line up.
         h('span', { class: 'row-tomorrow' }, tomorrowTag(s)),
-        s.level != null ? levelWithTrend(s.level, s.trend, s.stale) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
+        s.level != null ? withSparkline(levelWithTrend(s.level, s.trend, s.stale), s) : h('span', { class: 'lvl lvl-none' }, s.station_no ? 'No reading' : 'No gauge'),
       ),
     ),
     favButton(s.slug, s.name, 'fav-row'),
