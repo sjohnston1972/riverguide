@@ -99,6 +99,13 @@ export async function takeDailyQuota(db: D1Database, hash: string, limit: number
   return (row?.messages ?? 0) <= limit;
 }
 
+/** Per-IP chat counts are only needed for today's quota; the privacy notice promises they go after two days. */
+export async function pruneChatUsage(db: D1Database, now = new Date()): Promise<number> {
+  const cutoff = today(new Date(now.getTime() - 2 * 86_400_000));
+  const r = await db.prepare('DELETE FROM chat_usage WHERE day < ?').bind(cutoff).run();
+  return r.meta.changes ?? 0;
+}
+
 /** Claude Haiku 4.5 list prices, in microdollars per token. */
 const PRICE = { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 };
 

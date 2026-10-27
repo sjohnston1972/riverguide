@@ -8,6 +8,7 @@ import { type AppEnv, flag } from './env.ts';
 import {
   SESSION_COOKIE,
   ipHash,
+  pruneChatUsage,
   readCookie,
   sessionCookie,
   signSession,
@@ -193,6 +194,7 @@ export default {
           console.log(`SEPA rising/falling ids refreshed: ${await refreshRisingFallingIds(env.DB)}`);
         })().catch((e) => console.error('gauge metadata refresh failed', e)),
       );
+      ctx.waitUntil(pruneChatUsage(env.DB).then((n) => n && console.log(`chat usage rows deleted: ${n}`), (e) => console.error('chat usage prune failed', e)));
       ctx.waitUntil(
         refreshFreshets(env.DB).then(
           async (n) => {

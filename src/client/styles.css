@@ -5433,3 +5433,21 @@ body {
 .feedback-sent p {
   margin: 0;
 }
+
+/* ---------- Privacy (About) ---------- */
+.about [id] {
+  /* Anchor links land below the sticky header. */
+  scroll-margin-top: calc(var(--header-h) + 12px);
+}
+
+.about-privacy h3 {
+  margin: 18px 0 6px;
+  font-size: 1rem;
+}
+
+.about-privacy ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.2em;
+}

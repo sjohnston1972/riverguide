@@ -80,7 +80,7 @@ const footer = h(
       h('a', { href: 'https://creativecommons.org/licenses/by-sa/4.0/', target: '_blank', rel: 'noopener' }, 'CC BY-SA 4.0'),
       '. Weather: Open-Meteo. Maps © OpenStreetMap contributors.',
     ),
-    h('p', null, h('a', { href: '/about' }, 'About River Guide, data sources and licences')),
+    h('p', null, h('a', { href: '/about' }, 'About River Guide, data sources and licences'), ' · ', h('a', { href: '/about#privacy' }, 'Privacy and cookies')),
   ),
 );
 

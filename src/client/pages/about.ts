@@ -27,8 +27,57 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
     h('p', null, 'Spotted something wrong, such as a level that doesn’t match the river, a missing section or a page that doesn’t work? Got an idea? Let us know.'),
     feedbackForm({ siteKey: () => ctx.config()?.turnstile_site_key ?? null, previousPath: ctx.previousPath }),
   );
+  // Privacy: the chat line only while chat is on.
+  const chatPrivacy = h(
+    'li',
+    { hidden: !ctx.config()?.chat_enabled },
+    h('strong', null, 'Chat: '),
+    'your messages are sent to Anthropic’s Claude to be answered, and the conversation is kept in your browser only until you close the tab. River Guide keeps a scrambled (hashed) form of your IP address and a count of your messages, for the daily limit, and deletes it after two days.',
+  );
+  const privacy = h(
+    'section',
+    { class: 'about-privacy', id: 'privacy' },
+    h('h2', null, 'Privacy and cookies'),
+    h('p', null, 'River Guide is a free, non-commercial site run by one person. It has no adverts, analytics or tracking, so there is no cookie banner: it only stores what is needed for things you choose to use.'),
+    h('h3', null, 'Stored on your device'),
+    h(
+      'ul',
+      null,
+      h('li', null, h('strong', null, 'A device cookie, '), 'only once you report a river level, vote or flag a note: a random id, so each device makes one report per section per day and abuse can be blocked. It lasts a year.'),
+      h('li', null, h('strong', null, 'Your settings: '), 'that you accepted the terms of use, light or dark theme, and your favourites. These stay in your browser and are never sent to River Guide.'),
+      h('li', null, h('strong', null, 'An offline copy '), 'of the app and the last river levels you saw, so River Guide still opens with no signal.'),
+    ),
+    h('h3', null, 'What River Guide keeps'),
+    h(
+      'ul',
+      null,
+      h('li', null, h('strong', null, 'Reports and votes: '), 'what you submit, with your device id and a scrambled (hashed) form of your IP address, used to count each person once and to block abuse. Kept while the report is up. You can delete your own reports from the same device.'),
+      h('li', null, h('strong', null, 'Feedback: '), 'your message, your email address if you give one, your browser type and screen size, the page you came from and a hashed IP address. Kept privately on GitHub (servers in the US) and deleted within 12 months of being dealt with.'),
+      chatPrivacy,
+      h('li', null, h('strong', null, 'Server logs: '), 'Cloudflare, which hosts River Guide, logs requests, which can include IP addresses. The logs are deleted within a week.'),
+    ),
+    h('h3', null, 'Other services'),
+    h(
+      'p',
+      null,
+      'Maps are drawn by ',
+      ext('https://osmfoundation.org/wiki/Privacy_Policy', 'OpenStreetMap'),
+      ', which sees your IP address when the map loads. The quick automated check before your first report or vote, and before feedback, is Cloudflare Turnstile; it doesn’t run otherwise. Weather and river levels are fetched by River Guide’s server, so those services never see you.',
+    ),
+    h('h3', null, 'Your data'),
+    h(
+      'p',
+      null,
+      'To ask what River Guide holds about you, or to have it deleted, email ',
+      h('a', { href: 'mailto:privacy@clydeford.net' }, 'privacy@clydeford.net'),
+      ' or use the ',
+      h('a', { href: '/about#feedback' }, 'feedback form'),
+      '.',
+    ),
+  );
   const onConfig = () => {
     chat.hidden = !ctx.config()?.chat_enabled;
+    chatPrivacy.hidden = !ctx.config()?.chat_enabled;
     feedback.hidden = !ctx.config()?.feedback_enabled;
   };
   document.addEventListener('rg:config', onConfig);
@@ -158,9 +207,14 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         h('li', null, h('strong', null, 'Maps: '), '© ', ext('https://www.openstreetmap.org/copyright', 'OpenStreetMap contributors'), ', data available under the Open Database Licence (ODbL).'),
       ),
 
+      privacy,
+
       h('section', { class: 'about-terms', id: 'terms' }, h('h2', null, 'Terms of use'), termsContent()),
     ),
   );
+  // Links such as the footer's /about#privacy: the app scrolls to the top after a page mounts, so jump after that.
+  const target = location.hash.slice(1);
+  if (target) requestAnimationFrame(() => document.getElementById(target)?.scrollIntoView());
   return {
     destroy() {
       document.removeEventListener('rg:config', onConfig);

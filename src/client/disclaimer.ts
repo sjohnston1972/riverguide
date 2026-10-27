@@ -41,6 +41,7 @@ export function termsContent(): HTMLElement[] {
       h('li', null, 'Whitewater paddling is dangerous. Always inspect the river, check a current guidebook and local knowledge, and paddle within your ability.'),
     ),
     h('p', null, 'You use River Guide at your own risk. River Guide and its contributors accept no liability for any loss, injury or damage arising from its use.'),
+    h('p', null, 'What River Guide stores, and how to ask about your data, is under “Privacy and cookies” on the About page. There is no tracking.'),
   ];
 }
 
