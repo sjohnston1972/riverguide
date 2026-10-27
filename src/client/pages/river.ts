@@ -442,7 +442,7 @@ export function mountRiver(container: HTMLElement, slug: string, ctx: AppCtx): P
     const g = l.gauge;
     let band = 'None set for this gauge';
     if (l.levels && l.basis === 'paddler')
-      band = `Runnable ${formatLevel(l.levels.scrape)} to ${formatLevel(l.levels.huge)} (scrape to huge)`;
+      band = `Runnable ${formatLevel(l.levels.scrape)} to ${formatLevel(l.levels.very_high)} (scrape to high)`;
     else if (l.min_level != null && l.max_level != null) band = `Runnable ${formatLevel(l.min_level)} to ${formatLevel(l.max_level)}`;
     else if (l.min_level != null) band = `Runnable from ${formatLevel(l.min_level)}`;
     else if (l.max_level != null) band = `Too high above ${formatLevel(l.max_level)}`;

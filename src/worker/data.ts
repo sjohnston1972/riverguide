@@ -4,7 +4,7 @@ import { distanceKm } from '../shared/geo.ts';
 import { parseJson } from '../shared/json.ts';
 import { type StoredRecent, toRecentLevels } from '../shared/recent.ts';
 import { type DurationCurve, pctForLevel } from '../shared/duration.ts';
-import { gaugeTrend, isStale, linkRank, paddlerStep, sectionStatus, typicalStatus, ukToday } from '../shared/status.ts';
+import { gaugeTrend, isStale, linkRank, linkStatus, paddlerStep, runnableMax, typicalStatus, ukToday } from '../shared/status.ts';
 import { damSchedule, releasingToday, sectionEbbs } from './schedules.ts';
 import type {
   BandBasis,
@@ -119,16 +119,16 @@ function toLink(l: LinkRow, gauge: Gauge): SectionGaugeLink {
     station_no: l.station_no,
     relation: l.relation,
     min_level: l.min_level,
-    max_level: l.max_level,
+    max_level: runnableMax(l.min_level, l.max_level, levels),
     basis: l.basis,
     confidence: l.confidence,
     reason: l.reason,
     calibration_url: l.calibration_url ?? null,
     gauge,
-    status: sectionStatus(gauge.level, gauge.stale, l.min_level, l.max_level),
+    status: linkStatus(gauge.level, gauge.stale, l.min_level, l.max_level, levels),
     levels,
     step: paddlerStep(gauge.level, gauge.stale, levels),
-    status_tomorrow: tomorrow == null ? null : sectionStatus(tomorrow, false, l.min_level, l.max_level),
+    status_tomorrow: tomorrow == null ? null : linkStatus(tomorrow, false, l.min_level, l.max_level, levels),
     step_tomorrow: paddlerStep(tomorrow, false, levels),
   };
 }

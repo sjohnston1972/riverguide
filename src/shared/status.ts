@@ -76,6 +76,25 @@ export function linkRank(l: { basis: string; confidence: Confidence; relation: R
   return (BASIS_TIER[l.basis] ?? 3) * 100 + CONFIDENCE_RANK[l.confidence] * 10 + RELATION_RANK[l.relation];
 }
 
+/**
+ * The top of a gauge's runnable band. Where the gauge has a paddler scale, River Guide counts it as too
+ * high from where Very high starts (Where's the Water itself only calls Huge too high), whatever the
+ * band's basis, so every high river is shown the same way. A cap at or below the bottom of the band is
+ * ignored rather than turning the band upside down.
+ */
+export function runnableMax(min: number | null, max: number | null, levels: PaddlerLevels | null): number | null {
+  if (!levels || !Number.isFinite(levels.very_high) || (min != null && levels.very_high <= min)) return max;
+  return max == null ? levels.very_high : Math.min(max, levels.very_high);
+}
+
+/** A level's status on a gauge link: its band, with the paddler scale's Very high and Huge counting as too high. */
+export function linkStatus(level: number | null, stale: boolean, min: number | null, max: number | null, levels: PaddlerLevels | null): SectionStatus {
+  const top = runnableMax(min, max, levels);
+  const status = sectionStatus(level, stale, min, top);
+  // When the top is where Very high starts, a level exactly on it is already on that step.
+  return status === 'runnable' && level != null && top != null && top === levels?.very_high && level >= top ? 'high' : status;
+}
+
 /** Where a level sits on a paddler scale (each threshold is where that step starts). */
 export function paddlerStep(level: number | null, stale: boolean, levels: PaddlerLevels | null): PaddlerStep | null {
   if (level == null || stale || !levels) return null;

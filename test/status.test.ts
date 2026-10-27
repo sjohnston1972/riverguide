@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayChange, gaugeTrend, isStale, linkRank, paddlerStep, relativeToAbsolute, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
+import { dayChange, gaugeTrend, isStale, linkRank, linkStatus, paddlerStep, relativeToAbsolute, runnableMax, sectionStatus, trendFrom, typicalStatus, ukToday } from '../src/shared/status.ts';
 import { latestAndHourAgo, parseTable } from '../src/shared/sepa.ts';
 
 describe('sectionStatus', () => {
@@ -128,5 +128,35 @@ describe('dayChange', () => {
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-06T19:15:00Z')).toBeCloseTo(-0.1, 9);
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', 0.9, '2026-10-07T07:15:00Z')).toBeNull();
     expect(dayChange(0.8, '2026-10-07T19:15:00Z', null, null)).toBeNull();
+  });
+});
+
+describe('linkStatus / runnableMax', () => {
+  // Anie for the Leny: a manual band of 0.9-2.0 m, with Where's the Water levels on the same gauge.
+  const levels = { scrape: 0.78, low: 0.9, medium: 1.1, high: 1.3, very_high: 1.55, huge: 1.9 };
+
+  it('counts Very high and Huge as too high whatever the band says', () => {
+    expect(linkStatus(1.4, false, 0.9, 2.0, levels)).toBe('runnable');
+    expect(linkStatus(1.655, false, 0.9, 2.0, levels)).toBe('high');
+    expect(linkStatus(1.55, false, 0.9, 2.0, levels)).toBe('high'); // exactly where Very high starts
+    expect(linkStatus(0.8, false, 0.9, 2.0, levels)).toBe('low');
+  });
+
+  it('caps the top of the runnable band where Very high starts, never above a lower band top', () => {
+    expect(runnableMax(0.78, 1.9, levels)).toBe(1.55);
+    expect(runnableMax(0.9, 1.4, levels)).toBe(1.4);
+    expect(runnableMax(0.78, null, levels)).toBe(1.55);
+    expect(runnableMax(0.6, 2.05, null)).toBe(2.05);
+  });
+
+  it('ignores a cap that would turn the band upside down', () => {
+    expect(runnableMax(1.6, 2.0, levels)).toBe(2.0);
+    expect(linkStatus(1.7, false, 1.6, 2.0, levels)).toBe('runnable');
+  });
+
+  it('is unchanged for gauges without paddler levels', () => {
+    expect(linkStatus(2.087, false, 0.594, 2.053, null)).toBe('high');
+    expect(linkStatus(1.5, false, 0.594, 2.053, null)).toBe('runnable');
+    expect(linkStatus(1.5, true, 0.594, 2.053, levels)).toBe('unknown');
   });
 });
