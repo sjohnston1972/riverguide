@@ -23,6 +23,8 @@ export interface AppCtx {
   config: () => PublicConfig | null;
   openChat: (context?: ChatContext) => void;
   setTitle: (title: string | null) => void;
+  /** Path and query of the page shown before this one, if any. */
+  previousPath: () => string | null;
 }
 
 export interface Page {
@@ -35,6 +37,8 @@ let config: PublicConfig | null = null;
 let page: Page | null = null;
 let pageName: Route['name'] | null = null;
 let firstRender = true;
+let currentPath: string | null = null;
+let previousPath: string | null = null;
 
 initTheme();
 
@@ -105,6 +109,7 @@ const ctx: AppCtx = {
   setTitle: (t) => {
     document.title = t ? `${t} | River Guide` : 'River Guide: Scottish river levels for paddlers';
   },
+  previousPath: () => previousPath,
 };
 
 api
@@ -115,7 +120,7 @@ api
     document.dispatchEvent(new CustomEvent('rg:config'));
   })
   .catch(() => {
-    config = { chat_enabled: false, community_enabled: false, turnstile_site_key: null, show_full_guide_text: false };
+    config = { chat_enabled: false, community_enabled: false, feedback_enabled: false, turnstile_site_key: null, show_full_guide_text: false };
   });
 
 /**
@@ -145,6 +150,8 @@ function restoreScroll(y: number): void {
 }
 
 function render(route: Route, nav: { pop: boolean }): void {
+  const path = location.pathname + location.search;
+  if (path !== currentPath) [previousPath, currentPath] = [currentPath, path];
   for (const [name, a] of Object.entries(navLinks)) {
     const active =
       name === route.name ||

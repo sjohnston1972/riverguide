@@ -5,6 +5,8 @@ export type AppEnv = Env & {
   TURNSTILE_SECRET?: string;
   /** Optional SEPA API key (base64 client credentials); without it SEPA's keyless access is used. */
   SEPA_API_KEY?: string;
+  /** Fine-grained GitHub token with Issues read/write on FEEDBACK_REPO; without it the feedback form is hidden. */
+  GITHUB_FEEDBACK_TOKEN?: string;
 };
 
 export function flag(v: string | undefined): boolean {

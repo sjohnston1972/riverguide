@@ -236,6 +236,7 @@ export interface PublicConfig {
   turnstile_site_key: string | null;
   chat_enabled: boolean;
   community_enabled: boolean;
+  feedback_enabled: boolean;
   show_full_guide_text: boolean;
 }
 

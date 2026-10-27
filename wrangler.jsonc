@@ -43,8 +43,10 @@
     "DAILY_MESSAGES_PER_IP": "40",
     "SHOW_FULL_GUIDE_TEXT": "false",
     "TURNSTILE_SITE_KEY": "0x4AAAAAAFPryVRo5mKb-dJF",
-    "AI_GATEWAY_URL": ""
+    "AI_GATEWAY_URL": "",
+    // Feedback form on About: raised as issues in this (private) repo. Needs the GITHUB_FEEDBACK_TOKEN secret.
+    "FEEDBACK_REPO": "sjohnston1972/riverguide-feedback"
   },
-  // Secrets (wrangler secret put): ANTHROPIC_API_KEY, SESSION_SECRET, TURNSTILE_SECRET
+  // Secrets (wrangler secret put): ANTHROPIC_API_KEY, SESSION_SECRET, TURNSTILE_SECRET, GITHUB_FEEDBACK_TOKEN
   "observability": { "enabled": true }
 }

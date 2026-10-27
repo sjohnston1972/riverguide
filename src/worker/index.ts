@@ -19,6 +19,7 @@ import {
 } from './guard.ts';
 import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRisingFallingIds } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
+import { feedbackEnabled, registerFeedbackRoutes } from './feedback.ts';
 import { refreshFreshets } from './freshets.ts';
 import { loraOverview, releasesOverview } from './schedules.ts';
 import { configureSepa } from './sepa-auth.ts';
@@ -61,6 +62,7 @@ app.get('/api/config', (c) => {
     turnstile_site_key: c.env.TURNSTILE_SITE_KEY || null,
     chat_enabled: chatEnabled(c.env),
     community_enabled: communityEnabled(c.env),
+    feedback_enabled: feedbackEnabled(c.env),
     show_full_guide_text: flag(c.env.SHOW_FULL_GUIDE_TEXT),
   };
   return c.json(body);
@@ -164,6 +166,7 @@ app.post('/api/chat', async (c) => {
 });
 
 registerCommunityRoutes(app);
+registerFeedbackRoutes(app);
 
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 

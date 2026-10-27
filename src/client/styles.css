@@ -5375,3 +5375,50 @@ body {
     font-weight: 600;
   }
 }
+
+/* ---------- Feedback (About) ---------- */
+.feedback {
+  max-width: 560px;
+  margin-top: 12px;
+}
+
+.feedback-kinds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.feedback-kinds .verdict {
+  align-content: center;
+  min-height: 46px;
+}
+
+.feedback .field {
+  width: 100%;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 400;
+}
+
+.feedback input.field {
+  min-height: 46px;
+  padding: 0 12px;
+}
+
+.feedback textarea.field {
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.feedback-sent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.feedback-sent p {
+  margin: 0;
+}

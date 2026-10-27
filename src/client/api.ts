@@ -13,6 +13,7 @@ import type {
   SectionSummary,
   Weather,
 } from '../shared/types.ts';
+import type { NewFeedback } from '../shared/feedback.ts';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -128,6 +129,10 @@ export const api = {
 
   deleteReport(id: string): Promise<{ ok: true }> {
     return send('DELETE', `/api/reports/${encodeURIComponent(id)}`);
+  },
+
+  sendFeedback(feedback: NewFeedback): Promise<{ ok: true }> {
+    return send('POST', '/api/feedback', feedback);
   },
 
   weather(lat: number, lon: number, signal?: AbortSignal): Promise<Weather> {

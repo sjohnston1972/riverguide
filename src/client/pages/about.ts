@@ -3,6 +3,7 @@
 import { statusPill } from '../components.ts';
 import { termsContent } from '../disclaimer.ts';
 import { h } from '../dom.ts';
+import { feedbackForm } from '../feedback.ts';
 import type { AppCtx, Page } from '../main.ts';
 
 const ext = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener' }, text);
@@ -18,7 +19,18 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
     h('h2', null, 'The chat assistant'),
     h('p', null, 'Ask River Guide answers questions using the same gauges, levels and forecasts as the rest of the site. It can be wrong. Treat its answers as a starting point and check the river page and a current guidebook before you go.'),
   );
-  const onConfig = () => (chat.hidden = !ctx.config()?.chat_enabled);
+  // Feedback form, while the Worker can raise issues.
+  const feedback = h(
+    'section',
+    { id: 'feedback', hidden: !ctx.config()?.feedback_enabled },
+    h('h2', null, 'Feedback and bugs'),
+    h('p', null, 'Spotted something wrong, such as a level that doesn’t match the river, a missing section or a page that doesn’t work? Got an idea? Let us know.'),
+    feedbackForm({ siteKey: () => ctx.config()?.turnstile_site_key ?? null, previousPath: ctx.previousPath }),
+  );
+  const onConfig = () => {
+    chat.hidden = !ctx.config()?.chat_enabled;
+    feedback.hidden = !ctx.config()?.feedback_enabled;
+  };
   document.addEventListener('rg:config', onConfig);
 
   container.append(
@@ -120,6 +132,8 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
       ),
 
       chat,
+
+      feedback,
 
       h('h2', null, 'Data sources and licences'),
       h(
