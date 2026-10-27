@@ -474,6 +474,17 @@ button {
   color: var(--loch-ink);
 }
 
+.btn:disabled,
+.btn:disabled:hover {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary:disabled:hover {
+  background: var(--loch);
+  border-color: var(--loch);
+}
+
 .btn-outline {
   border-color: var(--loch);
   color: var(--loch);

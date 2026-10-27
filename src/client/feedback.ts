@@ -12,6 +12,8 @@ const PLACEHOLDER: Record<FeedbackKind, string> = {
   other: 'Your message',
 };
 
+const MISSING_KIND = 'Choose what it’s about: Problem, Idea or Other.';
+
 export interface FeedbackFormOptions {
   siteKey: () => string | null;
   /** The page the sender was on before About, sent with bug reports. */
@@ -25,12 +27,11 @@ export function feedbackForm(o: FeedbackFormOptions): HTMLElement {
   function form(): HTMLElement {
     let kind: FeedbackKind | null = null;
     const msg = h('p', { class: 'form-msg', role: 'status' });
-    const message = h('textarea', { class: 'field', rows: 5, maxlength: 4000, placeholder: 'Choose a type first', required: true });
+    const message = h('textarea', { class: 'field', rows: 5, maxlength: 4000, placeholder: PLACEHOLDER.bug });
     const email = h('input', { class: 'field', type: 'email', maxlength: 200, autocomplete: 'email', placeholder: 'you@example.com' });
     const tsBox = h('div', { class: 'community-check' });
-    const submit = h('button', { type: 'submit', class: 'btn btn-primary', disabled: true }, 'Send');
-    const sync = () => (submit.disabled = !kind || message.value.trim().length < 5);
-    message.addEventListener('input', sync);
+    // Always pressable: a disabled Send gave no clue what was missing.
+    const submit = h('button', { type: 'submit', class: 'btn btn-primary' }, 'Send');
 
     const kindBtns = FEEDBACK_KINDS.map((k) => {
       const b = h('button', { type: 'button', class: 'verdict', 'aria-pressed': 'false' }, KIND_LABEL[k]);
@@ -38,7 +39,7 @@ export function feedbackForm(o: FeedbackFormOptions): HTMLElement {
         kind = k;
         kindBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
         message.placeholder = PLACEHOLDER[k];
-        sync();
+        if (msg.textContent === MISSING_KIND) msg.textContent = '';
       });
       return b;
     });
@@ -57,7 +58,16 @@ export function feedbackForm(o: FeedbackFormOptions): HTMLElement {
     f.addEventListener('submit', (e) => {
       e.preventDefault();
       const chosen = kind;
-      if (!chosen) return;
+      if (!chosen) {
+        msg.textContent = MISSING_KIND;
+        kindBtns[0].focus();
+        return;
+      }
+      if (message.value.trim().length < 5) {
+        msg.textContent = 'Please write a message first.';
+        message.focus();
+        return;
+      }
       submit.disabled = true;
       msg.textContent = 'Sending…';
       const key = o.siteKey();
@@ -81,7 +91,7 @@ export function feedbackForm(o: FeedbackFormOptions): HTMLElement {
           root.replaceChildren(sent());
         })
         .catch((err: unknown) => {
-          sync();
+          submit.disabled = false;
           msg.textContent = err instanceof Error ? err.message : 'Couldn’t send your message.';
         });
     });
