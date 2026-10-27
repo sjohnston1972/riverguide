@@ -110,6 +110,12 @@ export async function fetchRisingFallingIds(fetcher: typeof fetch = fetch): Prom
   return new Map(parseTable(raw).filter((r) => r.parametertype_name === 'S').map((r) => [r.station_no, r.ts_id]));
 }
 
+/** SEPA's daily peak level series (Day.Max, the series the outlook models were fitted to): station_no -> ts_id. */
+export async function fetchDayMaxIds(fetcher: typeof fetch = fetch): Promise<Map<string, string>> {
+  const raw = await getJson('request=getTimeseriesList&stationparameter_name=Level&ts_name=Day.Max&returnfields=station_no,ts_id&format=json', fetcher);
+  return new Map(parseTable(raw).map((r) => [r.station_no, r.ts_id]));
+}
+
 /** Values between two instants (ISO), for many series at once. */
 export async function fetchSeriesWindow(tsIds: string[], from: string, to: string, fetcher: typeof fetch = fetch): Promise<SepaSeries[]> {
   if (tsIds.length === 0) return [];

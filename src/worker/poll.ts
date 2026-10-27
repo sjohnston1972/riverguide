@@ -2,6 +2,7 @@
 
 import type { ForecastModel } from '../shared/forecast.ts';
 import { parseJson } from '../shared/json.ts';
+import type { LearnedOutlook } from '../shared/learning.ts';
 import { mergeRecent, type StoredRecent } from '../shared/recent.ts';
 import { fetchLevelStations, fetchRisingFallingIds, fetchSeriesValues, fetchSeriesWindow, latestAndHourAgo } from '../shared/sepa.ts';
 import { dayChange, gaugeTrend, isStale, ukToday } from '../shared/status.ts';
@@ -34,6 +35,8 @@ export interface GaugePollRow {
   forecast_model: string | null;
   rain: string | null;
   outlook: string | null;
+  /** Corrections learned from checked outlooks (JSON, shared/learning.ts). */
+  learned: string | null;
   recent: string | null;
 }
 
@@ -101,6 +104,7 @@ export function nextGaugeState(row: GaugePollRow, fetched: PollFetched, now: Dat
             parse<StoredRain>(next.rain),
             t,
             dayChange(next.level, next.level_at, next.level_day_ago, next.level_day_ago_at),
+            parse<LearnedOutlook>(row.learned),
           );
     const old = parse<GaugeOutlook>(row.outlook);
     const keep = sameOutlook(old, o) && (!old || t - Date.parse(old.at) < OUTLOOK_REWRITE_MS);
@@ -147,7 +151,7 @@ export async function pollReadings(db: D1Database, now = new Date()): Promise<Po
   const { results: rows } = await db
     .prepare(
       `SELECT station_no, ts_id, rf_ts_id, lat, lon, level, level_at, level_hour_ago, level_day_ago, level_day_ago_at,
-              trend_sepa, trend_sepa_at, forecast_model, rain, outlook, recent FROM gauges`,
+              trend_sepa, trend_sepa_at, forecast_model, rain, outlook, recent, learned FROM gauges`,
     )
     .all<GaugePollRow>();
 

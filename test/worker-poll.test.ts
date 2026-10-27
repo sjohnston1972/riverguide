@@ -21,6 +21,7 @@ const row = (over: Partial<GaugePollRow> = {}): GaugePollRow => ({
   trend_sepa: 0,
   trend_sepa_at: '2026-10-08T11:45:00.000Z',
   forecast_model: null,
+  learned: null,
   rain: null,
   outlook: null,
   recent: null,

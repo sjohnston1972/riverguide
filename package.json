@@ -15,6 +15,7 @@
     "data:durations": "node scripts/fetch-durations.ts",
     "data:forecast": "node scripts/fit-forecast.ts",
     "data:tides": "node scripts/fit-tides.ts",
+    "data:learning": "node scripts/learning-report.ts",
     "data:enrich": "node --env-file=.env scripts/enrich.ts",
     "data:wtw": "node scripts/import-wtw.ts",
     "data:seed": "node scripts/build-seed.ts",

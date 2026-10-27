@@ -2,6 +2,7 @@
 // and stored as JSON on the gauge row so page loads stay cheap.
 
 import { type DailyRain, direction, type ForecastModel, predictLevels } from '../shared/forecast.ts';
+import { correctRange, type LearnedOutlook } from '../shared/learning.ts';
 import { ukToday } from '../shared/status.ts';
 import type { GaugeOutlook, Trend } from '../shared/types.ts';
 
@@ -15,7 +16,10 @@ export interface StoredRain extends DailyRain {
 /** Rain data older than this is not used for an outlook. */
 const RAIN_MAX_AGE_MS = 6 * 3_600_000;
 
-/** `dayChange`: level now minus 24 hours ago (null when unknown; models that use it then assume no change). */
+/**
+ * `dayChange`: level now minus 24 hours ago (null when unknown; models that use it then assume no change).
+ * `learned`: corrections learned from checked outlooks (shared/learning.ts); a demoted gauge shows a direction only.
+ */
 export function computeOutlook(
   level: number,
   trend: Trend,
@@ -23,12 +27,16 @@ export function computeOutlook(
   rain: StoredRain | null,
   now = Date.now(),
   dayChange: number | null = null,
+  learned: LearnedOutlook | null = null,
 ): GaugeOutlook | null {
   if (!rain || rain.day !== ukToday(new Date(now)) || now - Date.parse(rain.at) > RAIN_MAX_AGE_MS) return null;
   const base = { rain_today_mm: rain.today, rain_tomorrow_mm: rain.tomorrow, at: new Date(now).toISOString() };
-  if (model?.usable && model.levels) {
+  if (model?.usable && model.levels && !learned?.demoted) {
     const p = predictLevels(model, level, rain, dayChange ?? 0);
-    return { basis: 'model', direction: direction(level, p.tomorrow), tomorrow: p.tomorrow, day_after: p.dayAfter, ...base };
+    const floor = Math.min(level, model.levels[0]);
+    const tomorrow = learned ? correctRange(p.tomorrow, learned.tomorrow, floor) : p.tomorrow;
+    const dayAfter = learned ? correctRange(p.dayAfter, learned.day_after, floor) : p.dayAfter;
+    return { basis: 'model', direction: direction(level, tomorrow), tomorrow, day_after: dayAfter, ...base };
   }
   // No trustworthy model: a plain direction from the trend and the rain to come.
   const wet = rain.today + rain.tomorrow;

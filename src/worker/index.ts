@@ -20,6 +20,7 @@ import {
 import { HISTORY_PERIODS, type HistoryPeriod, levelHistory, pollReadings, refreshGaugeMetadata, refreshRisingFallingIds } from './poll.ts';
 import { communityEnabled, registerCommunityRoutes } from './community.ts';
 import { feedbackEnabled, registerFeedbackRoutes } from './feedback.ts';
+import { runDailyLearning } from './learning.ts';
 import { refreshFreshets } from './freshets.ts';
 import { loraOverview, releasesOverview } from './schedules.ts';
 import { configureSepa } from './sepa-auth.ts';
@@ -170,10 +171,20 @@ registerFeedbackRoutes(app);
 
 app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 
+/** The daily outlook snapshot, check and re-learn (learning.ts): 07:15 UK time, whether BST or GMT. */
+const LEARNING_CRON = '15 6,7 * * *';
+
 export default {
   fetch: app.fetch,
   async scheduled(event, env, ctx) {
     configureSepa(env);
+    if (event.cron === LEARNING_CRON) {
+      // Runs at 06:15 and 07:15 UTC; only the one that is 07:15 in the UK (BST or GMT) does the work.
+      const ukHour = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hourCycle: 'h23' }).format(new Date(event.scheduledTime));
+      if (ukHour !== '07') return;
+      ctx.waitUntil(runDailyLearning(env.DB, new Date(event.scheduledTime)).then((s) => console.log(`outlook learning: ${s}`), (e) => console.error('outlook learning failed', e)));
+      return;
+    }
     if (event.cron === '0 3 * * *') {
       // Metadata first, so gauges new to SEPA also get their rising/falling series id.
       ctx.waitUntil(
