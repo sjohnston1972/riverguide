@@ -1,11 +1,11 @@
 // Gauge board for phones: the paddling scale as a column of equal-height bands, each step's name
-// and range written inside its band, so every label sits on its band on any screen. Now / Tomorrow
-// pills point in from the left at each level, placed in proportion between its band's limits.
+// and range written inside its band, so every label sits on its band on any screen. Pills for now
+// and the outlook's next two days ("Sat", "Sun") point in from the left at each level, placed in proportion between its band's limits.
 // Not to scale in metres: each band carries its own numbers.
 
 import type { PaddlerStep, SectionGaugeLink } from '../shared/types.ts';
 import { h } from './dom.ts';
-import { formatLevel, STEP_LABEL } from './labels.ts';
+import { formatLevel, STEP_LABEL, weekdayAfter } from './labels.ts';
 
 interface Band {
   cls: string;
@@ -15,7 +15,6 @@ interface Band {
   from: number;
   to: number;
   now: boolean;
-  tomorrow: boolean;
 }
 
 const LADDER: Exclude<PaddlerStep, 'empty'>[] = ['scrape', 'low', 'medium', 'high', 'very_high', 'huge'];
@@ -27,7 +26,11 @@ const between = (a: number, b: number) => `${a.toFixed(2)}–${formatLevel(b)}`;
 export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
   const g = link.gauge;
   const level = g.stale ? null : g.level;
-  const t = level != null ? (g.outlook?.tomorrow ?? null) : null;
+  // The outlook's predicted peaks: tomorrow, then the day after, each labelled by weekday.
+  const o = g.outlook;
+  const ahead = level != null && o
+    ? [o.tomorrow && { r: o.tomorrow, day: weekdayAfter(o.at, 1) }, o.day_after && { r: o.day_after, day: weekdayAfter(o.at, 2) }].filter((d) => !!d)
+    : [];
   const { min_level: min, max_level: max } = link;
   const tLow = g.typical_low;
   const tHigh = g.typical_high;
@@ -35,7 +38,7 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
   if (!pl && min == null && max == null && (tLow == null || tHigh == null)) return null;
 
   // Open-ended bands (the bottom and top ones) run to the readings' padded extremes.
-  const values = [level, min, max, tLow, tHigh, t?.level, ...(pl ? Object.values(pl) : [])].filter((v): v is number => v != null && Number.isFinite(v));
+  const values = [level, min, max, tLow, tHigh, ...ahead.map((d) => d.r.level), ...(pl ? Object.values(pl) : [])].filter((v): v is number => v != null && Number.isFinite(v));
   const span = Math.max(...values) - Math.min(...values);
   const lo = Math.min(...values) - Math.max(span * 0.1, 0.1);
   const hi = Math.max(...values) + Math.max(span * 0.1, 0.1);
@@ -43,7 +46,7 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
 
   const bands: Band[] = [];
   const add = (cls: string, name: string, range: string, from: number, to: number, top = false) =>
-    bands.push({ cls, name, range, from, to, now: inBand(level, from, to, top), tomorrow: false });
+    bands.push({ cls, name, range, from, to, now: inBand(level, from, to, top) });
   if (pl) {
     add('s-empty', STEP_LABEL.empty, `under ${formatLevel(pl.scrape)}`, Math.min(lo, pl.scrape), pl.scrape);
     LADDER.forEach((s, i) => {
@@ -62,10 +65,6 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     add('gb-below', 'Below typical', `under ${formatLevel(tLow!)}`, Math.min(lo, tLow!), tLow!);
     add('gb-typical', 'Typical range', between(tLow!, tHigh!), tLow!, tHigh!);
     add('gb-above', 'Above typical', `from ${formatLevel(tHigh!)}`, tHigh!, Math.max(hi, tHigh!), true);
-  }
-  if (t) {
-    const i = bands.findIndex((b, j) => inBand(t.level, b.from, b.to, j === bands.length - 1));
-    if (i >= 0 && !bands[i].now) bands[i].tomorrow = true;
   }
 
   /** A level's position, % from the bottom: its band's slot plus how far it is through the band. */
@@ -93,13 +92,13 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     'div',
     { class: 'gb-pills' },
     level != null ? h('span', { class: 'gb-pill', 'data-at': String(pos(level)) }, `Now ${formatLevel(level)}`) : null,
-    t ? h('span', { class: 'gb-pill gb-pill-next', 'data-at': String(pos(t.level)) }, `Tomorrow ${formatLevel(t.level)}`) : null,
+    ahead.map((d) => h('span', { class: 'gb-pill gb-pill-next', 'data-at': String(pos(d.r.level)) }, `${d.day} ${formatLevel(d.r.level)}`)),
   );
 
   const parts: string[] = [level != null ? `Current level ${formatLevel(level)}.` : 'No current reading.'];
   const cur = bands.find((b) => b.now);
   if (cur) parts.push(`${cur.name} (${cur.range}).`);
-  if (t) parts.push(`Tomorrow about ${formatLevel(t.level)}, likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)}.`);
+  for (const d of ahead) parts.push(`${d.day} about ${formatLevel(d.r.level)}, likely ${formatLevel(d.r.lo)} to ${formatLevel(d.r.hi)}.`);
   for (const b of [...bands].reverse()) parts.push(`${b.name}: ${b.range}.`);
   if (!pl && min == null && max == null) parts.push('No paddling band for this gauge yet.');
 
@@ -110,22 +109,27 @@ export function gaugeBoard(link: SectionGaugeLink): HTMLElement | null {
     !pl && min == null && max == null ? h('figcaption', { class: 'gb-key', 'aria-hidden': 'true' }, 'No paddling band yet') : null,
   );
 
-  // Pills at their levels; Tomorrow moves clear of Now when the two are close.
+  // Pills at their levels, in order (Now first, so it stays on its level): each later pill moves
+  // clear of the ones already placed, towards its own level, or the other way when it hits an end.
   const place = () => {
     const H = pills.clientHeight;
     if (!H) return;
-    const [now, next] = [...pills.children] as HTMLElement[];
-    const centre = (p: HTMLElement) => H - (Number(p.dataset.at) / 100) * H;
-    const clamp = (p: HTMLElement, y: number) => Math.min(H - p.offsetHeight / 2, Math.max(p.offsetHeight / 2, y));
-    if (now) now.style.top = `${clamp(now, centre(now))}px`;
-    if (next) {
-      let y = centre(next);
-      if (now) {
-        const space = Math.max(now.offsetHeight, next.offsetHeight) + 4;
-        const nowY = clamp(now, centre(now));
-        if (Math.abs(y - nowY) < space) y = nowY + (y <= nowY ? -space : space);
+    const placed: number[] = [];
+    for (const p of [...pills.children] as HTMLElement[]) {
+      const half = p.offsetHeight / 2;
+      const space = p.offsetHeight + 4;
+      const clamp = (y: number) => Math.min(H - half, Math.max(half, y));
+      let y = clamp(H - (Number(p.dataset.at) / 100) * H);
+      for (let tries = 0; tries < placed.length * 2; tries++) {
+        const q = placed.find((qy) => Math.abs(y - qy) < space - 0.5);
+        if (q == null) break;
+        const up = clamp(q - space);
+        const down = clamp(q + space);
+        const fits = (v: number) => Math.abs(v - q) >= space - 0.5;
+        y = y <= q ? (fits(up) ? up : down) : fits(down) ? down : up;
       }
-      next.style.top = `${clamp(next, y)}px`;
+      placed.push(y);
+      p.style.top = `${y}px`;
     }
   };
   if ('ResizeObserver' in window) new ResizeObserver(place).observe(pills);

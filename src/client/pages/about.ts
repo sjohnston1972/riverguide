@@ -142,6 +142,11 @@ export function mountAbout(container: HTMLElement, ctx: AppCtx): Page {
         null,
         'Each gauge was tested on every season of the last three years, a block at a time, on days the model had not seen. Only gauges where it clearly beat "tomorrow will be the same as today", and did no worse on wet days, get a prediction. Other gauges show just a direction (likely to rise, drop or stay about the same) from the current trend and the rain due. Those tests used the rain that actually fell, so a wrong rain forecast makes the prediction wrong too. Treat all of it as a rough guide: rain falling higher up a catchment may not be in the forecast for the gauge.',
       ),
+      h(
+        'p',
+        null,
+        'The outlook also learns as it goes. Every morning River Guide saves each gauge’s outlook, and once SEPA publishes the peaks the river actually reached, it checks them. After about five weeks of checks, a gauge whose predictions run high or low, or whose likely range is too narrow or too wide, is corrected, and a gauge whose predictions stop beating "the same as today" shows just a direction until they improve.',
+      ),
 
       h('h2', null, 'Dam releases and the Falls of Lora'),
       h(

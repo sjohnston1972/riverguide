@@ -5,7 +5,7 @@
 import { h } from './dom.ts';
 
 const KEY = 'rg-terms';
-const TERMS_VERSION = '2026-10-10';
+const TERMS_VERSION = '2026-10-29';
 
 /** In memory too, for browsers that block storage: accepted for this visit at least. */
 let acceptedThisVisit = false;
@@ -32,6 +32,7 @@ function remember(): void {
 export function termsContent(): HTMLElement[] {
   return [
     h('p', null, 'River Guide helps you decide which Scottish rivers might be worth a look. It is a planning aid, not a safety service.'),
+    h('p', null, 'River Guide is in beta testing. It is new and still being tested, so features may change or stop working, and some levels and forecasts are still being tuned. If something looks wrong, please tell us with the feedback form on the About page.'),
     h(
       'ul',
       null,

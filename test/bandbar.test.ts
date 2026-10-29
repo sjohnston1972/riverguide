@@ -42,12 +42,22 @@ describe('bandBar', () => {
     expect(el.querySelector('.step-chip-next')?.closest('li')?.classList.contains('s-high')).toBe(true);
   });
 
-  it("adds tomorrow's predicted level when there is a model outlook", () => {
-    const outlook = { basis: 'model', direction: 'rise', tomorrow: { level: 1.2, lo: 0.9, hi: 1.6 }, day_after: null, rain_today_mm: 10, rain_tomorrow_mm: 12, at: '' } as const;
+  it('adds the predicted peaks for the next two days, labelled by weekday', () => {
+    // Thursday 29 October, just before midnight UK time (still Thursday in the UK, 23:30 UTC in GMT).
+    const outlook = { basis: 'model', direction: 'rise', tomorrow: { level: 1.2, lo: 0.9, hi: 1.6 }, day_after: { level: 1.0, lo: 0.7, hi: 1.5 }, rain_today_mm: 10, rain_tomorrow_mm: 12, at: '2026-10-29T23:30:00Z' } as const;
     const bar = bandBar(link({ gauge: gauge({ outlook }) }))!;
-    expect(bar.querySelector('.bb-pill-tomorrow')?.textContent).toBe('Tomorrow 1.20 m');
+    expect([...bar.querySelectorAll('.bb-pill-tomorrow')].map((p) => p.textContent)).toEqual(['Fri 1.20 m', 'Sat 1.00 m']);
+    expect(bar.classList.contains('has-forecast-2')).toBe(true);
     expect(left(bar.querySelector('.bb-fc-marker'))).toBeGreaterThan(left(bar.querySelector('.bb-marker')));
-    expect(bar.getAttribute('aria-label')).toContain('Tomorrow about 1.20 m, likely 0.90 m to 1.60 m.');
+    expect(bar.getAttribute('aria-label')).toContain('Fri about 1.20 m, likely 0.90 m to 1.60 m. Sat about 1.00 m, likely 0.70 m to 1.50 m.');
+  });
+
+  it('labels the ladder chip with the weekday too', () => {
+    const levels = { scrape: 0.4, low: 0.6, medium: 0.8, high: 1.0, very_high: 1.4, huge: 1.8 };
+    const outlook = { basis: 'model', direction: 'rise', tomorrow: { level: 1.2, lo: 0.9, hi: 1.6 }, day_after: null, rain_today_mm: 10, rain_tomorrow_mm: 12, at: '2026-10-31T08:00:00Z' } as const;
+    const el = bandBar(link({ basis: 'paddler', levels, step: 'medium', step_tomorrow: 'high', gauge: gauge({ outlook }) }))!;
+    expect(el.querySelector('.step-chip-next')?.textContent).toBe('Sun');
+    expect(el.querySelector('.bandbar')?.classList.contains('has-forecast-2')).toBe(false);
   });
 });
 

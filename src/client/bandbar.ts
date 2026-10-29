@@ -3,7 +3,7 @@
 
 import type { PaddlerLevels, PaddlerStep, SectionGaugeLink } from '../shared/types.ts';
 import { h } from './dom.ts';
-import { formatLevel, STEP_LABEL } from './labels.ts';
+import { formatLevel, STEP_LABEL, weekdayAfter } from './labels.ts';
 
 function niceStep(range: number): number {
   for (const s of [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5]) if (range / s <= 5) return s;
@@ -17,7 +17,12 @@ export function bandBar(link: SectionGaugeLink): HTMLElement | null {
   const { min_level: min, max_level: max } = link;
   const tLow = g.typical_low;
   const tHigh = g.typical_high;
-  const values = [g.level, min, max, tLow, tHigh, ...(link.levels ? Object.values(link.levels) : []), ...(link.gauge.outlook?.tomorrow ? [link.gauge.outlook.tomorrow.level] : [])].filter((v): v is number => v != null && Number.isFinite(v));
+  // The outlook's predicted peaks, labelled by weekday ("Sat"): tomorrow, then the day after.
+  const o = g.outlook;
+  const ahead = level != null && o
+    ? [o.tomorrow && { r: o.tomorrow, day: weekdayAfter(o.at, 1) }, o.day_after && { r: o.day_after, day: weekdayAfter(o.at, 2) }].filter((d) => !!d)
+    : [];
+  const values = [g.level, min, max, tLow, tHigh, ...(link.levels ? Object.values(link.levels) : []), ...ahead.map((d) => d.r.level)].filter((v): v is number => v != null && Number.isFinite(v));
   if (min == null && max == null && (tLow == null || tHigh == null)) return null;
   if (values.length < 2) return null;
 
@@ -74,13 +79,10 @@ export function bandBar(link: SectionGaugeLink): HTMLElement | null {
     ticks.push(h('span', { class: 'bb-tick', style: `left:${pct(v)}` }, v.toFixed(step < 0.1 ? 2 : step < 1 ? 1 : 0)));
   }
 
-  // Tomorrow's predicted peak: a dotted line with a "Tomorrow" pill.
-  const t = level != null ? link.gauge.outlook?.tomorrow : null;
-  const forecast = t
-    ? [
-        h('div', { class: 'bb-fc-marker', style: `left:${pct(t.level)}` }, h('span', { class: `bb-pill bb-pill-tomorrow ${edge(t.level)}` }, `Tomorrow ${formatLevel(t.level)}`)),
-      ]
-    : [];
+  // Each predicted peak: a dotted line up to its own label row, with a weekday pill.
+  const forecast = ahead.map((d, i) =>
+    h('div', { class: `bb-fc-marker bb-fc-row${i + 1}`, style: `left:${pct(d.r.level)}` }, h('span', { class: `bb-pill bb-pill-tomorrow ${edge(d.r.level)}` }, `${d.day} ${formatLevel(d.r.level)}`)),
+  );
 
   const marker =
     level != null
@@ -92,11 +94,11 @@ export function bandBar(link: SectionGaugeLink): HTMLElement | null {
   else if (min != null) parts.push(`Runnable from ${formatLevel(min)}.`);
   else if (max != null) parts.push(`Too high above ${formatLevel(max)}.`);
   if (tLow != null && tHigh != null) parts.push(`Typical range ${formatLevel(tLow)} to ${formatLevel(tHigh)}.`);
-  if (t) parts.push(`Tomorrow about ${formatLevel(t.level)}, likely ${formatLevel(t.lo)} to ${formatLevel(t.hi)}.`);
+  for (const d of ahead) parts.push(`${d.day} about ${formatLevel(d.r.level)}, likely ${formatLevel(d.r.lo)} to ${formatLevel(d.r.hi)}.`);
 
   const bar = h(
     'div',
-    { class: `bandbar${t ? ' has-forecast' : ''}`, role: 'img', 'aria-label': parts.join(' ') },
+    { class: `bandbar${ahead.length ? ' has-forecast' : ''}${ahead.length > 1 ? ' has-forecast-2' : ''}`, role: 'img', 'aria-label': parts.join(' ') },
     h('div', { class: 'bb-track' }, zones, typical, forecast, marker),
     h('div', { class: 'bb-scale', 'aria-hidden': 'true' }, ticks),
     h(
@@ -104,14 +106,14 @@ export function bandBar(link: SectionGaugeLink): HTMLElement | null {
       { class: 'bb-key', 'aria-hidden': 'true' },
       !pl && (min != null || max != null) ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-run' }), 'Paddling band') : null,
       typical ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-typical-swatch' }), 'Typical range') : null,
-      t ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-fc-swatch' }), "Tomorrow's predicted level") : null,
+      ahead.length ? h('span', { class: 'bb-key-item' }, h('span', { class: 'bb-swatch bb-fc-swatch' }), 'Predicted peak') : null,
     ),
   );
-  return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step, link.step_tomorrow)) : bar;
+  return pl ? h('div', { class: 'bandbar-wrap' }, bar, stepLadder(pl, link.step, link.step_tomorrow, o ? weekdayAfter(o.at, 1) : 'Tomorrow')) : bar;
 }
 
 /** The paddler scale as labelled chips: colour, name and the level each step starts at; the current step is highlighted. */
-function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null, tomorrow: PaddlerStep | null = null): HTMLElement {
+function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null, tomorrow: PaddlerStep | null, tomorrowDay: string): HTMLElement {
   const steps: Array<[PaddlerStep, string]> = [
     ['empty', `under ${formatLevel(pl.scrape)}`],
     ['scrape', `from ${formatLevel(pl.scrape)}`],
@@ -131,7 +133,7 @@ function stepLadder(pl: PaddlerLevels, current: PaddlerStep | null, tomorrow: Pa
         h('span', { class: 'step-chip-name' }, STEP_LABEL[step]),
         h('span', { class: 'step-chip-range' }, range),
         step === current ? h('span', { class: 'step-chip-now' }, 'Now') : null,
-        step === tomorrow && tomorrow !== current ? h('span', { class: 'step-chip-now step-chip-next' }, 'Tomorrow') : null,
+        step === tomorrow && tomorrow !== current ? h('span', { class: 'step-chip-now step-chip-next' }, tomorrowDay) : null,
       ),
     ),
   );

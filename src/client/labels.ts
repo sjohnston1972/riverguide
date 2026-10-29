@@ -91,6 +91,15 @@ export function clockTime(iso: string, now = Date.now()): string {
   return day(d) === day(new Date(now)) ? time : `${d.toLocaleDateString('en-GB', { ...tz, weekday: 'short' })} ${time}`;
 }
 
+/** "Sat": the UK weekday `days` after the UK day of `iso` (an outlook's tomorrow is 1, the day after 2). */
+export function weekdayAfter(iso: string, days: number): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return days === 1 ? 'Tomorrow' : 'Day after';
+  const d = new Date(`${at.toLocaleDateString('en-CA', { timeZone: 'Europe/London' })}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toLocaleDateString('en-GB', { timeZone: 'UTC', weekday: 'short' });
+}
+
 
 /** Lower-case, accents and punctuation removed, for forgiving search. */
 export function normalize(s: string): string {
